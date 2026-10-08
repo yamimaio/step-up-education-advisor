@@ -1,0 +1,39 @@
+{
+  "locationOffers": [
+    "network_density",
+    "industry_hub"
+  ],
+  "attendance": "recurring_weekends",
+  "onsiteNote": "every-other-weekend residential format",
+  "lodgingIncluded": true,
+  "figureNotes": {
+    "tuitionUsd": "Price for the class entering in 2026; the 2027 price is not published.",
+    "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028."
+  },
+  "extraSources": [
+    {
+      "field": "attendance",
+      "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+      "quote": "every-other-weekend residential format",
+      "checkedOn": "2026-10-08"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Housing and dining for regular class weekends and for required modular courses.",
+      "checkedOn": "2026-10-08"
+    },
+    {
+      "field": "paymentOptions",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Program tuition is due in six equal installments.",
+      "checkedOn": "2026-10-08"
+    },
+    {
+      "field": "cohortMedianExperienceYears",
+      "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+      "quote": "an average of 13-14 years of professional experience",
+      "checkedOn": "2026-10-08"
+    }
+  ]
+}

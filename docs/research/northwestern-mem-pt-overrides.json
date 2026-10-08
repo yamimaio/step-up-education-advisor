@@ -1,0 +1,41 @@
+{
+  "locationOffers": ["industry_hub"],
+  "attendance": "recurring_evenings",
+  "onsiteNote": "Classes held Monday - Thursday evenings + Saturday mornings",
+  "durationMonths": 24,
+  "durationMaxMonths": 36,
+  "credits": "A minimum number of 12 courses is required",
+  "tuitionPerCourseUsd": 8100,
+  "courseCount": 12,
+  "figureNotes": {
+    "tuitionPerCourseUsd": "2026-27 rate; the Fall 2027 rate is not published.",
+    "courseCount": "A minimum; the school publishes no fixed total.",
+    "durationMonths": "The school publishes a 2-3 year range for the part-time option."
+  },
+  "extraSources": [
+    {
+      "field": "durationMonths",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+      "quote": "Part-time option: 2-3 years",
+      "checkedOn": "2026-10-08"
+    },
+    {
+      "field": "attendance",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+      "quote": "Classes held Monday - Thursday evenings + Saturday mornings",
+      "checkedOn": "2026-10-08"
+    },
+    {
+      "field": "credits",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+      "quote": "A minimum number of 12 courses is required",
+      "checkedOn": "2026-10-08"
+    },
+    {
+      "field": "tuitionPerCourseUsd",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/",
+      "quote": "$8,100 per course for part-time students",
+      "checkedOn": "2026-10-08"
+    }
+  ]
+}

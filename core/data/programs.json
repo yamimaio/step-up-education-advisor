@@ -1,1 +1,679 @@
-[]
+[
+  {
+    "id": "harvard-ext-org-behavior",
+    "name": "Organizational Behavior Graduate Certificate (Online)",
+    "institution": "Harvard Extension School",
+    "category": "certificate",
+    "credential": "Graduate Certificate",
+    "format": "online",
+    "durationMonths": 8,
+    "durationMaxMonths": null,
+    "credits": null,
+    "attendance": "none",
+    "onsiteNote": null,
+    "onsiteDaysPerYear": 0,
+    "residencyCount": 0,
+    "longestStretchDays": 0,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": null,
+    "state": null,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 14320,
+    "tuitionPerCourseUsd": 3580,
+    "courseCount": 4,
+    "tuitionIncludes": "Tuition for four courses at the published 2026–27 rate of $3,580 per course. Harvard states that books, course materials, supplies, equipment, and certain transaction-related fees may be additional; lodging and meals are not included.",
+    "lodgingIncluded": null,
+    "paymentOptions": ["installments", "employer_sponsorship", "loans", "scholarships"],
+    "minExperienceYears": null,
+    "accreditation": [],
+    "cohortMedianExperienceYears": null,
+    "cohortExperienceBasis": null,
+    "cohortSeniority": "Select certificate-earner titles published by the school: Business Analyst, Customer Success Manager, Director of Operations, Program Manager, Principal, and Vice President; the school does not say these titles represent a majority.",
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "network": 3,
+      "depth": 3,
+      "practicality": 4,
+      "costValue": 4
+    },
+    "ratingNotes": {
+      "network": "Online synchronous instruction is available, and certificate earners receive affiliate Harvard Extension Alumni Association membership; no in-person time is required, while a fixed cohort, seniority mix and alumni activity are not established (low evidence).",
+      "depth": "Four required graduate-credit courses meet the credit-bearing certificate tier; featured faculty are identified, but total credit hours and a research/thesis requirement are not published.",
+      "practicality": "Part-time study compatible with full-time work, an 8-month–3-year completion window, online delivery and applied leadership practice support 4 rather than 5; participant-organization projects and program-specific weekly workload are not documented (low evidence).",
+      "costValue": "Tuition is $14,320 for four graduate-credit courses over 8 months–3 years; the research includes a school-published comparison of $3,580 per course versus $5,476 at peer institutions, supporting favorable value, but peer duration and credential comparability are not documented (low evidence)."
+    },
+    "ratingLowEvidence": ["network", "practicality", "costValue"],
+    "figureNotes": {},
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Organizational Behavior Graduate Certificate (Online)",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Institution Harvard Extension School",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Program Type Graduate Certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Program Type Graduate Certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Format Online",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Finish in 8 Months – 3 Years",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Complete the four certificate courses for graduate credit.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://extension.harvard.edu/about/faq/",
+        "quote": "All graduate certificates may be completed entirely through online education.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://extension.harvard.edu/about/faq/",
+        "quote": "All graduate certificates may be completed entirely through online education.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "The Organizational Behavior Graduate Certificate includes four online courses",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://extension.harvard.edu/academics/graduate-certificates/",
+        "quote": "The courses can be completed on a part-time basis, allowing many to continue working full time.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "country",
+        "url": "https://extension.harvard.edu/registration-admissions/for-students/support-and-services/sexual-assault-and-harassment-resources/",
+        "quote": "51 Brattle Street Cambridge, MA 02138",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Tuition $14,320",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://extension.harvard.edu/paying-for-school/",
+        "quote": "some courses may require additional lab fees or the purchase of specific books and materials relevant to that class",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/",
+        "quote": "These interest-free plans allow you to pay your tuition in four installments.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/harvard-employees/",
+        "quote": "You can use TAP to pursue an undergraduate or graduate degree or certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/",
+        "quote": "You may consider applying for a credit-based private student loan",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/",
+        "quote": "Limited scholarship funds are available for non-admitted students at Harvard Extension School.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortSeniority",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "They hold such titles as: Business Analyst ... Director of Operations ... Principal ... Vice President",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "courseCount",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "The Organizational Behavior Graduate Certificate includes four online courses",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionPerCourseUsd",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Tuition $3,580 per course",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["travel_ease", "affordability"]
+  },
+  {
+    "id": "mit-tlp",
+    "name": "Blended Professional Certificate: Technology Leadership Program",
+    "institution": "MIT Professional Education",
+    "category": "executive",
+    "credential": "Certificate of Completion from MIT Professional Education",
+    "format": "hybrid",
+    "durationMonths": 8,
+    "durationMaxMonths": null,
+    "credits": "42 CEUs",
+    "attendance": "residencies",
+    "onsiteNote": "3 residential weeks and 14+ live online sessions",
+    "onsiteDaysPerYear": null,
+    "residencyCount": 3,
+    "longestStretchDays": null,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "Cambridge",
+    "state": "Massachusetts",
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 28000,
+    "tuitionPerCourseUsd": null,
+    "courseCount": null,
+    "tuitionIncludes": null,
+    "lodgingIncluded": null,
+    "paymentOptions": null,
+    "minExperienceYears": 6,
+    "accreditation": [],
+    "cohortMedianExperienceYears": null,
+    "cohortExperienceBasis": null,
+    "cohortSeniority": "Technology leaders and experienced practitioners; relevant roles include C-level positions, Heads of Engineering/Technology, engineering managers, product managers, team leaders, senior functional managers, and delivery heads.",
+    "lodgingPerNightUsd": {
+      "min": 213,
+      "max": 365
+    },
+    "ratings": {
+      "network": 4,
+      "depth": 3,
+      "practicality": 3,
+      "costValue": 3
+    },
+    "ratingNotes": {
+      "network": "Three residential weeks, 14+ live online sessions, a senior-leader target audience, and Professional Education alumni access support 4; network size and activity are not established for 5.",
+      "depth": "Eight months, 42 CEUs, 20+ MIT faculty, and strategy projects support a substantial non-degree program; graduate academic credit and research/thesis requirements are not published.",
+      "practicality": "Low evidence: hybrid delivery, applied projects, and a work-compatibility testimonial support 3; weekly workload, schedule flexibility, and projects on participants' own organizations are not established.",
+      "costValue": "Low evidence: $28,000 covers an eight-month completion-certificate program with eligibility for 42 CEUs; 3 is a provisional midpoint because no comparable tuition benchmarks establish relative value."
+    },
+    "ratingLowEvidence": ["practicality", "costValue"],
+    "figureNotes": {},
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Blended Professional Certificate: Technology Leadership Program",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "MIT Professional Education",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "All the participants who successfully complete Technology Leadership Program will receive a Certificate of Completion from MIT Professional Education.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Location MIT Campus & Live-Online",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Program Length 8 Months",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "CEUs 42",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "Experience a unique blended learning journey featuring 3 residential weeks and 14+ live online sessions",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "3 residential weeks",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "3 residential weeks",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "I also was looking for a program which was an extended program and a hybrid ... as well as I wouldn't have to stop my work or you could accommodate according to my schedule.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Program Fee $28,000",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "The program fee is USD 28,000",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "minExperienceYears",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "A minimum of 6+ years of work experience in functional, technical, or business roles.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortSeniority",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Relevant roles include: C-level positions including CEOs, CTOs, COOs, CIOs, Chief Architects, etc.; Head of Engineering, Head of Technology; Engineering managers, product managers, and team leaders with a significant team size and budget responsibility.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "lodgingPerNightUsd",
+        "url": "https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&city=Boston&state=MA&fiscal_year=2027",
+        "quote": "Boston / Cambridge ... $365 [October], $213 [November–February], $305 [March–August], $365 [September].",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["network_density", "industry_hub"]
+  },
+  {
+    "id": "northwestern-mem-pt",
+    "name": "Master of Engineering Management",
+    "institution": "Northwestern University",
+    "category": "specialized_masters",
+    "credential": "Master of Engineering Management",
+    "format": "in_person",
+    "durationMonths": 24,
+    "durationMaxMonths": 36,
+    "credits": "A minimum number of 12 courses is required",
+    "attendance": "recurring_evenings",
+    "onsiteNote": "Classes held Monday - Thursday evenings + Saturday mornings",
+    "onsiteDaysPerYear": null,
+    "residencyCount": null,
+    "longestStretchDays": null,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "Evanston",
+    "state": null,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": null,
+    "tuitionPerCourseUsd": 8100,
+    "courseCount": 12,
+    "tuitionIncludes": null,
+    "lodgingIncluded": null,
+    "paymentOptions": ["scholarships", "loans"],
+    "minExperienceYears": null,
+    "accreditation": null,
+    "cohortMedianExperienceYears": null,
+    "cohortExperienceBasis": null,
+    "cohortSeniority": null,
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "network": 3,
+      "depth": 4,
+      "practicality": 4,
+      "costValue": 3
+    },
+    "ratingNotes": {
+      "network": "Low evidence: scheduled evening/Saturday classes and an experienced-STEM target audience support a provisional 3; cohort interaction, actual in-person time, seniority and alumni access are not established.",
+      "depth": "Master’s degree requiring at least 12 courses, including 7 core courses and at least 2 advanced-engineering courses, supports 4; research/thesis requirements and faculty involvement are not established for 5.",
+      "practicality": "The work-accommodating part-time option offers evening/Saturday classes, entry in any quarter, a capstone choice and applied leadership simulations; projects in participants’ own organizations are not established for 5.",
+      "costValue": "Low evidence: $8,100 per course is published for 2026–2027 for a master’s typically lasting 2–3 years, but total tuition, Fall 2027 pricing and comparable-program costs are missing; 3 is provisional, not a verified market-value assessment."
+    },
+    "ratingLowEvidence": ["network", "costValue"],
+    "figureNotes": {
+      "tuitionPerCourseUsd": "2026-27 rate; the Fall 2027 rate is not published.",
+      "courseCount": "A minimum; the school publishes no fixed total.",
+      "durationMonths": "The school publishes a 2-3 year range for the part-time option."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Master of Engineering Management",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Northwestern University’s Evanston campus",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "Master of Engineering Management degree",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "Master of Engineering Management degree",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Choose the part-time option to accommodate work or personal needs",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Northwestern University’s Evanston campus",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/financial-aid.html",
+        "quote": "The Albert H. Rubenstein Memorial Scholarship is based on merit and is awarded during the application process.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.mccormick.northwestern.edu/academics/graduate/prospective-student-resources/financial-aid.html",
+        "quote": "master’s students are provided with a variety of federal and private loan options",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Part-time option: 2-3 years",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "attendance",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Classes held Monday - Thursday evenings + Saturday mornings",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "credits",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "A minimum number of 12 courses is required",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "tuitionPerCourseUsd",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/",
+        "quote": "$8,100 per course for part-time students",
+        "checkedOn": "2026-10-08"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["industry_hub"]
+  },
+  {
+    "id": "wharton-emba-sf",
+    "name": "MBA Program for Executives",
+    "institution": "The Wharton School, University of Pennsylvania",
+    "category": "emba",
+    "credential": "MBA",
+    "format": "in_person",
+    "durationMonths": null,
+    "durationMaxMonths": null,
+    "credits": "19 course units",
+    "attendance": "recurring_weekends",
+    "onsiteNote": "every-other-weekend residential format",
+    "onsiteDaysPerYear": null,
+    "residencyCount": null,
+    "longestStretchDays": null,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "San Francisco",
+    "state": null,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 243000,
+    "tuitionPerCourseUsd": null,
+    "courseCount": null,
+    "tuitionIncludes": "Housing and dining for regular class weekends and for required modular courses; textbooks are not included.",
+    "lodgingIncluded": true,
+    "paymentOptions": ["installments"],
+    "minExperienceYears": 8,
+    "accreditation": null,
+    "cohortMedianExperienceYears": 13.5,
+    "cohortExperienceBasis": "average",
+    "cohortSeniority": null,
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "network": 4,
+      "depth": 4,
+      "practicality": 3,
+      "costValue": 3
+    },
+    "ratingNotes": {
+      "network": "Low evidence: Every-other-weekend residential attendance and an eight-year standard experience requirement support 4; incoming-cohort seniority and alumni size/access are not established, so 5 is unsupported.",
+      "depth": "Low evidence: An MBA requiring 19 course units supports a provisional master's-level 4; applied content and San Francisco faculty involvement are not established, and research/thesis evidence needed for 5 is missing.",
+      "practicality": "Low evidence: Required full-time employment and every-other-weekend attendance support a provisional 3 for work compatibility; workload, schedule flexibility and applied projects are not established.",
+      "costValue": "Low evidence: 3 is a provisional midpoint, not a verified peer-value assessment; 2027 tuition and duration and comparable-program prices are missing, while the $243,000 tuition and fees apply only to the 2026 intake."
+    },
+    "ratingLowEvidence": ["network", "depth", "practicality", "costValue"],
+    "figureNotes": {
+      "tuitionUsd": "Price for the class entering in 2026; the 2027 price is not published.",
+      "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "MBA Program for Executives",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://executivemba.wharton.upenn.edu/global-cohort/",
+        "quote": "University of Pennsylvania’s campus in Philadelphia",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "Executive MBA Class Profile",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "There is no difference in the degree earned by executive and full-time MBA students.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "every-other-weekend residential format",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "You must complete 19 course units at Wharton to earn your degree from our program.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "Executive MBA students are required to maintain full-time employment throughout the duration of the program.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "Philadelphia and San Francisco cohort members",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "minExperienceYears",
+        "url": "https://executivemba.wharton.upenn.edu/emba-application-requirements/",
+        "quote": "at least eight (8)",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Tuition and fees for the class entering in 2026 is $243,000 or $40,500 per academic term.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "Class of 2028",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/03/cal_52_SF_TY_V6_03192026-1.pdf",
+        "quote": "ACADEMIC CALENDAR: 2026–2028",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "attendance",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "every-other-weekend residential format",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Housing and dining for regular class weekends and for required modular courses.",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Program tuition is due in six equal installments.",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "an average of 13-14 years of professional experience",
+        "checkedOn": "2026-10-08"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["network_density", "industry_hub"]
+  }
+]
