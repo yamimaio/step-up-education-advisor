@@ -66,12 +66,14 @@ export function checkTravelBudget(travel: TravelEstimate, profile: EffectiveProf
   const check = limitCheck("travelBudget", travel.totalUsd, limit, "USD");
   if (check.unknown) check.note = travel.notes.join(" ") || check.note;
   // With airfare unknown the total covers lodging only: it can fail the budget on its own, but
-  // it can never be shown to pass, so a pass becomes an unknown near miss (a fail at a limit of 0).
+  // it can never be shown to pass, so a pass becomes a near miss (a fail at a limit of 0). The gap
+  // is the user's (airfare is in profileGaps), not the program's, so `unknown` stays false and
+  // confidence is untouched.
   if (travel.lodgingOnly && limit !== null && check.status === "pass") {
     return {
       ...check,
       status: limit === 0 ? "fail" : "near_miss",
-      unknown: true,
+      unknown: false,
       note: travel.notes.join(" "),
     };
   }

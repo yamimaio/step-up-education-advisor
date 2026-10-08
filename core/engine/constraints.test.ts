@@ -11,6 +11,7 @@ import {
   checkWorkCompatible,
   overshoot,
 } from "./constraints";
+import { evaluate } from "./evaluate";
 import { travelEstimate } from "./travel";
 import { fixture } from "../../tests/fixtures/dataset";
 import { makeProfile } from "../../tests/fixtures/profiles";
@@ -231,7 +232,7 @@ describe("The travel budget with airfare unknown", () => {
     const profile = eff({ ...away, airfareRange: "unknown", travelBudgetUsd: 2000 });
     const emba = fixture("fake-emba");
     const check = checkTravelBudget(travelEstimate(emba, profile), profile);
-    expect(check).toMatchObject({ status: "near_miss", unknown: true });
+    expect(check).toMatchObject({ status: "near_miss", unknown: false });
     expect(check.note).toMatch(/Airfare unknown/);
   });
 
@@ -288,5 +289,19 @@ describe("A declined relocation answer is not a rule-out", () => {
       status: "pass",
       note: "may require relocating",
     });
+  });
+});
+
+describe("Airfare unknown is the user's gap, not the program's", () => {
+  it("keeps a fully published, verified record at high confidence", () => {
+    const result = evaluate(
+      makeProfile({ homeCity: "Chicago", travelBudgetUsd: 50000, airfareRange: "unknown" }),
+      [fixture("fake-executive")],
+      new Date("2026-10-08T00:00:00Z"),
+    );
+    const [p] = result.programs;
+    expect(p?.checks.find((c) => c.id === "travelBudget")?.status).toBe("near_miss");
+    expect(p?.confidence).toEqual({ level: "high", reasons: [] });
+    expect(result.profileGaps).toContain("airfareRange");
   });
 });

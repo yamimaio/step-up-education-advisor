@@ -102,3 +102,20 @@ describe("Travel estimate: published counts and relocation", () => {
     expect(included).not.toMatch(/GSA/);
   });
 });
+
+describe("Travel estimate: weekends that publish days but no trip count", () => {
+  it("counts weekends from the published on-site days", () => {
+    const emba = fixture("fake-emba", {
+      residencyCount: null,
+      onsiteDaysPerYear: 20,
+      durationMonths: 12,
+      lodgingIncluded: false,
+      lodgingPerNightUsd: { min: 213, max: 365 },
+    });
+    const t = travelEstimate(emba, buenosAires);
+    // 20 days at 2 nights a weekend: 10 trips of 2 nights = 10 x (1,250 + 2 x 365)
+    expect(t).toMatchObject({ trips: 10, nightsPerTrip: 2, tripsEstimated: true });
+    expect(t.totalUsd).toBe(10 * (1250 + 2 * 365));
+    expect(t.notes.join(" ")).toMatch(/estimated from the 20 published on-site days/);
+  });
+});

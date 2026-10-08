@@ -64,7 +64,14 @@ export function travelEstimate(
     trips = (program.residencyCount as number) * years;
     nights = WEEKEND_NIGHTS_PER_TRIP;
     notes.push(`Nights per trip estimated at ${WEEKEND_NIGHTS_PER_TRIP}.`);
-  } else if (weekends && !count) {
+  } else if (weekends && days !== null) {
+    // No trip count, but the school publishes its on-site days: count weekends from those.
+    const perYear = Math.max(1, Math.ceil(days / WEEKEND_NIGHTS_PER_TRIP));
+    trips = perYear * years;
+    nights = days / perYear;
+    tripsEstimated = true;
+    notes.push(`Trip count estimated from the ${days} published on-site days a year.`);
+  } else if (weekends) {
     trips = WEEKEND_TRIPS_PER_YEAR * years;
     nights = WEEKEND_NIGHTS_PER_TRIP;
     tripsEstimated = true;

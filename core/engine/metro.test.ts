@@ -71,3 +71,50 @@ describe("City matching: city, state and country in one answer", () => {
     expect(sameMetro("Boston, MA, USA", boston)).toBe(true);
   });
 });
+
+describe("City matching: a qualifier that contradicts the program", () => {
+  const mit = fixture("fake-executive", {
+    city: "Cambridge",
+    metro: "boston",
+    state: "MA",
+    country: "US",
+  });
+  const sj = fixture("fake-executive", {
+    city: "San Jose",
+    metro: "sf_bay_area",
+    state: "CA",
+    country: "US",
+  });
+
+  it("does not match the same city name in another country", () => {
+    expect(sameMetro("Cambridge, UK", mit)).toBe(false);
+    expect(sameMetro("Cambridge, England", mit)).toBe(false);
+    expect(sameMetro("San José, Costa Rica", sj)).toBe(false);
+    expect(sameMetro("San Jose, CA, USA", sj)).toBe(true);
+  });
+
+  it("does not match the same city name in another state", () => {
+    expect(sameMetro("Cambridge, MD", mit)).toBe(false);
+    expect(sameMetro("Cambridge, MA", mit)).toBe(true);
+  });
+});
+
+describe("City matching: spelled-out states and no comma", () => {
+  const boston = fixture("fake-executive", { city: "Boston", metro: "boston" });
+  const dc = fixture("fake-executive", { city: "Washington", metro: "washington_dc" });
+
+  it("reads a full state name", () => {
+    expect(sameMetro("Cambridge, Massachusetts", boston)).toBe(true);
+    expect(sameMetro("Cambridge, Massachusetts, USA", boston)).toBe(true);
+    expect(sameMetro("Arlington, Virginia", dc)).toBe(true);
+  });
+
+  it("reads a state without a comma", () => {
+    expect(sameMetro("Boston MA", boston)).toBe(true);
+    expect(sameMetro("Cambridge Massachusetts", boston)).toBe(true);
+    expect(sameMetro("Washington DC", dc)).toBe(true);
+    expect(
+      sameMetro("New York", fixture("fake-executive", { city: "Brooklyn", metro: null })),
+    ).toBe(true);
+  });
+});
