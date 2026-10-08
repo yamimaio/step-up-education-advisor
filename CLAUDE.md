@@ -1,0 +1,27 @@
+# Step Up: rules for Claude Code
+
+Step Up is an AI advisor that recommends a leader's best next educational step. Read these first, in this order:
+
+- `docs/build-steps.md`: the approved build plan for steps 1 to 7 (files, versions, scripts, tests, "done when")
+- `docs/implementation-plan.md`: the approved design. Decisions D1 to D15 stand, and its section 12 wins wherever it differs from the build plan
+- `docs/build-plan.md`, `docs/day2-plan.md`, `docs/perplexity-program-prompts.md`, `docs/tools-and-models.md`: background
+
+## Rules
+
+1. **`core/` has no web or model code.** It never imports from `app/` or `server/`, nor from `next`, `react`, `@anthropic-ai/*` or Node built-ins. An ESLint rule enforces it; never disable it.
+2. **Tests never call the real Claude API.** They use the fake model adapter (`server/model/fake.ts`).
+3. **The API key lives only in `.env` as `MODEL_API_KEY`.** It is never committed, logged or sent to the browser. Only `server/model/anthropic.ts` reads it.
+4. **The server never logs message content.** Logs hold counts, statuses and error kinds only.
+5. **Nothing runs on the host except `git`, `gh` and `docker`.** Run every `npm`, `npx`, `node`, `tsx`, test, lint, build and dev server through `./run` (for example `./run npm test`). In `docs/build-steps.md`, `npm …` means `./run npm …`.
+6. **One GitHub issue per step, one PR per issue.** Each PR body starts with `Closes #N`. Work outside a step gets its own issue. Step 4 is one PR per program, each closing its own sub-issue.
+7. **The build runs on Sonnet 5.5.** Facts and numbers on cards come from program records and the engine, never from model text.
+8. Don't reopen approved decisions. Where the docs are silent, pick a default, record it in `docs/decisions.md` and say so in the PR.
+
+## Session workflow
+
+1. A builder session builds one step on branch `step-N-<slug>` and opens the PR.
+2. A different, fresh session reviews it with `/code-review --comment`. Step 3 and step 6 reviews use Opus 5.5; step 6 also gets `/security-review`. Step 4 data PRs skip the review.
+3. The builder session fixes the findings.
+4. After the merge, **start a new session for the next step.** This file and `docs/build-steps.md` carry the context; nothing may depend on chat history.
+
+Commits end with the Co-Authored-By line given in the session; PR bodies end with the "Generated with Claude Code" line.
