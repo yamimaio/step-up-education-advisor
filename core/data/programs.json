@@ -1,1 +1,168 @@
-[]
+[
+  {
+    "id": "wharton-emba-sf",
+    "name": "MBA Program for Executives",
+    "institution": "The Wharton School, University of Pennsylvania",
+    "category": "emba",
+    "credential": "MBA",
+    "format": "in_person",
+    "durationMonths": null,
+    "durationMaxMonths": null,
+    "credits": "19 course units",
+    "attendance": "recurring_weekends",
+    "onsiteNote": "every-other-weekend residential format",
+    "onsiteDaysPerYear": null,
+    "residencyCount": null,
+    "longestStretchDays": null,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "San Francisco",
+    "state": null,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 243000,
+    "tuitionPerCourseUsd": null,
+    "courseCount": null,
+    "tuitionIncludes": "Housing and dining for regular class weekends and for required modular courses; textbooks are not included.",
+    "lodgingIncluded": true,
+    "paymentOptions": ["installments"],
+    "minExperienceYears": 8,
+    "accreditation": null,
+    "cohortMedianExperienceYears": 13.5,
+    "cohortExperienceBasis": "average",
+    "cohortSeniority": null,
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "network": 4,
+      "depth": 4,
+      "practicality": 3,
+      "costValue": 3
+    },
+    "ratingNotes": {
+      "network": "Low evidence: Every-other-weekend residential attendance and an eight-year standard experience requirement support 4; incoming-cohort seniority and alumni size/access are not established, so 5 is unsupported.",
+      "depth": "Low evidence: An MBA requiring 19 course units supports a provisional master's-level 4; applied content and San Francisco faculty involvement are not established, and research/thesis evidence needed for 5 is missing.",
+      "practicality": "Low evidence: Required full-time employment and every-other-weekend attendance support a provisional 3 for work compatibility; workload, schedule flexibility and applied projects are not established.",
+      "costValue": "Low evidence: 3 is a provisional midpoint, not a verified peer-value assessment; 2027 tuition and duration and comparable-program prices are missing, while the $243,000 tuition and fees apply only to the 2026 intake."
+    },
+    "ratingLowEvidence": ["network", "depth", "practicality", "costValue"],
+    "figureNotes": {
+      "tuitionUsd": "Price for the class entering in 2026; the 2027 price is not published.",
+      "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "MBA Program for Executives",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://executivemba.wharton.upenn.edu/global-cohort/",
+        "quote": "University of Pennsylvania’s campus in Philadelphia",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "Executive MBA Class Profile",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "There is no difference in the degree earned by executive and full-time MBA students.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "every-other-weekend residential format",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "You must complete 19 course units at Wharton to earn your degree from our program.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "Executive MBA students are required to maintain full-time employment throughout the duration of the program.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "Philadelphia and San Francisco cohort members",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "minExperienceYears",
+        "url": "https://executivemba.wharton.upenn.edu/emba-application-requirements/",
+        "quote": "at least eight (8)",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Tuition and fees for the class entering in 2026 is $243,000 or $40,500 per academic term.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "Class of 2028",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/03/cal_52_SF_TY_V6_03192026-1.pdf",
+        "quote": "ACADEMIC CALENDAR: 2026–2028",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "attendance",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "every-other-weekend residential format",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Housing and dining for regular class weekends and for required modular courses.",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Program tuition is due in six equal installments.",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "an average of 13-14 years of professional experience",
+        "checkedOn": "2026-10-08"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["network_density", "industry_hub"]
+  }
+]
