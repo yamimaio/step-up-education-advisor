@@ -119,3 +119,12 @@ describe("Travel estimate: weekends that publish days but no trip count", () => 
     expect(t.notes.join(" ")).toMatch(/estimated from the 20 published on-site days/);
   });
 });
+
+describe("Travel estimate: a declined relocation answer", () => {
+  it("counts no recurring travel to a full-time program elsewhere, with a note", () => {
+    const mba = fixture("fake-mba");
+    const t = travelEstimate(mba, { ...buenosAires, relocate: null });
+    expect(t).toMatchObject({ kind: "none", totalUsd: 0 });
+    expect(t.notes.join(" ")).toMatch(/didn't say whether you'd relocate/);
+  });
+});

@@ -39,9 +39,14 @@ export function travelEstimate(
   if (local) {
     return { ...base, notes: ["The program is in your metro area, so no airfare or lodging."] };
   }
-  // A user who would move to attend a program that needs it is not commuting from home.
-  if (needsLocalPresence(program) && profile.relocate === true) {
-    return { ...base, notes: ["You'd relocate for this program, so no recurring travel."] };
+  // A user who would move (or hasn't said they wouldn't) to attend a program that needs them
+  // local is not commuting from home.
+  if (needsLocalPresence(program) && profile.relocate !== false) {
+    const note =
+      profile.relocate === true
+        ? "You'd relocate for this program, so no recurring travel."
+        : "You didn't say whether you'd relocate, so no recurring travel is counted.";
+    return { ...base, notes: [note] };
   }
 
   const months = program.durationMonths ?? program.durationMaxMonths;

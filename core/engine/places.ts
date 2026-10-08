@@ -58,14 +58,27 @@ export const US_STATES: Record<string, string> = {
 
 export const US_STATE_CODES: ReadonlySet<string> = new Set(Object.values(US_STATES));
 
-// A state written as a name or a code, as the lower-case code; null when it isn't a state.
-// "washington" alone is a city here, so only the code "wa" and the full "washington state"
-// read as that state.
-export function stateCode(normalized: string): string | null {
+// Common short forms of state names.
+const STATE_ABBREVIATIONS: Record<string, string> = {
+  mass: "ma",
+  penn: "pa",
+  calif: "ca",
+  conn: "ct",
+  tenn: "tn",
+  wash: "wa",
+  "washington state": "wa",
+  "d c": "dc",
+};
+
+// A state written as a name, a code or a common short form ("Mass.", "N.Y.", "D.C."), as the
+// lower-case code; null when it isn't a state. A bare "washington" is a city unless the caller
+// is reading a qualifier ("Seattle, Washington"), where it is the state.
+export function stateCode(normalized: string, asQualifier = false): string | null {
+  const squashed = normalized.replace(/ /g, "");
   if (US_STATE_CODES.has(normalized)) return normalized;
-  if (normalized === "washington state") return "wa";
-  if (normalized === "washington") return null;
-  return US_STATES[normalized] ?? null;
+  if (US_STATE_CODES.has(squashed)) return squashed;
+  if (normalized === "washington") return asQualifier ? "wa" : null;
+  return STATE_ABBREVIATIONS[normalized] ?? US_STATES[normalized] ?? null;
 }
 
 // Country names and common spellings to the two-letter ISO code the program records use.
@@ -120,5 +133,6 @@ export const COUNTRIES: Record<string, string> = {
   uae: "AE",
 };
 
-// Unknown country text stays as written (lower case), so it never equals an ISO code.
-export const countryCode = (normalized: string): string => COUNTRIES[normalized] ?? normalized;
+// A recognised country name or code as the ISO code; null for anything else (a province, a typo).
+export const countryCode = (normalized: string): string | null =>
+  COUNTRIES[normalized] ?? COUNTRIES[normalized.replace(/ /g, "")] ?? null;

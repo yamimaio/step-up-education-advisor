@@ -184,3 +184,16 @@ export const PROGRAM_CITY_METROS: Record<string, string> = {
   "san jose": "sf_bay_area",
   washington: "washington_dc",
 };
+
+// States each metro key covers, so a user's written state can rule out a same-named city
+// elsewhere ("Manhattan, KS" is not Manhattan, New York).
+export const METRO_STATES: Record<string, readonly string[]> = {
+  boston: ["ma", "nh"],
+  sf_bay_area: ["ca"],
+  new_york: ["ny", "nj", "ct"],
+  chicago: ["il", "in", "wi"],
+  washington_dc: ["dc", "va", "md"],
+  philadelphia: ["pa", "nj", "de"],
+  new_haven: ["ct"],
+  los_angeles: ["ca"],
+};

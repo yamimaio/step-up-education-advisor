@@ -1,4 +1,4 @@
-import { AMBIGUOUS_HOME_CITIES, METROS, PROGRAM_CITY_METROS } from "./constants";
+import { AMBIGUOUS_HOME_CITIES, METROS, METRO_STATES, PROGRAM_CITY_METROS } from "./constants";
 import { countryCode, stateCode } from "./places";
 import type { Program } from "../schema/program";
 
@@ -20,11 +20,14 @@ interface Home {
   name: string;
   whole: string;
   states: string[];
+  // Recognised countries only. A US state implies "US". A province or an unrecognised word is
+  // neutral: it never rules a match out.
   countries: string[];
 }
 
-// The user's city is free text: "Boston", "Boston, MA", "Cambridge, Massachusetts, USA" or
-// "Boston MA". Split off the city and sort the rest into US states and countries.
+// The user's city is free text: "Boston", "Boston, MA", "Cambridge, Massachusetts, USA",
+// "Washington, D.C.", "Brooklyn, NY 11201" or "Boston MA". Split off the city and sort the rest
+// into US states and countries.
 function parseHome(homeCity: string): Home {
   const parts = homeCity
     .split(",")
@@ -37,7 +40,7 @@ function parseHome(homeCity: string): Home {
     const words = name.split(" ");
     for (const n of [3, 2, 1]) {
       const tail = words.slice(-n).join(" ");
-      if (words.length > n && stateCode(tail)) {
+      if (words.length > n && stateCode(tail, true)) {
         name = words.slice(0, -n).join(" ");
         qualifiers = [tail];
         break;
@@ -46,22 +49,36 @@ function parseHome(homeCity: string): Home {
   }
   const states: string[] = [];
   const countries: string[] = [];
-  for (const q of qualifiers) {
-    const state = stateCode(q);
+  for (const raw of qualifiers) {
+    // Drop a ZIP or postal number: "ny 11201" is "ny".
+    const q = raw
+      .split(" ")
+      .filter((w) => !/^\d+$/.test(w))
+      .join(" ");
+    if (q === "") continue;
+    const state = stateCode(q, true);
+    const country = countryCode(q);
     if (state) states.push(state);
-    else countries.push(countryCode(q));
+    else if (country) countries.push(country);
   }
+  if (states.length > 0) countries.push("US");
   return { name, whole: normalizeCity(homeCity), states, countries };
 }
 
 // A metro for the user's city. Names shared by several well-known cities (Cambridge,
 // Arlington, Washington, San Jose) only resolve with a state, because the profile has no
-// structured location yet.
+// structured location yet. A written state must belong to the metro it resolves to.
 function homeKey(home: Home): string | null {
-  const qualified = home.states.map((s) => METROS[`${home.name} ${s}`]).find((k) => k);
-  if (METROS[home.whole]) return METROS[home.whole] ?? null;
-  if (qualified) return qualified;
-  return AMBIGUOUS_HOME_CITIES.includes(home.name) ? null : (METROS[home.name] ?? null);
+  const key =
+    METROS[home.whole] ??
+    home.states.map((s) => METROS[`${home.name} ${s}`]).find((k) => k) ??
+    (AMBIGUOUS_HOME_CITIES.includes(home.name) ? undefined : METROS[home.name]);
+  if (!key) return null;
+  const covered = METRO_STATES[key];
+  if (home.states.length > 0 && covered && !home.states.some((s) => covered.includes(s))) {
+    return null;
+  }
+  return key;
 }
 
 // True when the user's home city is the program's city or in the same metro (DQ18 plus the

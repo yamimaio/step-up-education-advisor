@@ -118,3 +118,25 @@ describe("City matching: spelled-out states and no comma", () => {
     ).toBe(true);
   });
 });
+
+describe("City matching: the round 3 probe table", () => {
+  const prog = (city: string, state: string | null, country: string, metro: string | null) =>
+    fixture("fake-executive", { city, state, country, metro });
+
+  it.each([
+    ["Washington, D.C.", prog("Washington", "DC", "US", null), true],
+    ["New York, N.Y.", prog("New York", "NY", "US", null), true],
+    ["Seattle, Washington", prog("Seattle", "WA", "US", null), true],
+    ["Seattle Washington", prog("Seattle", "WA", "US", null), true],
+    ["Toronto, Ontario, Canada", prog("Toronto", "ON", "CA", null), true],
+    ["Sao Paulo, SP, Brazil", prog("Sao Paulo", "SP", "BR", null), true],
+    ["Brooklyn, NY 11201", prog("New York", "NY", "US", null), true],
+    ["Cambridge, MA", prog("Cambridge", null, "GB", null), false],
+    ["Manhattan, KS", prog("New York", "NY", "US", null), false],
+    ["Brooklyn, MI", prog("New York", "NY", "US", null), false],
+    ["Oakland, MD", prog("San Francisco", "CA", "US", null), false],
+    ["Brooklyn, NY", prog("New York", "NY", "US", null), true],
+  ])("%s", (home, program, expected) => {
+    expect(sameMetro(home, program)).toBe(expected);
+  });
+});
