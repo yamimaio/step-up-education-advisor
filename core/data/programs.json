@@ -1,1 +1,172 @@
-[]
+[
+  {
+    "id": "mit-tlp",
+    "name": "Blended Professional Certificate: Technology Leadership Program",
+    "institution": "MIT Professional Education",
+    "category": "executive",
+    "credential": "Certificate of Completion from MIT Professional Education",
+    "format": "hybrid",
+    "durationMonths": 8,
+    "durationMaxMonths": null,
+    "credits": "42 CEUs",
+    "attendance": "residencies",
+    "onsiteNote": "3 residential weeks and 14+ live online sessions",
+    "onsiteDaysPerYear": null,
+    "residencyCount": 3,
+    "longestStretchDays": null,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "Cambridge",
+    "state": "Massachusetts",
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 28000,
+    "tuitionPerCourseUsd": null,
+    "courseCount": null,
+    "tuitionIncludes": null,
+    "lodgingIncluded": null,
+    "paymentOptions": null,
+    "minExperienceYears": 6,
+    "accreditation": [],
+    "cohortMedianExperienceYears": null,
+    "cohortExperienceBasis": null,
+    "cohortSeniority": "Technology leaders and experienced practitioners; relevant roles include C-level positions, Heads of Engineering/Technology, engineering managers, product managers, team leaders, senior functional managers, and delivery heads.",
+    "lodgingPerNightUsd": {
+      "min": 213,
+      "max": 365
+    },
+    "ratings": {
+      "network": 4,
+      "depth": 3,
+      "practicality": 3,
+      "costValue": 3
+    },
+    "ratingNotes": {
+      "network": "Three residential weeks, 14+ live online sessions, a senior-leader target audience, and Professional Education alumni access support 4; network size and activity are not established for 5.",
+      "depth": "Eight months, 42 CEUs, 20+ MIT faculty, and strategy projects support a substantial non-degree program; graduate academic credit and research/thesis requirements are not published.",
+      "practicality": "Low evidence: hybrid delivery, applied projects, and a work-compatibility testimonial support 3; weekly workload, schedule flexibility, and projects on participants' own organizations are not established.",
+      "costValue": "Low evidence: $28,000 covers an eight-month completion-certificate program with eligibility for 42 CEUs; 3 is a provisional midpoint because no comparable tuition benchmarks establish relative value."
+    },
+    "ratingLowEvidence": ["practicality", "costValue"],
+    "figureNotes": {},
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Blended Professional Certificate: Technology Leadership Program",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "MIT Professional Education",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "All the participants who successfully complete Technology Leadership Program will receive a Certificate of Completion from MIT Professional Education.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Location MIT Campus & Live-Online",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Program Length 8 Months",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "CEUs 42",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "Experience a unique blended learning journey featuring 3 residential weeks and 14+ live online sessions",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "3 residential weeks",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "3 residential weeks",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "I also was looking for a program which was an extended program and a hybrid ... as well as I wouldn't have to stop my work or you could accommodate according to my schedule.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Program Fee $28,000",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "The program fee is USD 28,000",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "minExperienceYears",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "A minimum of 6+ years of work experience in functional, technical, or business roles.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortSeniority",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Relevant roles include: C-level positions including CEOs, CTOs, COOs, CIOs, Chief Architects, etc.; Head of Engineering, Head of Technology; Engineering managers, product managers, and team leaders with a significant team size and budget responsibility.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "lodgingPerNightUsd",
+        "url": "https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&city=Boston&state=MA&fiscal_year=2027",
+        "quote": "Boston / Cambridge ... $365 [October], $213 [November–February], $305 [March–August], $365 [September].",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["network_density", "industry_hub"]
+  }
+]
