@@ -59,6 +59,10 @@ describe("core/ boundary", () => {
     ["export const b = Buffer.from('x');", "Buffer"],
     ["export const d = __dirname;", "__dirname"],
     ["export const k = globalThis.process.env;", "globalThis.process"],
+    ["export const k = globalThis['process'];", "globalThis['process']"],
+    ["const g = globalThis;\nexport const k = g.process;", "aliased globalThis"],
+    ['import x from "events/";\nexport const y = x;', "built-in name with a trailing slash"],
+    ['import x from "fs/";\nexport const y = x;', "fs with a trailing slash"],
   ])("rejects %s (%s)", async (code) => {
     const messages = await lint("core/__probe__.ts", `${code}\nexport const y = x;\n`);
     expect(messages.length).toBeGreaterThan(0);
@@ -70,14 +74,6 @@ describe("core/ boundary", () => {
       'import x from "../../server/index";\nexport const y = x;\n',
     );
     expect(messages.length).toBeGreaterThan(0);
-  });
-
-  it("allows npm packages that share a built-in's name when imported with a trailing slash", async () => {
-    const messages = await lint(
-      "core/__probe__.ts",
-      'import e from "events/";\nexport const y = e;\n',
-    );
-    expect(messages).toEqual([]);
   });
 
   it("does not mistake local files named like built-ins for built-ins", async () => {

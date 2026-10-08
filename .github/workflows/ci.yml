@@ -29,13 +29,17 @@ jobs:
       - run: npm run build
         env:
           MODEL_API_KEY: ci-canary-not-a-key
-      # The canary must never appear in client assets or prerendered pages (CLAUDE.md rule 3).
+      # The canary must never appear in the build output (CLAUDE.md rule 3). Every directory
+      # must exist and grep must exit 0 or 1, so a layout change can't make this pass silently.
       - name: Check the key canary is not in the build output
         run: |
-          test -d .next/static
-          if grep -rl ci-canary-not-a-key .next/static .next/server/app; then
-            echo "MODEL_API_KEY leaked into the build output"; exit 1
-          fi
+          for d in .next/static .next/server .next/standalone; do
+            test -d "$d" || { echo "missing $d: cannot check for a key leak"; exit 1; }
+          done
+          rc=0
+          grep -rlF -- ci-canary-not-a-key .next/static .next/server .next/standalone || rc=$?
+          if [ "$rc" -eq 0 ]; then echo "MODEL_API_KEY leaked into the build output"; exit 1; fi
+          if [ "$rc" -ne 1 ]; then echo "grep failed (exit $rc)"; exit 1; fi
 
   docker:
     runs-on: ubuntu-latest

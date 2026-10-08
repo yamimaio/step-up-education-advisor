@@ -16,8 +16,10 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     working_dir: /repo
-    # On Linux hosts set UID/GID (export UID GID) so files written to the repo aren't root-owned.
-    # Docker Desktop on macOS maps ownership already, so the default is fine there.
+    # Linux hosts: to avoid root-owned files in the repo, `export UID GID`, then once run
+    #   docker compose run --rm -u 0 dev chown -R "$UID:$GID" node_modules .next
+    # (the named volumes below are created root-owned). Docker Desktop on macOS maps ownership
+    # already, so the default is fine there.
     user: "${UID:-0}:${GID:-0}"
     command: npm run dev -- --hostname 0.0.0.0
     ports:

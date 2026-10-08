@@ -24,6 +24,10 @@ Run any command in the dev container with `./run`:
 ./run --ports npm run dev   # same as `docker compose up dev`, publishing port 3000
 ```
 
+On Linux, files the container writes are root-owned unless you run it as yourself: `export UID GID`, then once
+`docker compose run --rm -u 0 dev chown -R "$UID:$GID" node_modules .next`. Docker Desktop on macOS needs nothing.
+Docker Compose 2.24 or newer is required.
+
 ## Layout
 
 - `core/`: data, schemas, engine and advisor rules. No web or model code; it never imports `app/` or `server/` (enforced by ESLint)
