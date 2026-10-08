@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/ && node .next/standalone/server.js",
+    "postbuild": "mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/ && { [ ! -d public ] || cp -r public .next/standalone/; }",
+    "start": "node .next/standalone/server.js",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

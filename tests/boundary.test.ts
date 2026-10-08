@@ -3,17 +3,40 @@ import { describe, expect, it } from "vitest";
 
 const eslint = new ESLint();
 
+const RESTRICTION_RULES = new Set([
+  "no-restricted-imports",
+  "no-restricted-syntax",
+  "import/no-restricted-paths",
+]);
+
+// Returns only the boundary-rule messages, but first insists the file was really linted:
+// a parse error, an ignored file or a broken config must fail the test, not look like "clean".
 async function lint(filePath: string, code: string) {
   const [result] = await eslint.lintText(code, { filePath });
-  return (
-    result?.messages.filter(
-      (m) =>
-        m.ruleId === "no-restricted-imports" ||
-        m.ruleId === "no-restricted-syntax" ||
-        m.ruleId === "import/no-restricted-paths",
-    ) ?? []
-  );
+  if (!result) throw new Error(`ESLint returned no result for ${filePath}`);
+  // Messages without a rule id are parse errors or "file ignored" warnings.
+  const broken = result.messages.filter((m) => m.fatal || m.ruleId === null);
+  if (broken.length) {
+    throw new Error(`${filePath} was not linted properly: ${JSON.stringify(broken)}`);
+  }
+  return result.messages.filter((m) => m.ruleId !== null && RESTRICTION_RULES.has(m.ruleId));
 }
+
+describe("lint helper", () => {
+  it("throws on a parse error instead of reporting a clean file", async () => {
+    await expect(lint("core/__probe__.ts", "import {{{ nope")).rejects.toThrow();
+  });
+
+  it("control: a known-bad import fails in the same setup the clean cases use", async () => {
+    const bad = await lint(
+      "core/__probe__.ts",
+      'import x from "@app/page";\nexport const y = x;\n',
+    );
+    const good = await lint("core/__probe__.ts", 'import { z } from "zod";\nexport const y = z;\n');
+    expect(bad.length).toBeGreaterThan(0);
+    expect(good).toEqual([]);
+  });
+});
 
 describe("core/ boundary", () => {
   it.each([
