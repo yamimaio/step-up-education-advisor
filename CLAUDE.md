@@ -21,7 +21,23 @@ Step Up is an AI advisor that recommends a leader's best next educational step. 
 
 1. A builder session builds one step on branch `step-N-<slug>` and opens the PR.
 2. A different, fresh session reviews it with `/code-review --comment`. Step 3 and step 6 reviews use Opus 5.5; step 6 also gets `/security-review`. Step 4 data PRs skip the review.
-3. The builder session fixes the findings.
+3. The builder session fixes the High and Medium findings. Low findings are filed as issues (see Review policy).
 4. After the merge, **start a new session for the next step.** This file and `docs/build-steps.md` carry the context; nothing may depend on chat history.
 
 Commits end with the Co-Authored-By line given in the session; PR bodies end with the "Generated with Claude Code" line.
+
+## Review policy
+
+A review session follows this whatever the command arguments. The goal is a clear stop, not zero findings.
+
+**Report only findings with a concrete failure scenario** (specific input or state, wrong result). No "could be hardened" without one. Start each finding's summary with its severity tag.
+
+- `[HIGH]`: breaks a rule above in practice, leaks the API key or message content, or is a correctness bug on the main path. Blocks the merge.
+- `[MEDIUM]`: a real bug or rule gap reachable with realistic inputs or setups. Blocks the merge.
+- `[LOW]`: hardening, edge cases needing contrived inputs, style, nice-to-haves. Never blocks.
+
+**Verdict.** End every review with one line: `APPROVED` (no High or Medium findings) or `CHANGES REQUESTED` (list the blockers). When the review posts with `--comment`, the verdict goes in the summary comment.
+
+**Low findings** become one GitHub issue each, labelled `low-priority`, linked from the PR. They are not fixed in the PR.
+
+**Round cap.** At most two review rounds per PR. In the second round, review only whether the previous High and Medium fixes work and whether they introduced new High or Medium problems. Anything else new and not High goes to a `low-priority` issue. Approve once none remain.
