@@ -3,7 +3,7 @@
 Oct 6, 2026 · @Yami
 
 
-> Update Oct 8: decisions refined during the Day 2 review (hours as a range, payment "no preference", the relocate and travel rule, PhD out of scope, program research in Perplexity) live in section 12 of day2-implementation-plan.md, which wins where the two differ. Tools and models are logged in tools-and-models.md.
+> Update Oct 8: decisions refined during the Day 2 review (hours as a range, payment "no preference", the relocate and travel rule, PhD out of scope, program research in Perplexity) live in section 12 of `docs/implementation-plan.md`, which wins where the two differ. Tools and models are logged in `docs/tools-and-models.md`.
 
 ## Summary
 
