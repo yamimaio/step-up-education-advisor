@@ -39,8 +39,30 @@ const config = [
         },
         "core/ must stay free of web, model and Node code (see CLAUDE.md rule 1).",
       ),
+      // Node globals: core/ must not read process.env (the API key lives in server/model only).
+      "no-restricted-globals": [
+        "error",
+        ...[
+          "process",
+          "Buffer",
+          "global",
+          "__dirname",
+          "__filename",
+          "require",
+          "module",
+          "exports",
+        ].map((name) => ({
+          name,
+          message: "core/ must not use Node globals (see CLAUDE.md rules 1 and 3).",
+        })),
+      ],
       "no-restricted-syntax": [
         "error",
+        {
+          selector:
+            "MemberExpression[object.name='globalThis'][property.name=/^(process|Buffer)$/]",
+          message: "core/ must not reach Node globals through globalThis.",
+        },
         {
           selector: "CallExpression[callee.name='require']",
           message: "core/ uses ES imports only; require() would bypass the boundary rules.",

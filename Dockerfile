@@ -12,8 +12,8 @@ RUN npm run build
 FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
+# The build's postbuild step puts .next/static (and public/) inside the standalone folder.
 COPY --from=build --chown=node:node /app/.next/standalone ./
-COPY --from=build --chown=node:node /app/.next/static ./.next/static
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

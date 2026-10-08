@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/ && { [ ! -d public ] || cp -r public .next/standalone/; }",
+    "postbuild": "node scripts/postbuild.mjs",
     "start": "node .next/standalone/server.js",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",

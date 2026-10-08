@@ -7,6 +7,7 @@ const RESTRICTION_RULES = new Set([
   "no-restricted-imports",
   "no-restricted-syntax",
   "import/no-restricted-paths",
+  "no-restricted-globals",
 ]);
 
 // Returns only the boundary-rule messages, but first insists the file was really linted:
@@ -54,6 +55,10 @@ describe("core/ boundary", () => {
     ['import x from "fs/promises";', "bare built-in fs/promises"],
     ['const x = require("../server/index");\nexport const z = x;', "require()"],
     ['export const x = import("../server/index");', "dynamic import"],
+    ["export const k = process.env.MODEL_API_KEY;", "process.env"],
+    ["export const b = Buffer.from('x');", "Buffer"],
+    ["export const d = __dirname;", "__dirname"],
+    ["export const k = globalThis.process.env;", "globalThis.process"],
   ])("rejects %s (%s)", async (code) => {
     const messages = await lint("core/__probe__.ts", `${code}\nexport const y = x;\n`);
     expect(messages.length).toBeGreaterThan(0);
@@ -65,6 +70,14 @@ describe("core/ boundary", () => {
       'import x from "../../server/index";\nexport const y = x;\n',
     );
     expect(messages.length).toBeGreaterThan(0);
+  });
+
+  it("allows npm packages that share a built-in's name when imported with a trailing slash", async () => {
+    const messages = await lint(
+      "core/__probe__.ts",
+      'import e from "events/";\nexport const y = e;\n',
+    );
+    expect(messages).toEqual([]);
   });
 
   it("does not mistake local files named like built-ins for built-ins", async () => {
