@@ -21,7 +21,7 @@ Step Up is an AI advisor that recommends a leader's best next educational step. 
 
 1. A builder session builds one step on branch `step-N-<slug>` and opens the PR.
 2. A different, fresh session reviews it with `/code-review --comment`. Step 3 and step 6 reviews use Opus 5.5; step 6 also gets `/security-review`. Step 4 data PRs skip the review.
-3. The builder session fixes the findings: all of them after the first review, High and Medium after the second (see Review policy).
+3. The builder session fixes the findings: all of them after the first review, High and Medium after later ones (see Review policy).
 4. After the merge, **start a new session for the next step.** This file and `docs/build-steps.md` carry the context; nothing may depend on chat history.
 
 Commits end with the Co-Authored-By line given in the session; PR bodies end with the "Generated with Claude Code" line.
@@ -38,8 +38,8 @@ A review session follows this whatever the command arguments. The goal is a clea
 
 **Round 1.** The builder fixes every finding, whatever its severity. A finding the builder shows to be wrong is answered in the PR instead of fixed.
 
-**Round 2.** Review only whether the round 1 fixes work and whether they introduced new problems. The builder fixes High and Medium findings. Low findings become one GitHub issue each, labelled `low-priority`, linked from the PR, and are not fixed in the PR.
+**Later rounds.** Each is a complete review of the PR, not only a check of the previous fixes. It also confirms that the previous High and Medium fixes work and did not introduce new problems. The builder fixes High and Medium findings. New Low findings do not block: each becomes one GitHub issue, labelled `low-priority`, linked from the PR, and is not fixed in the PR.
 
-**Round cap.** At most two review rounds per PR. Approve once no blocking finding remains.
+**Stopping.** Reviews repeat until a round finds no new High or Medium findings. There is no cap on rounds.
 
-**Verdict.** End every review with one line. Round 1: `APPROVED` (no findings) or `CHANGES REQUESTED` (list them). Round 2: `APPROVED` (no High or Medium findings) or `CHANGES REQUESTED` (list the blockers). When the review posts with `--comment`, the verdict goes in the summary comment.
+**Verdict.** End every review with one line. Round 1: `APPROVED` (no findings) or `CHANGES REQUESTED` (list them). Later rounds: `APPROVED` (no High or Medium findings) or `CHANGES REQUESTED` (list the blockers). When the review posts with `--comment`, the verdict goes in the summary comment.
