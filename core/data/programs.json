@@ -1,1 +1,204 @@
-[]
+[
+  {
+    "id": "harvard-ext-org-behavior",
+    "name": "Organizational Behavior Graduate Certificate (Online)",
+    "institution": "Harvard Extension School",
+    "category": "certificate",
+    "credential": "Graduate Certificate",
+    "format": "online",
+    "durationMonths": 8,
+    "durationMaxMonths": null,
+    "credits": null,
+    "attendance": "none",
+    "onsiteNote": null,
+    "onsiteDaysPerYear": 0,
+    "residencyCount": 0,
+    "longestStretchDays": 0,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": null,
+    "state": null,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 14320,
+    "tuitionPerCourseUsd": 3580,
+    "courseCount": 4,
+    "tuitionIncludes": "Tuition for four courses at the published 2026–27 rate of $3,580 per course. Harvard states that books, course materials, supplies, equipment, and certain transaction-related fees may be additional; lodging and meals are not included.",
+    "lodgingIncluded": null,
+    "paymentOptions": ["installments", "employer_sponsorship", "loans", "scholarships"],
+    "minExperienceYears": null,
+    "accreditation": [],
+    "cohortMedianExperienceYears": null,
+    "cohortExperienceBasis": null,
+    "cohortSeniority": "Select certificate-earner titles published by the school: Business Analyst, Customer Success Manager, Director of Operations, Program Manager, Principal, and Vice President; the school does not say these titles represent a majority.",
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "network": 3,
+      "depth": 3,
+      "practicality": 4,
+      "costValue": 4
+    },
+    "ratingNotes": {
+      "network": "Online synchronous instruction is available, and certificate earners receive affiliate Harvard Extension Alumni Association membership; no in-person time is required, while a fixed cohort, seniority mix and alumni activity are not established (low evidence).",
+      "depth": "Four required graduate-credit courses meet the credit-bearing certificate tier; featured faculty are identified, but total credit hours and a research/thesis requirement are not published.",
+      "practicality": "Part-time study compatible with full-time work, an 8-month–3-year completion window, online delivery and applied leadership practice support 4 rather than 5; participant-organization projects and program-specific weekly workload are not documented (low evidence).",
+      "costValue": "Tuition is $14,320 for four graduate-credit courses over 8 months–3 years; the research includes a school-published comparison of $3,580 per course versus $5,476 at peer institutions, supporting favorable value, but peer duration and credential comparability are not documented (low evidence)."
+    },
+    "ratingLowEvidence": ["network", "practicality", "costValue"],
+    "figureNotes": {},
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Organizational Behavior Graduate Certificate (Online)",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Institution Harvard Extension School",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Program Type Graduate Certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Program Type Graduate Certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Format Online",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Finish in 8 Months – 3 Years",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Complete the four certificate courses for graduate credit.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://extension.harvard.edu/about/faq/",
+        "quote": "All graduate certificates may be completed entirely through online education.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://extension.harvard.edu/about/faq/",
+        "quote": "All graduate certificates may be completed entirely through online education.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "The Organizational Behavior Graduate Certificate includes four online courses",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://extension.harvard.edu/academics/graduate-certificates/",
+        "quote": "The courses can be completed on a part-time basis, allowing many to continue working full time.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "country",
+        "url": "https://extension.harvard.edu/registration-admissions/for-students/support-and-services/sexual-assault-and-harassment-resources/",
+        "quote": "51 Brattle Street Cambridge, MA 02138",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Tuition $14,320",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://extension.harvard.edu/paying-for-school/",
+        "quote": "some courses may require additional lab fees or the purchase of specific books and materials relevant to that class",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/",
+        "quote": "These interest-free plans allow you to pay your tuition in four installments.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/harvard-employees/",
+        "quote": "You can use TAP to pursue an undergraduate or graduate degree or certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/",
+        "quote": "You may consider applying for a credit-based private student loan",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/",
+        "quote": "Limited scholarship funds are available for non-admitted students at Harvard Extension School.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortSeniority",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "They hold such titles as: Business Analyst ... Director of Operations ... Principal ... Vice President",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "courseCount",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "The Organizational Behavior Graduate Certificate includes four online courses",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionPerCourseUsd",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Tuition $3,580 per course",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["travel_ease", "affordability"]
+  }
+]
