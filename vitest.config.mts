@@ -13,6 +13,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // The boundary tests load the full ESLint + Next config on first use, which is slow when cold.
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     include: ["**/*.test.{ts,tsx}"],
     exclude: ["node_modules/**", ".next/**"],
   },

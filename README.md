@@ -21,6 +21,7 @@ Run any command in the dev container with `./run`:
 ```sh
 ./run npm run ci      # lint, typecheck, format check, tests
 ./run npm test
+./run --ports npm run dev   # same as `docker compose up dev`, publishing port 3000
 ```
 
 ## Layout

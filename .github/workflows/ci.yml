@@ -38,12 +38,14 @@ jobs:
       - name: Smoke test the image
         run: |
           docker run -d --name step-up -p 3000:3000 step-up
+          trap 'docker logs step-up; docker rm -f step-up' EXIT
+          ready=
           for i in $(seq 1 20); do
-            curl -fsS http://localhost:3000/ -o page.html && break
+            if curl -fsS http://localhost:3000/ -o page.html; then ready=1; break; fi
             sleep 1
           done
+          [ -n "$ready" ] || { echo "server never became ready"; exit 1; }
           grep -q "Step Up" page.html
-          css=$(grep -o '/_next/static/[^"]*\.css' page.html | head -1)
+          css=$(grep -o '/_next/static/[^"]*\.css' page.html | head -1 || true)
+          [ -n "$css" ] || { echo "no stylesheet link found in the page"; exit 1; }
           curl -fsS "http://localhost:3000$css" -o /dev/null
-          docker logs step-up
-          docker rm -f step-up

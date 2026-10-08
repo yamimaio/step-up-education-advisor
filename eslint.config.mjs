@@ -5,19 +5,17 @@ import nextTypescript from "eslint-config-next/typescript";
 // Every Node built-in, bare and node:-prefixed (exact names, so "../lib/util" is still fine).
 const nodeBuiltins = builtinModules.flatMap((name) => [name, `node:${name}`]);
 
-// Regexes (not globs) so that "react-dom/server" isn't mistaken for the server/ directory.
-const appPaths = [String.raw`^@app(/|$)`, String.raw`^(\.{1,2}/)+(.*/)?app(/|$)`];
-const serverPaths = [String.raw`^@server(/|$)`, String.raw`^(\.{1,2}/)+(.*/)?server(/|$)`];
-
-const ban = ({ regex = [], group = [], names = [] }, message) => [
+// Package bans are by name. Directory boundaries use import/no-restricted-paths below,
+// which resolves the real path (so react-dom/server and core/server/ are not confused
+// with the top-level server/ directory).
+const ban = ({ group = [], names = [] }, message) => [
   "error",
-  {
-    paths: names.map((name) => ({ name, message })),
-    patterns: [
-      ...(regex.length ? [{ regex: regex.join("|"), message }] : []),
-      ...(group.length ? [{ group, message }] : []),
-    ],
-  },
+  { paths: names.map((name) => ({ name, message })), patterns: [{ group, message }] },
+];
+
+const zones = (target, froms, message) => [
+  "error",
+  { zones: froms.map((from) => ({ target, from, message })) },
 ];
 
 const config = [
@@ -29,9 +27,13 @@ const config = [
     // core/ has no web or model code and never imports app/ or server/.
     files: ["core/**/*.{ts,tsx}"],
     rules: {
+      "import/no-restricted-paths": zones(
+        "./core",
+        ["./app", "./server"],
+        "core/ must not import from app/ or server/ (see CLAUDE.md rule 1).",
+      ),
       "no-restricted-imports": ban(
         {
-          regex: [...appPaths, ...serverPaths],
           group: ["next/*", "react/*", "react-dom/*", "@anthropic-ai/*", "node:*"],
           names: ["next", "react", "react-dom", ...nodeBuiltins],
         },
@@ -54,7 +56,11 @@ const config = [
   {
     files: ["server/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": ban({ regex: appPaths }, "server/ must not import from app/."),
+      "import/no-restricted-paths": zones(
+        "./server",
+        ["./app"],
+        "server/ must not import from app/.",
+      ),
     },
   },
   {
@@ -62,7 +68,11 @@ const config = [
     files: ["app/**/*.{ts,tsx}"],
     ignores: ["app/api/**"],
     rules: {
-      "no-restricted-imports": ban({ regex: serverPaths }, "Browser code must not import server/."),
+      "import/no-restricted-paths": zones(
+        "./app",
+        ["./server"],
+        "Browser code must not import server/.",
+      ),
     },
   },
   {

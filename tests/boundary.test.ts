@@ -7,15 +7,18 @@ async function lint(filePath: string, code: string) {
   const [result] = await eslint.lintText(code, { filePath });
   return (
     result?.messages.filter(
-      (m) => m.ruleId === "no-restricted-imports" || m.ruleId === "no-restricted-syntax",
+      (m) =>
+        m.ruleId === "no-restricted-imports" ||
+        m.ruleId === "no-restricted-syntax" ||
+        m.ruleId === "import/no-restricted-paths",
     ) ?? []
   );
 }
 
 describe("core/ boundary", () => {
   it.each([
-    ['import x from "../server/x";', "relative server import"],
-    ['import x from "@server/x";', "aliased server import"],
+    ['import x from "../server/index";', "relative server import"],
+    ['import x from "@server/index";', "aliased server import"],
     ['import x from "../app/page";', "relative app import"],
     ['import x from "@app/page";', "aliased app import"],
     ['import x from "@anthropic-ai/sdk";', "model SDK"],
@@ -26,10 +29,18 @@ describe("core/ boundary", () => {
     ['import x from "http";', "bare built-in http"],
     ['import x from "path/posix";', "bare built-in subpath"],
     ['import x from "fs/promises";', "bare built-in fs/promises"],
-    ['const x = require("../server/x");\nexport const z = x;', "require()"],
-    ['export const x = import("../server/x");', "dynamic import"],
+    ['const x = require("../server/index");\nexport const z = x;', "require()"],
+    ['export const x = import("../server/index");', "dynamic import"],
   ])("rejects %s (%s)", async (code) => {
     const messages = await lint("core/__probe__.ts", `${code}\nexport const y = x;\n`);
+    expect(messages.length).toBeGreaterThan(0);
+  });
+
+  it("rejects a relative server import from a subfolder of core/", async () => {
+    const messages = await lint(
+      "core/engine/__probe__.ts",
+      'import x from "../../server/index";\nexport const y = x;\n',
+    );
     expect(messages.length).toBeGreaterThan(0);
   });
 
@@ -62,7 +73,7 @@ describe("browser and server boundaries", () => {
   it.each(["app/components/__probe__.tsx", "app/page.tsx", "app/chat/__probe__.tsx"])(
     "keeps %s away from server/",
     async (file) => {
-      const messages = await lint(file, 'import x from "@server/tools";\nexport const y = x;\n');
+      const messages = await lint(file, 'import x from "@server/index";\nexport const y = x;\n');
       expect(messages.length).toBeGreaterThan(0);
     },
   );
@@ -70,7 +81,7 @@ describe("browser and server boundaries", () => {
   it("lets app/api import server/", async () => {
     const messages = await lint(
       "app/api/chat/route.ts",
-      'import x from "@server/tools";\nexport const y = x;\n',
+      'import x from "@server/index";\nexport const y = x;\n',
     );
     expect(messages).toEqual([]);
   });
