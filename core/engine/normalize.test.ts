@@ -71,3 +71,19 @@ describe("Declined fields outside the limits", () => {
     expect(profileGaps).toEqual(["homeCity", "airfareRange"]);
   });
 });
+
+describe("A declined career goal", () => {
+  it("is the neutral 'step up', so grow-in-role adds no bonus", () => {
+    const { profile } = applyDeclinedDefaults(
+      makeProfile({
+        careerGoal: { kind: "grow_in_role", description: "placeholder" },
+        declined: ["careerGoal"],
+      }),
+    );
+    expect(profile.careerGoal.kind).toBe("step_up");
+    const kept = applyDeclinedDefaults(
+      makeProfile({ careerGoal: { kind: "grow_in_role", description: "Lead better" } }),
+    ).profile;
+    expect(kept.careerGoal.kind).toBe("grow_in_role");
+  });
+});

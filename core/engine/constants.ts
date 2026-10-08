@@ -133,6 +133,12 @@ export const WEEKEND_NIGHTS_PER_TRIP = 2;
 // `metro` key; either is looked up here. Extend as the dataset grows.
 export const METROS: Record<string, string> = {
   boston: "boston",
+  nyc: "new_york",
+  sf: "sf_bay_area",
+  la: "los_angeles",
+  dc: "washington_dc",
+  "d c": "washington_dc",
+  philly: "philadelphia",
   "san francisco": "sf_bay_area",
   oakland: "sf_bay_area",
   berkeley: "sf_bay_area",

@@ -61,6 +61,10 @@ function parseHome(homeCity: string): Home {
     if (state) states.push(state);
     else if (country) countries.push(country);
   }
+  // A written non-US country decides: "Perth, WA, Australia" is not a US state. Otherwise a US
+  // state implies the US.
+  if (countries.some((c) => c !== "US"))
+    return { name, whole: normalizeCity(homeCity), states: [], countries };
   if (states.length > 0) countries.push("US");
   return { name, whole: normalizeCity(homeCity), states, countries };
 }
@@ -96,7 +100,7 @@ export function sameMetro(
   const programState = program.state ? stateCode(normalizeCity(program.state)) : null;
   const stateAgrees = !programState || home.states.every((s) => s === programState);
   if (home.name === normalizeCity(program.city) && stateAgrees) return true;
-  if (program.metro && home.name === normalizeCity(program.metro)) return true;
+  if (program.metro && home.name === normalizeCity(program.metro) && stateAgrees) return true;
 
   const key = homeKey(home);
   if (!key) return false;

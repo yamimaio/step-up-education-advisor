@@ -30,6 +30,8 @@ export function applyDeclinedDefaults(profile: Profile): {
     keepWorking: out("keepWorking") ? false : profile.keepWorking,
     relocate: out("relocate") ? null : profile.relocate,
     yearsExperience: out("yearsExperience") ? null : profile.yearsExperience,
+    // The neutral goal is "step up": grow-in-role adds a bonus the user never asked for.
+    careerGoal: out("careerGoal") ? { ...profile.careerGoal, kind: "step_up" } : profile.careerGoal,
   };
 
   const profileGaps = [...declinedFields];

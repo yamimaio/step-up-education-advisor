@@ -140,3 +140,25 @@ describe("City matching: the round 3 probe table", () => {
     expect(sameMetro(home, program)).toBe(expected);
   });
 });
+
+describe("City matching: round 4", () => {
+  const prog = (city: string, state: string | null, country: string, metro: string | null) =>
+    fixture("fake-executive", { city, state, country, metro });
+
+  it.each([
+    ["Philadelphia, MS", prog("Philadelphia", "PA", "US", "philadelphia"), false],
+    ["Boston, GA", prog("Boston", "MA", "US", "boston"), false],
+    ["Philadelphia, PA", prog("Philadelphia", "PA", "US", "philadelphia"), true],
+    ["Perth, WA, Australia", prog("Perth", "WA", "AU", null), true],
+    ["Florianopolis, SC, Brazil", prog("Florianopolis", "SC", "BR", null), true],
+    ["Perth, WA, USA", prog("Perth", "WA", "AU", null), false],
+    ["NYC", prog("New York", "NY", "US", "new_york"), true],
+    ["nyc", prog("Brooklyn", "NY", "US", null), true],
+    ["SF", prog("San Francisco", "CA", "US", null), true],
+    ["LA", prog("Los Angeles", "CA", "US", null), true],
+    ["DC", prog("Washington", "DC", "US", null), true],
+    ["D.C.", prog("Washington", "DC", "US", null), true],
+  ])("%s", (home, program, expected) => {
+    expect(sameMetro(home, program)).toBe(expected);
+  });
+});
