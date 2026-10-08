@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build
+        env:
+          MODEL_API_KEY: ci-canary-not-a-key
+      # The canary must never appear in the build output (CLAUDE.md rule 3). Every directory
+      # must exist and grep must exit 0 or 1, so a layout change can't make this pass silently.
+      - name: Check the key canary is not in the build output
+        run: |
+          for d in .next/static .next/server .next/standalone; do
+            test -d "$d" || { echo "missing $d: cannot check for a key leak"; exit 1; }
+          done
+          rc=0
+          grep -rlF -- ci-canary-not-a-key .next/static .next/server .next/standalone || rc=$?
+          if [ "$rc" -eq 0 ]; then echo "MODEL_API_KEY leaked into the build output"; exit 1; fi
+          if [ "$rc" -ne 1 ]; then echo "grep failed (exit $rc)"; exit 1; fi
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t step-up .
+      - name: Smoke test the image
+        run: |
+          docker run -d --name step-up -p 3000:3000 step-up
+          trap 'docker logs step-up; docker rm -f step-up' EXIT
+          ready=
+          for i in $(seq 1 20); do
+            if curl -fsS http://localhost:3000/ -o page.html; then ready=1; break; fi
+            sleep 1
+          done
+          [ -n "$ready" ] || { echo "server never became ready"; exit 1; }
+          grep -q "Step Up" page.html
+          css=$(grep -o '/_next/static/[^"]*\.css' page.html | head -1 || true)
+          [ -n "$css" ] || { echo "no stylesheet link found in the page"; exit 1; }
+          curl -fsS "http://localhost:3000$css" -o /dev/null

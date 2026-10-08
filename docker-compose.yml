@@ -1,0 +1,40 @@
+# Requires Docker Compose 2.24 or newer (env_file entries with `required: false`).
+services:
+  # Production image. Run one of web or dev at a time: both use port 3000.
+  web:
+    build: .
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
+
+  # Development container. `docker compose up dev` starts the dev server;
+  # `./run <cmd>` runs any command in it.
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /repo
+    # Linux hosts: to avoid root-owned files in the repo, `export UID GID`, then once run
+    #   docker compose run --rm -u 0 dev chown -R "$UID:$GID" node_modules .next
+    # (the named volumes below are created root-owned). Docker Desktop on macOS maps ownership
+    # already, so the default is fine there.
+    user: "${UID:-0}:${GID:-0}"
+    command: npm run dev -- --hostname 0.0.0.0
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      WATCHPACK_POLLING: "true"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/repo
+      # Linux binaries (Next SWC, lightningcss) stay in a volume, never on the host.
+      - node_modules:/repo/node_modules
+      - next_cache:/repo/.next
+
+volumes:
+  node_modules:
+  next_cache:
