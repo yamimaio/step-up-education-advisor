@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IsoDate, HoursRange, Text } from "./common";
+import { IsoDate, HoursRange, Text, CountryCode } from "./common";
 import { Attendance, Category, Format, LocationValue, PaymentOption, RatingKey } from "./enums";
 
 const nonNegative = z.number().nonnegative();
@@ -58,7 +58,7 @@ const ProgramObject = z.strictObject({
   // Same-metro key (for example "boston" for Boston and Cambridge); resolved by core in step 3.
   metro: text.nullable(),
   // ISO 3166 alpha-2 code.
-  country: z.string().regex(/^[A-Z]{2}$/, "use a two-letter ISO country code like US"),
+  country: CountryCode,
   locationOffers: z
     .array(LocationValue)
     .refine((a) => new Set(a).size === a.length, "must not repeat a value"),

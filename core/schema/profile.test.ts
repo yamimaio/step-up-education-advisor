@@ -88,6 +88,26 @@ describe("home location", () => {
     expect(ProfileSchema.safeParse({ ...profile, declined: [] }).success).toBe(false);
   });
 
+  it("requires the exact placeholder when declined, and declined when a placeholder", () => {
+    const base = { ...personaAProfile, ...home };
+    const bad = [
+      { homeCountry: "United States", declined: ["homeCountry"] },
+      { homeRegion: "MA", declined: ["homeRegion"] },
+      { homeCity: "", declined: [] },
+    ];
+    for (const b of bad) expect(ProfileSchema.safeParse({ ...base, ...b }).success).toBe(false);
+  });
+
+  it("applies the declined placeholder rules to the partial profile too", () => {
+    expect(
+      PartialProfileSchema.safeParse({ homeCountry: "", declined: ["homeCountry"] }).success,
+    ).toBe(true);
+    expect(PartialProfileSchema.safeParse({ homeCountry: "" }).success).toBe(false);
+    expect(
+      PartialProfileSchema.safeParse({ homeCountry: "US", declined: ["homeCountry"] }).success,
+    ).toBe(false);
+  });
+
   it("trims the city", () => {
     const r = ProfileSchema.parse({ ...personaAProfile, homeCity: "Boston " });
     expect(r.homeCity).toBe("Boston");
@@ -96,9 +116,10 @@ describe("home location", () => {
   it("accepts the partial profile with any of the three, and declined naming them", () => {
     expect(PartialProfileSchema.safeParse({}).success).toBe(true);
     expect(PartialProfileSchema.safeParse({ homeCity: "Boston" }).success).toBe(true);
-    expect(PartialProfileSchema.safeParse({ ...home, declined: ["homeRegion"] }).success).toBe(
-      true,
-    );
+    expect(
+      PartialProfileSchema.safeParse({ ...home, homeRegion: null, declined: ["homeRegion"] })
+        .success,
+    ).toBe(true);
     expect(PartialProfileSchema.safeParse({ homeCountry: "usa" }).success).toBe(false);
   });
 });

@@ -129,7 +129,7 @@ Validation rules beyond types: a fact group (tuition, schedule, class profile) n
 | `maxProgramMonths` | number |
 | `keepWorking` | boolean |
 | `maxOnsiteDays`, `maxStretchDays` | number |
-| `homeCity`, `homeRegion`, `homeCountry`, `relocate` | non-empty string; string or null (null when the country has no state or province and the user said so); two-letter ISO country code (`/^[A-Z]{2}$/`, as `country` in the program schema); boolean |
+| `homeCity`, `homeRegion`, `homeCountry`, `relocate` | non-empty string; string or null (null when the country has no state or province and the user said so); two-letter ISO country code (`/^[A-Z]{2}$/`, the same rule as `country` in the program schema); boolean. When named in `declined`, the part holds `""` (city, country) or `null` (region) and the engine ignores it |
 | `locationValues` | up to 2 of the plan's seven location values |
 | `resolvedTensions` | `{ rule: string, chosen: string }[]` |
 | `tieBreaker` | category, optional (D11) |

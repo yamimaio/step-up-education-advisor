@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { HoursRange, Text } from "./common";
+import { CountryCode, HoursRange, Text } from "./common";
 import { Category, LocationValue, Need } from "./enums";
 
 const AirfareRange = z.enum(["under_500", "500_1000", "1000_1500", "over_1500", "unknown"]);
@@ -34,10 +34,11 @@ const ProfileObject = z.strictObject({
   keepWorking: z.boolean(),
   maxOnsiteDays: z.number().nonnegative(),
   maxStretchDays: z.number().nonnegative(),
-  homeCity: z.string().trim(),
-  // null when the country has no state or province and the user said so.
-  homeRegion: z.string().trim().nullable(),
-  homeCountry: z.string(),
+  // "" is the placeholder for a declined city or country; checkDeclinedHome pairs it with `declined`.
+  homeCity: Text.or(z.literal("")),
+  // null when the country has no state or province and the user said so, or when declined.
+  homeRegion: Text.nullable(),
+  homeCountry: CountryCode.or(z.literal("")),
   relocate: z.boolean(),
   locationValues: z
     .array(LocationValue)
@@ -48,43 +49,52 @@ const ProfileObject = z.strictObject({
   declined: z.array(z.string()),
 });
 
-const HomeCity = Text;
-const HomeRegion = Text.nullable();
-const HomeCountry = z.string().regex(/^[A-Z]{2}$/, "use a two-letter ISO country code like US");
-
-// A declined home part is stored as "" (city, country) or null (region) and the engine ignores it.
-// Any part not declined must be real: a non-blank city, a region or null, an ISO country code.
-export const ProfileSchema = ProfileObject.superRefine((p, ctx) => {
-  const checks = [
-    ["homeCity", HomeCity],
-    ["homeRegion", HomeRegion],
-    ["homeCountry", HomeCountry],
-  ] as const;
-  for (const [field, schema] of checks) {
-    if (p.declined.includes(field)) continue;
-    const r = schema.safeParse(p[field]);
-    if (!r.success) {
-      for (const issue of r.error.issues) ctx.addIssue({ ...issue, path: [field] });
+// A declined home part holds the placeholder ("" for city and country, null for region) and the
+// engine ignores it. A placeholder without `declined` is an error, as is a real value that is
+// declined. Field-level errors show in the first parse; this pairing check runs only once every
+// field has passed, so it can need a second round.
+function checkDeclinedHome(
+  p: { homeCity?: string; homeRegion?: string | null; homeCountry?: string; declined?: string[] },
+  ctx: z.RefinementCtx,
+) {
+  for (const field of ["homeCity", "homeRegion", "homeCountry"] as const) {
+    const value = p[field];
+    if (value === undefined) continue;
+    const declined = p.declined?.includes(field) ?? false;
+    const placeholder = field === "homeRegion" ? null : "";
+    if (declined && value !== placeholder) {
+      ctx.addIssue({
+        code: "custom",
+        path: [field],
+        message: `declined, so must be ${JSON.stringify(placeholder)}`,
+      });
+    } else if (!declined && value === "") {
+      ctx.addIssue({
+        code: "custom",
+        path: [field],
+        message: "empty: ask again, or name it in declined",
+      });
     }
   }
-});
+}
+
+export const ProfileSchema = ProfileObject.superRefine(checkDeclinedHome);
 export type Profile = z.infer<typeof ProfileSchema>;
 
 export const PROFILE_FIELDS = Object.keys(ProfileObject.shape);
 
 // What the interview has collected so far: every field optional, and needs may still be short.
 // Nested objects can be set piecemeal too (a degree level before its field).
-export const PartialProfileSchema = ProfileObject.partial().extend({
-  degree: ProfileObject.shape.degree.partial().optional(),
-  careerGoal: ProfileObject.shape.careerGoal.partial().optional(),
-  resolvedTensions: z.array(ProfileObject.shape.resolvedTensions.element.partial()).optional(),
-  homeCity: HomeCity.optional(),
-  homeRegion: HomeRegion.optional(),
-  homeCountry: HomeCountry.optional(),
-  needs: z
-    .array(Need)
-    .max(3)
-    .refine((a) => new Set(a).size === a.length, "must not repeat a need")
-    .optional(),
-});
+export const PartialProfileSchema = ProfileObject.partial()
+  .extend({
+    degree: ProfileObject.shape.degree.partial().optional(),
+    careerGoal: ProfileObject.shape.careerGoal.partial().optional(),
+    resolvedTensions: z.array(ProfileObject.shape.resolvedTensions.element.partial()).optional(),
+    needs: z
+      .array(Need)
+      .max(3)
+      .refine((a) => new Set(a).size === a.length, "must not repeat a need")
+      .optional(),
+  })
+  .superRefine(checkDeclinedHome);
 export type PartialProfile = z.infer<typeof PartialProfileSchema>;
