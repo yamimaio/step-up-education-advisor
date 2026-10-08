@@ -1,1 +1,141 @@
-[]
+[
+  {
+    "id": "northwestern-mem-pt",
+    "name": "Master of Engineering Management",
+    "institution": "Northwestern University",
+    "category": "specialized_masters",
+    "credential": "Master of Engineering Management",
+    "format": "in_person",
+    "durationMonths": 24,
+    "durationMaxMonths": 36,
+    "credits": "A minimum number of 12 courses is required",
+    "attendance": "recurring_evenings",
+    "onsiteNote": "Classes held Monday - Thursday evenings + Saturday mornings",
+    "onsiteDaysPerYear": null,
+    "residencyCount": null,
+    "longestStretchDays": null,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "Evanston",
+    "state": null,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": null,
+    "tuitionPerCourseUsd": 8100,
+    "courseCount": 12,
+    "tuitionIncludes": null,
+    "lodgingIncluded": null,
+    "paymentOptions": ["scholarships", "loans"],
+    "minExperienceYears": null,
+    "accreditation": null,
+    "cohortMedianExperienceYears": null,
+    "cohortExperienceBasis": null,
+    "cohortSeniority": null,
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "network": 3,
+      "depth": 4,
+      "practicality": 4,
+      "costValue": 3
+    },
+    "ratingNotes": {
+      "network": "Low evidence: scheduled evening/Saturday classes and an experienced-STEM target audience support a provisional 3; cohort interaction, actual in-person time, seniority and alumni access are not established.",
+      "depth": "Master’s degree requiring at least 12 courses, including 7 core courses and at least 2 advanced-engineering courses, supports 4; research/thesis requirements and faculty involvement are not established for 5.",
+      "practicality": "The work-accommodating part-time option offers evening/Saturday classes, entry in any quarter, a capstone choice and applied leadership simulations; projects in participants’ own organizations are not established for 5.",
+      "costValue": "Low evidence: $8,100 per course is published for 2026–2027 for a master’s typically lasting 2–3 years, but total tuition, Fall 2027 pricing and comparable-program costs are missing; 3 is provisional, not a verified market-value assessment."
+    },
+    "ratingLowEvidence": ["network", "costValue"],
+    "figureNotes": {
+      "tuitionPerCourseUsd": "2026-27 rate; the Fall 2027 rate is not published.",
+      "courseCount": "A minimum; the school publishes no fixed total.",
+      "durationMonths": "The school publishes a 2-3 year range for the part-time option."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Master of Engineering Management",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Northwestern University’s Evanston campus",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "Master of Engineering Management degree",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "Master of Engineering Management degree",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Choose the part-time option to accommodate work or personal needs",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Northwestern University’s Evanston campus",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/financial-aid.html",
+        "quote": "The Albert H. Rubenstein Memorial Scholarship is based on merit and is awarded during the application process.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.mccormick.northwestern.edu/academics/graduate/prospective-student-resources/financial-aid.html",
+        "quote": "master’s students are provided with a variety of federal and private loan options",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Part-time option: 2-3 years",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "attendance",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Classes held Monday - Thursday evenings + Saturday mornings",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "credits",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "A minimum number of 12 courses is required",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "tuitionPerCourseUsd",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/",
+        "quote": "$8,100 per course for part-time students",
+        "checkedOn": "2026-10-08"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["industry_hub"]
+  }
+]
