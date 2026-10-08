@@ -13,3 +13,6 @@ export { ProfileSchema, PartialProfileSchema, PROFILE_FIELDS } from "./schema/pr
 export type { Profile, PartialProfile } from "./schema/profile";
 export * from "./schema/enums";
 export { HoursRange, IsoDate } from "./schema/common";
+export { evaluate } from "./engine/evaluate";
+export { checkContradictions } from "./engine/contradictions";
+export type * from "./engine/types";

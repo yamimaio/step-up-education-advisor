@@ -28,3 +28,17 @@ export const personaAProfile: Profile = {
   resolvedTensions: [],
   declined: [],
 };
+
+// The plan's worked example (docs/build-plan.md, Step 1), set in Boston so the fixtures'
+// evening master's isn't ruled out on location: needs senior network, leadership, expertise;
+// no degree required; nothing longer than 12 months.
+export const workedExampleProfile: Profile = {
+  ...personaAProfile,
+  homeCity: "Boston",
+  airfareRange: "unknown",
+  travelComfort: "fine",
+};
+
+export function makeProfile(overrides: Partial<Profile> = {}): Profile {
+  return { ...workedExampleProfile, ...overrides };
+}
