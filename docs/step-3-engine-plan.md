@@ -15,7 +15,7 @@ All files sit in `core/engine/`. They are pure: no I/O, no `node:` imports, and 
 | `types.ts` | `CheckId` (8), `CheckStatus`, `Check { id, status, value, limit, unit, unknown, note? }`, `ProgramEvaluation`, `CategoryResult`, `NoProgramResult`, `EngineResult`, `Contradiction` |
 | `constants.ts` | `TYPE_RATINGS` matrix, `NEED_WEIGHTS [3,2,1]`, `DEGREE_ADJUST {no:-3, unsure:-2, preferred:-1}`, `DEGREE_ADJUSTED_TYPES`, `REQUIRED_RULES_OUT`, `GROW_IN_ROLE_BONUS 2` + types, `NO_PROGRAM_THRESHOLD 4`, `NEAR_MISS_PCT 15`, `HOURS_PASS_PCT 25`, `HOURS_NEAR_PCT 50`, `SCENARIO_WEIGHTS`, `CATEGORY_BONUS 0.5`, `PEER_FIT`, `LOCATION_FIT`, `AIRFARE_MIDPOINTS`, `CONFIDENCE_WINDOW_DAYS 60`, `WEEKEND_TRIPS_PER_YEAR 26`, `METROS` (city → metro key) |
 | `normalize.ts` | `applyDeclinedDefaults(profile)` → the profile the engine actually uses plus `profileGaps` |
-| `metro.ts` | `normalizeCity`, `sameMetro(homeCity, program)` (DQ18 + metro table) |
+| `metro.ts` | `normalizeCity`, `sameMetro(home, program)`, where `home` is `{ homeCity, homeRegion, homeCountry }` (DQ18 + metro table) |
 | `travel.ts` | `travelEstimate(program, profile)` |
 | `constraints.ts` | `overshoot()` helper, one function per check, `checkConstraints(program, profile, travel)` → `{ checks, status }` |
 | `categoryFit.ts` | `categoryFit(profile, programs, evaluations)` |
@@ -106,7 +106,7 @@ Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). �
     - `travelComfort`: `fine`
     - `airfareRange`: `unknown`
     - `degreeRequired`: no adjustment (not specified anywhere)
-    - `homeCity`: no metro match, so programs that need you local fail unless you'd relocate
+    - `homeCity`, `homeRegion`, `homeCountry`: no metro match, so programs that need you local fail unless you'd relocate
 
     `profileGaps` = the `declined` fields plus `airfareRange: unknown`.
 12. **No-program precedence when several triggers fire.** `goal_unclear`, then `nothing_passes`, then `no_type_fits`. An empty dataset counts as `nothing_passes`. Shortlists are still built ("if you decide to go anyway"), and with no winner there's no +0.5 bonus.

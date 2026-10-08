@@ -34,7 +34,10 @@ const ProfileObject = z.strictObject({
   keepWorking: z.boolean(),
   maxOnsiteDays: z.number().nonnegative(),
   maxStretchDays: z.number().nonnegative(),
-  homeCity: z.string(),
+  homeCity: z.string().min(1),
+  // null when the country has no state or province and the user said so.
+  homeRegion: z.string().min(1).nullable(),
+  homeCountry: z.string().regex(/^[A-Z]{2}$/, "use a two-letter ISO country code like US"),
   relocate: z.boolean(),
   locationValues: z
     .array(LocationValue)

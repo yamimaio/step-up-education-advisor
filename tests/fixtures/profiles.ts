@@ -23,6 +23,8 @@ export const personaAProfile: Profile = {
   maxOnsiteDays: 20,
   maxStretchDays: 7,
   homeCity: "Buenos Aires",
+  homeRegion: "C",
+  homeCountry: "AR",
   relocate: false,
   locationValues: ["immersion", "network_density"],
   resolvedTensions: [],

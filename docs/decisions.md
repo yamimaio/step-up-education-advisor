@@ -20,3 +20,10 @@ Choices made while building, where the approved docs were silent. Each links to 
 - The converter sets `cohortExperienceBasis` to `unspecified` and leaves `figureNotes`, `onsiteNote`, `metro`, `durationMaxMonths`, `tuitionPerCourseUsd`, `courseCount`, `lodgingIncluded` and `attendance` (unless residencies or online) to the overrides file. It turns a lone GSA number into a range by reading the dollar amounts in the GSA quote, and refuses if the quote has none.
 - `validate-data` also fails on a `checkedOn` later than today. `fake-` ids pass only through `FixtureDatasetSchema`.
 - The overrides file may set only an allow-list of keys (never `id`, `sources`, `ratings` or `verification`), plus `extraSources` to append sources the research kept in its Part 2 tables. A lodging quote that mentions meals or totals is refused unless the overrides give `lodgingPerNightUsd`. A source with no URL converts as `school_correspondence`.
+
+## Structured home location (issue #35)
+
+- `homeCity` was one free-text string, and the engine had to parse spellings like "Cambridge, MA" and "Washington, D.C.". The profile now holds `homeCity` (non-empty), `homeRegion` (string or null) and `homeCountry` (two-letter ISO code, same rule as `country` in the program schema). The model fills them in from the conversation.
+- `homeRegion` is null only when the country has no state or province and the user said so. A missing part is asked again, not guessed.
+- The partial profile has the same three fields, all optional. `declined` may name any of them; a declined country or region is a gap, not an error.
+- Engine matching (country, then region, then city or metro table), the advisor wording and the server's validation and re-ask error land in #22, #25 and step 6.
