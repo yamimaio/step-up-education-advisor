@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { HoursRange } from "./common";
+import { HoursRange, Text } from "./common";
 import { Category, LocationValue, Need } from "./enums";
 
 const AirfareRange = z.enum(["under_500", "500_1000", "1000_1500", "over_1500", "unknown"]);
@@ -34,10 +34,10 @@ const ProfileObject = z.strictObject({
   keepWorking: z.boolean(),
   maxOnsiteDays: z.number().nonnegative(),
   maxStretchDays: z.number().nonnegative(),
-  homeCity: z.string().min(1),
+  homeCity: z.string().trim(),
   // null when the country has no state or province and the user said so.
-  homeRegion: z.string().min(1).nullable(),
-  homeCountry: z.string().regex(/^[A-Z]{2}$/, "use a two-letter ISO country code like US"),
+  homeRegion: z.string().trim().nullable(),
+  homeCountry: z.string(),
   relocate: z.boolean(),
   locationValues: z
     .array(LocationValue)
@@ -48,7 +48,26 @@ const ProfileObject = z.strictObject({
   declined: z.array(z.string()),
 });
 
-export const ProfileSchema = ProfileObject;
+const HomeCity = Text;
+const HomeRegion = Text.nullable();
+const HomeCountry = z.string().regex(/^[A-Z]{2}$/, "use a two-letter ISO country code like US");
+
+// A declined home part is stored as "" (city, country) or null (region) and the engine ignores it.
+// Any part not declined must be real: a non-blank city, a region or null, an ISO country code.
+export const ProfileSchema = ProfileObject.superRefine((p, ctx) => {
+  const checks = [
+    ["homeCity", HomeCity],
+    ["homeRegion", HomeRegion],
+    ["homeCountry", HomeCountry],
+  ] as const;
+  for (const [field, schema] of checks) {
+    if (p.declined.includes(field)) continue;
+    const r = schema.safeParse(p[field]);
+    if (!r.success) {
+      for (const issue of r.error.issues) ctx.addIssue({ ...issue, path: [field] });
+    }
+  }
+});
 export type Profile = z.infer<typeof ProfileSchema>;
 
 export const PROFILE_FIELDS = Object.keys(ProfileObject.shape);
@@ -59,6 +78,9 @@ export const PartialProfileSchema = ProfileObject.partial().extend({
   degree: ProfileObject.shape.degree.partial().optional(),
   careerGoal: ProfileObject.shape.careerGoal.partial().optional(),
   resolvedTensions: z.array(ProfileObject.shape.resolvedTensions.element.partial()).optional(),
+  homeCity: HomeCity.optional(),
+  homeRegion: HomeRegion.optional(),
+  homeCountry: HomeCountry.optional(),
   needs: z
     .array(Need)
     .max(3)

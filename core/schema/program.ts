@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { IsoDate, HoursRange } from "./common";
+import { IsoDate, HoursRange, Text } from "./common";
 import { Attendance, Category, Format, LocationValue, PaymentOption, RatingKey } from "./enums";
 
 const nonNegative = z.number().nonnegative();
 const nonNegativeInt = z.number().int().nonnegative();
-const text = z.string().trim().min(1);
+const text = Text;
 
 const Rating = z.number().int().min(1).max(5);
 

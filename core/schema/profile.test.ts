@@ -65,11 +65,32 @@ describe("home location", () => {
     ["an empty city", { homeCity: "" }],
     ["a lowercase country", { homeCountry: "us" }],
     ["a three-letter country", { homeCountry: "USA" }],
+    ["a city of only spaces", { homeCity: "   " }],
+    ["a region of only spaces", { homeRegion: " " }],
+    ["an empty region", { homeRegion: "" }],
+    ["a missing region", { homeRegion: undefined }],
     ["a missing country", { homeCountry: undefined }],
   ])("rejects %s", (_name, override) => {
     expect(ProfileSchema.safeParse({ ...personaAProfile, ...home, ...override }).success).toBe(
       false,
     );
+  });
+
+  it("accepts declined city, region and country with placeholders", () => {
+    const profile = {
+      ...personaAProfile,
+      homeCity: "",
+      homeRegion: null,
+      homeCountry: "",
+      declined: ["homeCity", "homeRegion", "homeCountry"],
+    };
+    expect(ProfileSchema.safeParse(profile).success).toBe(true);
+    expect(ProfileSchema.safeParse({ ...profile, declined: [] }).success).toBe(false);
+  });
+
+  it("trims the city", () => {
+    const r = ProfileSchema.parse({ ...personaAProfile, homeCity: "Boston " });
+    expect(r.homeCity).toBe("Boston");
   });
 
   it("accepts the partial profile with any of the three, and declined naming them", () => {
