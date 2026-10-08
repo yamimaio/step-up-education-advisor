@@ -1,13 +1,24 @@
+import { builtinModules } from "node:module";
 import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
 import nextTypescript from "eslint-config-next/typescript";
 
-const modelAndWeb = ["next", "next/*", "react", "react-dom", "@anthropic-ai/*"];
-const nodeBuiltins = ["node:*", "fs", "path", "fs/promises", "child_process", "os", "crypto"];
+// Every Node built-in, bare and node:-prefixed (exact names, so "../lib/util" is still fine).
+const nodeBuiltins = builtinModules.flatMap((name) => [name, `node:${name}`]);
 
-const appPaths = ["@app/*", "**/app", "**/app/*"];
-const serverPaths = ["@server/*", "**/server", "**/server/*"];
+// Regexes (not globs) so that "react-dom/server" isn't mistaken for the server/ directory.
+const appPaths = [String.raw`^@app(/|$)`, String.raw`^(\.{1,2}/)+(.*/)?app(/|$)`];
+const serverPaths = [String.raw`^@server(/|$)`, String.raw`^(\.{1,2}/)+(.*/)?server(/|$)`];
 
-const ban = (patterns, message) => ["error", { patterns: [{ group: patterns, message }] }];
+const ban = ({ regex = [], group = [], names = [] }, message) => [
+  "error",
+  {
+    paths: names.map((name) => ({ name, message })),
+    patterns: [
+      ...(regex.length ? [{ regex: regex.join("|"), message }] : []),
+      ...(group.length ? [{ group, message }] : []),
+    ],
+  },
+];
 
 const config = [
   { ignores: [".next/**", "node_modules/**", "coverage/**", "next-env.d.ts"] },
@@ -19,20 +30,39 @@ const config = [
     files: ["core/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-imports": ban(
-        [...appPaths, ...serverPaths, ...modelAndWeb, ...nodeBuiltins],
+        {
+          regex: [...appPaths, ...serverPaths],
+          group: ["next/*", "react/*", "react-dom/*", "@anthropic-ai/*", "node:*"],
+          names: ["next", "react", "react-dom", ...nodeBuiltins],
+        },
         "core/ must stay free of web, model and Node code (see CLAUDE.md rule 1).",
       ),
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.name='require']",
+          message: "core/ uses ES imports only; require() would bypass the boundary rules.",
+        },
+        {
+          selector: "ImportExpression",
+          message:
+            "core/ uses static imports only; dynamic import() would bypass the boundary rules.",
+        },
+      ],
     },
   },
   {
     files: ["server/**/*.{ts,tsx}"],
-    rules: { "no-restricted-imports": ban(appPaths, "server/ must not import from app/.") },
+    rules: {
+      "no-restricted-imports": ban({ regex: appPaths }, "server/ must not import from app/."),
+    },
   },
   {
-    // Only app/api may import server code.
-    files: ["app/components/**/*.{ts,tsx}", "app/lib/**/*.{ts,tsx}"],
+    // Only app/api may import server code, so server/ can't be bundled for the browser.
+    files: ["app/**/*.{ts,tsx}"],
+    ignores: ["app/api/**"],
     rules: {
-      "no-restricted-imports": ban(serverPaths, "Browser code must not import server/."),
+      "no-restricted-imports": ban({ regex: serverPaths }, "Browser code must not import server/."),
     },
   },
   {

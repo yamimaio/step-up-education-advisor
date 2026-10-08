@@ -10,6 +10,7 @@ Everything runs in Docker. Nothing needs Node on your machine.
 
 ```sh
 cp .env.example .env            # then add MODEL_API_KEY (server-only, never commit it)
+./run npm ci                    # first time only: installs into the container's node_modules volume
 docker compose up dev           # dev server on http://localhost:3000
 docker compose up --build web   # production image on http://localhost:3000
 HOST_PORT=3100 docker compose up web   # if port 3000 is taken
@@ -18,7 +19,6 @@ HOST_PORT=3100 docker compose up web   # if port 3000 is taken
 Run any command in the dev container with `./run`:
 
 ```sh
-./run npm ci
 ./run npm run ci      # lint, typecheck, format check, tests
 ./run npm test
 ```
