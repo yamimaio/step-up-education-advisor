@@ -25,6 +25,8 @@ export const personaAProfile: Profile = {
   homeCity: "Buenos Aires",
   homeRegion: "C",
   homeCountry: "AR",
+  homeLat: -34.6037,
+  homeLon: -58.3816,
   relocate: false,
   locationValues: ["immersion", "network_density"],
   resolvedTensions: [],

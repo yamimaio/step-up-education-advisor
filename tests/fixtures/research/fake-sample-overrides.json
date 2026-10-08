@@ -1,4 +1,6 @@
 {
   "locationOffers": ["network_density", "industry_hub"],
-  "metro": "boston"
+  "metro": "boston",
+  "campusLat": 42.3601,
+  "campusLon": -71.0589
 }

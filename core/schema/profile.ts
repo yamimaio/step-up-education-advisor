@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CountryCode, HoursRange, Text } from "./common";
+import { CountryCode, HoursRange, Latitude, Longitude, Text } from "./common";
 import { Category, LocationValue, Need } from "./enums";
 
 const AirfareRange = z.enum(["under_500", "500_1000", "1000_1500", "over_1500", "unknown"]);
@@ -39,6 +39,9 @@ const ProfileObject = z.strictObject({
   // null when the country has no state or province and the user said so, or when declined.
   homeRegion: Text.nullable(),
   homeCountry: CountryCode.or(z.literal("")),
+  // Approximate centre of the home city, filled by the model; null when the home is declined.
+  homeLat: Latitude.nullable(),
+  homeLon: Longitude.nullable(),
   relocate: z.boolean(),
   locationValues: z
     .array(LocationValue)
@@ -53,22 +56,30 @@ const ProfileObject = z.strictObject({
 // engine ignores it. A placeholder without `declined` is an error, as is a real value that is
 // declined. Field-level errors show in the first parse; this pairing check runs only once every
 // field has passed, so it can need a second round.
+const textPlaceholder = new Set(["homeCity", "homeCountry"]);
 function checkDeclinedHome(
-  p: { homeCity?: string; homeRegion?: string | null; homeCountry?: string; declined?: string[] },
+  p: {
+    homeCity?: string;
+    homeRegion?: string | null;
+    homeCountry?: string;
+    homeLat?: number | null;
+    homeLon?: number | null;
+    declined?: string[];
+  },
   ctx: z.RefinementCtx,
 ) {
-  for (const field of ["homeCity", "homeRegion", "homeCountry"] as const) {
+  for (const field of ["homeCity", "homeRegion", "homeCountry", "homeLat", "homeLon"] as const) {
     const value = p[field];
     if (value === undefined) continue;
     const declined = p.declined?.includes(field) ?? false;
-    const placeholder = field === "homeRegion" ? null : "";
+    const placeholder = textPlaceholder.has(field) ? "" : null;
     if (declined && value !== placeholder) {
       ctx.addIssue({
         code: "custom",
         path: [field],
         message: `declined, so must be ${JSON.stringify(placeholder)}`,
       });
-    } else if (!declined && value === "") {
+    } else if (!declined && (value === "" || (value === null && field !== "homeRegion"))) {
       ctx.addIssue({
         code: "custom",
         path: [field],

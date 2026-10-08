@@ -17,6 +17,10 @@ export const CountryCode = z
   .string()
   .regex(/^[A-Z]{2}$/, "use a two-letter ISO country code like US");
 
+// Degrees; the model's approximate city centre for the user, a campus for a program.
+export const Latitude = z.number().min(-90).max(90);
+export const Longitude = z.number().min(-180).max(180);
+
 // Used for the user's hours per week and a program's published estimate.
 export const HoursRange = z
   .object({ min: z.number().nonnegative(), max: z.number().nonnegative() })

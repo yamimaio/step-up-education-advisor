@@ -144,6 +144,29 @@ describe("online programs", () => {
   });
 });
 
+describe("campus coordinates", () => {
+  it("accepts coordinates on site and null online", () => {
+    expect(problems(fakeExecutive)).toEqual([]);
+    expect(fakeCertificate.campusLat).toBeNull();
+    expect(problems(fakeCertificate)).toEqual([]);
+  });
+
+  it("requires both coordinates for an on-site program", () => {
+    const p = clone(fakeExecutive);
+    p.campusLat = null;
+    p.campusLon = null;
+    const out = problems(p).join("\n");
+    expect(out).toMatch(/campusLat: required unless/);
+    expect(out).toMatch(/campusLon: required unless/);
+  });
+
+  it("rejects out-of-range and non-numeric coordinates", () => {
+    for (const bad of [{ campusLat: 91 }, { campusLon: -181 }, { campusLat: "42.36" }]) {
+      expect(ProgramSchema.safeParse({ ...clone(fakeExecutive), ...bad }).success).toBe(false);
+    }
+  });
+});
+
 describe("lodging", () => {
   it("needs a gsa.gov source for a US rate", () => {
     const p = clone(fakeExecutive);

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IsoDate, HoursRange, Text, CountryCode } from "./common";
+import { IsoDate, HoursRange, Text, CountryCode, Latitude, Longitude } from "./common";
 import { Attendance, Category, Format, LocationValue, PaymentOption, RatingKey } from "./enums";
 
 const nonNegative = z.number().nonnegative();
@@ -55,6 +55,9 @@ const ProgramObject = z.strictObject({
   // Bare city name; null only for online programs.
   city: text.nullable(),
   state: text.nullable(),
+  // Approximate campus coordinates in degrees; the engine compares them with the user's home.
+  campusLat: Latitude.nullable(),
+  campusLon: Longitude.nullable(),
   // Same-metro key (for example "boston" for Boston and Cambridge); resolved by core in step 3.
   metro: text.nullable(),
   // ISO 3166 alpha-2 code.
@@ -192,6 +195,10 @@ export const ProgramSchema = ProgramObject.superRefine((p, ctx) => {
       fail(["lodgingPerNightUsd"], "an online program has no lodging");
   } else if (p.city === null) {
     fail(["city"], "required unless the program is online");
+  } else {
+    for (const f of ["campusLat", "campusLon"] as const) {
+      if (p[f] === null) fail([f], "required unless the program is online");
+    }
   }
 
   if (

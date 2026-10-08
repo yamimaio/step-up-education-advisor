@@ -13,9 +13,9 @@ All files sit in `core/engine/`. They are pure: no I/O, no `node:` imports, and 
 | File | Exports |
 | --- | --- |
 | `types.ts` | `CheckId` (8), `CheckStatus`, `Check { id, status, value, limit, unit, unknown, note? }`, `ProgramEvaluation`, `CategoryResult`, `NoProgramResult`, `EngineResult`, `Contradiction` |
-| `constants.ts` | `TYPE_RATINGS` matrix, `NEED_WEIGHTS [3,2,1]`, `DEGREE_ADJUST {no:-3, unsure:-2, preferred:-1}`, `DEGREE_ADJUSTED_TYPES`, `REQUIRED_RULES_OUT`, `GROW_IN_ROLE_BONUS 2` + types, `NO_PROGRAM_THRESHOLD 4`, `NEAR_MISS_PCT 15`, `HOURS_PASS_PCT 25`, `HOURS_NEAR_PCT 50`, `SCENARIO_WEIGHTS`, `CATEGORY_BONUS 0.5`, `PEER_FIT`, `LOCATION_FIT`, `AIRFARE_MIDPOINTS`, `CONFIDENCE_WINDOW_DAYS 60`, `WEEKEND_TRIPS_PER_YEAR 26`, `METROS` (city → metro key) |
+| `constants.ts` | `TYPE_RATINGS` matrix, `NEED_WEIGHTS [3,2,1]`, `DEGREE_ADJUST {no:-3, unsure:-2, preferred:-1}`, `DEGREE_ADJUSTED_TYPES`, `REQUIRED_RULES_OUT`, `GROW_IN_ROLE_BONUS 2` + types, `NO_PROGRAM_THRESHOLD 4`, `NEAR_MISS_PCT 15`, `HOURS_PASS_PCT 25`, `HOURS_NEAR_PCT 50`, `SCENARIO_WEIGHTS`, `CATEGORY_BONUS 0.5`, `PEER_FIT`, `LOCATION_FIT`, `AIRFARE_MIDPOINTS`, `CONFIDENCE_WINDOW_DAYS 60`, `WEEKEND_TRIPS_PER_YEAR 26`, `COMMUTE_KM 80` (commuting distance) |
 | `normalize.ts` | `applyDeclinedDefaults(profile)` → the profile the engine actually uses plus `profileGaps` |
-| `metro.ts` | `normalizeCity`, `sameMetro(home, program)`, where `home` is `{ homeCity, homeRegion, homeCountry }` (DQ18 + metro table) |
+| `distance.ts` | `withinCommute(home, program)`: great-circle distance between `{ homeLat, homeLon }` and `{ campusLat, campusLon }` against `COMMUTE_KM` (replaces `places.ts`, `normalize.ts`, `metro.ts` and `METRO_STATES`; see `docs/ux-two-stage.md`) |
 | `travel.ts` | `travelEstimate(program, profile)` |
 | `constraints.ts` | `overshoot()` helper, one function per check, `checkConstraints(program, profile, travel)` → `{ checks, status }` |
 | `categoryFit.ts` | `categoryFit(profile, programs, evaluations)` |
@@ -69,9 +69,9 @@ Also:
 | Length ≤ `maxProgramMonths` | `checkLength` | EMBA 24 against 12 fails (S8-1); null → unknown rule |
 | Hours: overlap or ≤ +25% passes with a note; ≤ +50% near miss; beyond fails | `checkHours` | E: overlap passes; 12 against 5–10 passes with "about 2 hours a week more"; 15 against 10 near miss; 16 against 10 fails |
 | Work-compatible when `keepWorking` (boolean, no near miss) | `checkWorkCompatible` | pass and fail |
-| Location: a full-time in-person program needs the home metro or relocation; evenings or daily attendance outside the metro fails; everything else passes and is left to the travel checks | `checkLocation` + `sameMetro` | E: in-person non-work-compatible fails unless same metro or relocating; Boston user is local to Cambridge; accent and case insensitive |
+| Location: a full-time in-person program needs the home metro or relocation; evenings or daily attendance outside the metro fails; everything else passes and is left to the travel checks | `checkLocation` + `withinCommute` | E: in-person non-work-compatible fails unless within 80 km or relocating; a Boston user is local to Cambridge; no spelling rules |
 | Program status = worst check | `checkConstraints` | small case |
-| Travel (D8 + §11): trips, nights, lodging max, airfare midpoint, `lodgingIncluded`, same metro → 0 | `travelEstimate` | E: D8 numbers (fake-executive from Buenos Aires: 3 × (1,250 + 5 × 365) = 9,225); airfare `unknown` → lodging only with the flag set; lodging included; weekends estimate labelled |
+| Travel (D8 + §11): trips, nights, lodging max, airfare midpoint, `lodgingIncluded`, within commuting distance → 0 | `travelEstimate` | E: D8 numbers (fake-executive from Buenos Aires: 3 × (1,250 + 5 × 365) = 9,225); airfare `unknown` → lodging only with the flag set; lodging included; weekends estimate labelled |
 | Location fit (D9): 3, +1 per matched value, appeal +0.5 and burden −1 for hybrid and in-person, clamped 1 to 5 | `locationFit` | E: clamps at 1 and at 5 |
 | Peer fit: `more_senior` below the user −1, at or above +0.5; `same_level` gap > 5 −1; otherwise 0 | `peerFit` | **S8-7**: 16 against median 5 gives −1, and the text says "about 5 years … you have 16" |
 | Confidence: high, medium or low (60 days, cost and on-site time from an official page, no near miss) | `confidence` | E: day 60 vs day 61; one condition missing → medium; draft → low (D7); a real near miss (10% over budget, all figures published) stays high |
@@ -106,7 +106,7 @@ Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). �
     - `travelComfort`: `fine`
     - `airfareRange`: `unknown`
     - `degreeRequired`: no adjustment (not specified anywhere)
-    - `homeCity`, `homeRegion`, `homeCountry`: no metro match, so programs that need you local fail unless you'd relocate
+    - `homeCity`, `homeRegion`, `homeCountry`, `homeLat`, `homeLon`: no distance, so programs that need you local fail unless you'd relocate
 
     `profileGaps` = the `declined` fields plus `airfareRange: unknown`.
 12. **No-program precedence when several triggers fire.** `goal_unclear`, then `nothing_passes`, then `no_type_fits`. An empty dataset counts as `nothing_passes`. Shortlists are still built ("if you decide to go anyway"), and with no winner there's no +0.5 bonus.

@@ -54,7 +54,13 @@ describe("PartialProfileSchema", () => {
 });
 
 describe("home location", () => {
-  const home = { homeCity: "Boston", homeRegion: "MA", homeCountry: "US" };
+  const home = {
+    homeCity: "Boston",
+    homeRegion: "MA",
+    homeCountry: "US",
+    homeLat: 42.3601,
+    homeLon: -71.0589,
+  };
 
   it("accepts city, region and country, and a null region", () => {
     expect(ProfileSchema.safeParse({ ...personaAProfile, ...home }).success).toBe(true);
@@ -70,6 +76,12 @@ describe("home location", () => {
     ["an empty region", { homeRegion: "" }],
     ["a missing region", { homeRegion: undefined }],
     ["a missing country", { homeCountry: undefined }],
+    ["a latitude above 90", { homeLat: 91 }],
+    ["a longitude below -180", { homeLon: -181 }],
+    ["a missing latitude", { homeLat: undefined }],
+    ["a missing longitude", { homeLon: undefined }],
+    ["a text latitude", { homeLat: "42.36" }],
+    ["a null latitude that was not declined", { homeLat: null }],
   ])("rejects %s", (_name, override) => {
     expect(ProfileSchema.safeParse({ ...personaAProfile, ...home, ...override }).success).toBe(
       false,
@@ -82,7 +94,9 @@ describe("home location", () => {
       homeCity: "",
       homeRegion: null,
       homeCountry: "",
-      declined: ["homeCity", "homeRegion", "homeCountry"],
+      homeLat: null,
+      homeLon: null,
+      declined: ["homeCity", "homeRegion", "homeCountry", "homeLat", "homeLon"],
     };
     expect(ProfileSchema.safeParse(profile).success).toBe(true);
     expect(ProfileSchema.safeParse({ ...profile, declined: [] }).success).toBe(false);
@@ -94,6 +108,7 @@ describe("home location", () => {
       { homeCountry: "United States", declined: ["homeCountry"] },
       { homeRegion: "MA", declined: ["homeRegion"] },
       { homeCity: "", declined: [] },
+      { homeLat: 0, declined: ["homeLat"] },
     ];
     for (const b of bad) expect(ProfileSchema.safeParse({ ...base, ...b }).success).toBe(false);
   });
@@ -116,6 +131,8 @@ describe("home location", () => {
   it("accepts the partial profile with any of the three, and declined naming them", () => {
     expect(PartialProfileSchema.safeParse({}).success).toBe(true);
     expect(PartialProfileSchema.safeParse({ homeCity: "Boston" }).success).toBe(true);
+    expect(PartialProfileSchema.safeParse({ homeLat: 42.36, homeLon: -71.06 }).success).toBe(true);
+    expect(PartialProfileSchema.safeParse({ homeLat: 95 }).success).toBe(false);
     expect(
       PartialProfileSchema.safeParse({ ...home, homeRegion: null, declined: ["homeRegion"] })
         .success,

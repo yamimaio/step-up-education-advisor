@@ -97,7 +97,7 @@ Everything in the plan's schema table, plus three additions from the decisions a
   - `attendance: "none" | "residencies" | "recurring_weekends" | "recurring_evenings" | "recurring_daily"` (daily means full-time on campus) and `onsiteNote` (the published wording). The day and trip counts win when they exist; `attendance` classifies the pattern and says whether the student must live near campus
   - `tuitionPerCourseUsd` and `courseCount`; `tuitionUsd` stays null when no total is published
   - `lodgingIncluded: boolean | null`, so the travel estimate doesn't count lodging the tuition already covers
-  - `city` is the bare city name, null only for online programs; `state`; `country` is an ISO 3166 alpha-2 code, not fixed to US; `metro` groups cities that share a commute (Boston and Cambridge)
+  - `city` is the bare city name, null only for online programs; `state`; `campusLat`/`campusLon` are the approximate campus coordinates in degrees (null only for online programs); `country` is an ISO 3166 alpha-2 code, not fixed to US; `metro` (kept in the schema, no longer used by the engine) groups cities that share a commute (Boston and Cambridge)
   - `cohortExperienceBasis: "median" | "average" | "unspecified"`, set whenever the cohort years are
   - `figureNotes`: a short caveat per field, shown next to the value (a price for the previous entering class, a range stored as its midpoint)
   - sources carry `kind: "official_page" | "school_correspondence"`; a correspondence source needs no URL. `nextStartDate` stays out (DQ7)
@@ -129,7 +129,7 @@ Validation rules beyond types: a fact group (tuition, schedule, class profile) n
 | `maxProgramMonths` | number |
 | `keepWorking` | boolean |
 | `maxOnsiteDays`, `maxStretchDays` | number |
-| `homeCity`, `homeRegion`, `homeCountry`, `relocate` | non-empty string; string or null (null when the country has no state or province and the user said so); two-letter ISO country code (`/^[A-Z]{2}$/`, the same rule as `country` in the program schema); boolean. When named in `declined`, the part holds `""` (city, country) or `null` (region) and the engine ignores it |
+| `homeCity`, `homeRegion`, `homeCountry`, `homeLat`, `homeLon`, `relocate` | non-empty string; string or null (null when the country has no state or province and the user said so); two-letter ISO country code (`/^[A-Z]{2}$/`, the same rule as `country` in the program schema); latitude (-90 to 90) and longitude (-180 to 180) of the approximate city centre, filled by the model; boolean. When named in `declined`, the part holds `""` (city, country) or `null` (region, lat, lon) and the engine ignores it |
 | `locationValues` | up to 2 of the plan's seven location values |
 | `resolvedTensions` | `{ rule: string, chosen: string }[]` |
 | `tieBreaker` | category, optional (D11) |

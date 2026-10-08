@@ -71,7 +71,7 @@ The advisor collects these 17 fields in conversation, not a form. The table is i
 | 3. Constraints | Hours per week available, and the longest program you'd take on right now (for example 8 weeks, a year, two years) | `hoursPerWeek`, `maxProgramMonths` | range + select |
 | 3. Constraints | Can you stop working? | `keepWorking` | yes / no |
 | 3. Constraints | Days per year you can be on site, and the longest single stretch you can be away (for example 3 separate weeks, not 3 weeks in a row) | `maxOnsiteDays`, maxStretchDays | range + number |
-| 4. Location | Where you live and would you relocate | `homeCity`, `homeRegion`, `homeCountry`, `relocate` | text (city, state or province, country) + yes / no |
+| 4. Location | Where you live and would you relocate | `homeCity`, `homeRegion`, `homeCountry`, `homeLat`, `homeLon`, `relocate` | text (city, state or province, country; the model adds approximate coordinates) + yes / no |
 | 4. Location | What should a location give you: network density, target industry hub, relocation path, immersion, affordability, travel ease, international exposure | `locationValues` | pick up to 2 |
 
 Contradiction checks below are a starting set, not the full list. v1 codes them as fixed rules that run after step 4, and the AI raises each one in plain words before results. The advisor may also point out other tensions it notices, and any new one found in persona testing joins the coded set:

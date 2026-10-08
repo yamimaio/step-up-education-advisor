@@ -28,4 +28,12 @@ Choices made while building, where the approved docs were silent. Each links to 
 - The partial profile has the same three fields, all optional. `declined` may name any of them; a declined country or region is a gap, not an error.
 - A declined part is stored as `""` (city, country) or `null` (region), in both `ProfileSchema` and `PartialProfileSchema`. A part named in `declined` must hold exactly that placeholder, and `""` without a `declined` entry is an error. Field rules (trimmed text, ISO code) run first; the declined pairing check runs after them, so a re-ask can need a second round. The engine ignores declined parts. `CountryCode` is shared with the program schema.
 - City and region are trimmed, with the same rule as program text fields (`Text` in `core/schema/common.ts`).
-- Engine matching (country, then region, then city or metro table), the advisor wording and the server's validation and re-ask error land in #22, #25 and step 6.
+- Engine matching (now a distance check, see the next section), the advisor wording and the server's validation and re-ask error land in #22, #25 and step 6.
+
+## Home coordinates and campus coordinates (issue #35, reshaped by docs/ux-two-stage.md)
+
+- Location is compared by distance, not parsed. The profile gains `homeLat` and `homeLon` (degrees, the model's approximate city centre); programs gain `campusLat` and `campusLon`. Ranges are -90 to 90 and -180 to 180, shared as `Latitude` and `Longitude` in `core/schema/common.ts`.
+- Declined: `homeLat` and `homeLon` hold `null`, and `null` without a `declined` entry is an error, the same pairing rule as the other home parts. Declining the city does not force declining the coordinates; the model sets both.
+- Campus coordinates are null only for online programs; an on-site program must have both, like `city`. The research converter leaves them null and the overrides file sets them (`campusLat` and `campusLon` joined the allow-list).
+- Commuting distance is 80 km by default, in `core/engine/constants.ts` (#22 adds it). `metro` stays in the program schema for now; #22 stops using it. Dropping the field is a later choice.
+- The step 4 records on the open PRs need `campusLat` and `campusLon` once this merges; their values are in each PR's notes.
