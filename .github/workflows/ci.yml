@@ -26,6 +26,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run format:check
       - run: npm test
+      - run: npm run validate-data
       - run: npm run build
         env:
           MODEL_API_KEY: ci-canary-not-a-key
