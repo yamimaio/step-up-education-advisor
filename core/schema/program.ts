@@ -56,6 +56,8 @@ const ProgramObject = z.strictObject({
   city: text.nullable(),
   state: text.nullable(),
   // Approximate campus coordinates in degrees; the engine compares them with the user's home.
+  // The official street address the coordinates were derived from; needs a source quoting it.
+  campusAddress: text.nullable(),
   campusLat: Latitude.nullable(),
   campusLon: Longitude.nullable(),
   // Same-metro key (for example "boston" for Boston and Cambridge); resolved by core in step 3.
@@ -131,6 +133,7 @@ export const FACT_GROUPS = {
     "longestStretchDays",
     "hoursPerWeek",
   ],
+  "campus location": ["campusAddress", "campusLat", "campusLon"],
   "class profile": ["cohortMedianExperienceYears", "cohortExperienceBasis", "cohortSeniority"],
 } as const satisfies Record<string, readonly FieldKey[]>;
 
@@ -196,8 +199,22 @@ export const ProgramSchema = ProgramObject.superRefine((p, ctx) => {
   } else if (p.city === null) {
     fail(["city"], "required unless the program is online");
   } else {
-    for (const f of ["campusLat", "campusLon"] as const) {
+    for (const f of ["campusAddress", "campusLat", "campusLon"] as const) {
       if (p[f] === null) fail([f], "required unless the program is online");
+    }
+  }
+
+  // The coordinates are derived from the address, so the address is quoted from the school and
+  // the figure notes say so.
+  if (p.campusAddress !== null) {
+    const quotes = p.sources.filter((s) => s.field === "campusAddress");
+    if (!quotes.some((s) => s.quote.toLowerCase().includes(p.campusAddress!.toLowerCase()))) {
+      fail(["campusAddress"], "needs a source with field campusAddress whose quote contains it");
+    }
+  }
+  for (const f of ["campusLat", "campusLon"] as const) {
+    if (p[f] !== null && !/derived/i.test(p.figureNotes[f] ?? "")) {
+      fail(["figureNotes", f], 'say how it was obtained, for example "derived from campusAddress"');
     }
   }
 

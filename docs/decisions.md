@@ -34,6 +34,7 @@ Choices made while building, where the approved docs were silent. Each links to 
 
 - Location is compared by distance, not parsed. The profile gains `homeLat` and `homeLon` (degrees, the model's approximate city centre); programs gain `campusLat` and `campusLon`. Ranges are -90 to 90 and -180 to 180, shared as `Latitude` and `Longitude` in `core/schema/common.ts`.
 - Declined: `homeLat` and `homeLon` hold `null`, and `null` without a `declined` entry is an error, the same pairing rule as the other home parts. Declining the city does not force declining the coordinates; the model sets both.
-- Campus coordinates are null only for online programs; an on-site program must have both, like `city`. The research converter leaves them null and the overrides file sets them (`campusLat` and `campusLon` joined the allow-list).
+- Campus coordinates are null only for online programs; any in-person or hybrid program must have `campusAddress`, `campusLat` and `campusLon`, like `city`, so the distance check never silently skips a program (validate-data fails otherwise).
+- The coordinates are checkable: `campusAddress` is the school's street address with an official-page source whose quote contains it (fact group "campus location"), and `figureNotes` for `campusLat` and `campusLon` say they are derived from it. The research converter leaves them null and the overrides file sets them (`campusLat` and `campusLon` joined the allow-list).
 - Commuting distance is 80 km by default, in `core/engine/constants.ts` (#22 adds it). `metro` stays in the program schema for now; #22 stops using it. Dropping the field is a later choice.
 - The step 4 records on the open PRs need `campusLat` and `campusLon` once this merges; their values are in each PR's notes.

@@ -17,6 +17,13 @@ export function source(id: string, field: string, quote = `Fixture quote for ${f
   };
 }
 
+const ADDRESS = "1 Fixture Way, Boston, MA 02110";
+const DERIVED = "Derived from campusAddress (city-centre approximation).";
+
+export function campusSource(id: string) {
+  return source(id, "campusAddress", `Campus: ${ADDRESS}`);
+}
+
 const gsaSource = {
   field: "lodgingPerNightUsd",
   url: GSA,
@@ -46,6 +53,7 @@ function base(id: string, overrides: Partial<ProgramInput>): ProgramInput {
     workCompatible: true,
     city: "Boston",
     state: "MA",
+    campusAddress: ADDRESS,
     campusLat: 42.3601,
     campusLon: -71.0589,
     metro: "boston",
@@ -71,8 +79,9 @@ function base(id: string, overrides: Partial<ProgramInput>): ProgramInput {
       costValue: "Fixture note.",
     },
     ratingLowEvidence: [],
-    figureNotes: {},
+    figureNotes: { campusLat: DERIVED, campusLon: DERIVED },
     sources: [
+      campusSource(id),
       source(id, "format"),
       source(id, "durationMonths"),
       source(id, "tuitionUsd"),
@@ -103,7 +112,11 @@ export const fakeEmba = base("fake-emba", {
   accreditation: ["AACSB"],
   cohortMedianExperienceYears: 14,
   cohortExperienceBasis: "average",
-  figureNotes: { tuitionUsd: "Fixture note: price for the previous entering class." },
+  figureNotes: {
+    tuitionUsd: "Fixture note: price for the previous entering class.",
+    campusLat: DERIVED,
+    campusLon: DERIVED,
+  },
   ratings: { network: 5, depth: 4, practicality: 3, costValue: 2 },
 });
 
@@ -130,6 +143,7 @@ export const fakeMba = base("fake-mba", {
   lodgingPerNightUsd: null,
   ratings: { network: 4, depth: 5, practicality: 1, costValue: 2 },
   sources: [
+    campusSource("fake-mba"),
     source("fake-mba", "format"),
     source("fake-mba", "durationMonths"),
     source("fake-mba", "tuitionUsd"),
@@ -161,6 +175,7 @@ export const fakeSpecializedMasters = base("fake-specialized-masters", {
   ratings: { network: 3, depth: 4, practicality: 4, costValue: 3 },
   ratingLowEvidence: ["network"],
   sources: [
+    campusSource("fake-specialized-masters"),
     source("fake-specialized-masters", "format"),
     source("fake-specialized-masters", "tuitionPerCourseUsd"),
     source("fake-specialized-masters", "cohortSeniority"),
@@ -182,6 +197,7 @@ export const fakeCertificate = base("fake-certificate", {
   hoursPerWeek: null,
   city: null,
   state: null,
+  campusAddress: null,
   campusLat: null,
   campusLon: null,
   metro: null,
@@ -225,6 +241,7 @@ export const fakeShortCourse = base("fake-short-course", {
   cohortSeniority: null,
   ratings: { network: 3, depth: 2, practicality: 4, costValue: 3 },
   sources: [
+    campusSource("fake-short-course"),
     source("fake-short-course", "format"),
     source("fake-short-course", "tuitionUsd"),
     gsaSource,
