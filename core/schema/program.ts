@@ -39,8 +39,8 @@ const ProgramObject = z.strictObject({
   format: Format,
   // Typical or fastest published length; durationMaxMonths is the slowest allowed pace.
   // Null means the school doesn't publish it.
-  durationMonths: nonNegative.nullable(),
-  durationMaxMonths: nonNegative.nullable(),
+  durationMonths: z.number().positive().nullable(),
+  durationMaxMonths: z.number().positive().nullable(),
   // What the program awards beyond the certificate, in the school's words.
   credits: text.nullable(),
   attendance: Attendance,

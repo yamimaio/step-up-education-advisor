@@ -229,6 +229,21 @@ describe("other rules", () => {
     expect(ProgramSchema.safeParse(p).success).toBe(false);
   });
 
+  it.each([0, -1])("rejects a duration of %s months, but allows a fraction", (months) => {
+    const p = clone(fakeCertificate);
+    p.durationMonths = months;
+    p.durationMaxMonths = null;
+    expect(problems(p).join("\n")).toMatch(/durationMonths/);
+    p.durationMonths = 0.25;
+    expect(problems(p)).toEqual([]);
+  });
+
+  it("rejects a duration max of 0", () => {
+    const p = clone(fakeCertificate);
+    p.durationMaxMonths = 0;
+    expect(problems(p).join("\n")).toMatch(/durationMaxMonths/);
+  });
+
   it("rejects a duration max below the typical duration", () => {
     const p = clone(fakeCertificate);
     p.durationMaxMonths = 4;
