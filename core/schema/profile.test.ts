@@ -123,6 +123,20 @@ describe("home location", () => {
     ).toBe(false);
   });
 
+  it("rejects a half pair of home coordinates", () => {
+    const base = { ...personaAProfile, ...home };
+    const halves = [
+      { homeLat: null, declined: ["homeLat"] },
+      { homeLon: null, declined: ["homeLon"] },
+    ];
+    for (const h of halves) expect(ProfileSchema.safeParse({ ...base, ...h }).success).toBe(false);
+    const partial = { homeLat: null, homeLon: 10, declined: ["homeLat"] };
+    expect(PartialProfileSchema.safeParse(partial).success).toBe(false);
+    expect(PartialProfileSchema.safeParse({ homeLat: null, declined: ["homeLat"] }).success).toBe(
+      true,
+    );
+  });
+
   it("trims the city", () => {
     const r = ProfileSchema.parse({ ...personaAProfile, homeCity: "Boston " });
     expect(r.homeCity).toBe("Boston");

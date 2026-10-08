@@ -34,7 +34,7 @@ const ProfileObject = z.strictObject({
   keepWorking: z.boolean(),
   maxOnsiteDays: z.number().nonnegative(),
   maxStretchDays: z.number().nonnegative(),
-  // "" is the placeholder for a declined city or country; checkDeclinedHome pairs it with `declined`.
+  // "" is the placeholder for a declined city or country, null for region, lat and lon; checkDeclinedHome pairs it with `declined`.
   homeCity: Text.or(z.literal("")),
   // null when the country has no state or province and the user said so, or when declined.
   homeRegion: Text.nullable(),
@@ -86,6 +86,18 @@ function checkDeclinedHome(
         message: "empty: ask again, or name it in declined",
       });
     }
+  }
+  // The pair moves together: a distance needs both, and a half pair would read as 0.
+  if (
+    p.homeLat !== undefined &&
+    p.homeLon !== undefined &&
+    (p.homeLat === null) !== (p.homeLon === null)
+  ) {
+    ctx.addIssue({
+      code: "custom",
+      path: [p.homeLat === null ? "homeLat" : "homeLon"],
+      message: "homeLat and homeLon are both numbers or both declined",
+    });
   }
 }
 
