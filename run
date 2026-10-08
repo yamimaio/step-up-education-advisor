@@ -1,0 +1,4 @@
+#!/bin/sh
+# Runs a command in the dev container. Nothing but git, gh and docker runs on the host.
+# Example: ./run npm test
+exec docker compose run --rm dev "$@"

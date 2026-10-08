@@ -1,0 +1,34 @@
+services:
+  # Production image. Run one of web or dev at a time: both use port 3000.
+  web:
+    build: .
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
+
+  # Development container. `docker compose up dev` starts the dev server;
+  # `./run <cmd>` runs any command in it.
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    working_dir: /repo
+    command: npm run dev -- --hostname 0.0.0.0
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      WATCHPACK_POLLING: "true"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - .:/repo
+      # Linux binaries (Next SWC, lightningcss) stay in a volume, never on the host.
+      - node_modules:/repo/node_modules
+      - next_cache:/repo/.next
+
+volumes:
+  node_modules:
+  next_cache:
