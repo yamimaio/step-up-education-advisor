@@ -61,3 +61,13 @@ describe("City matching: free-text home cities", () => {
     expect(sameMetro("Cambridge, MA", boston)).toBe(true);
   });
 });
+
+describe("City matching: city, state and country in one answer", () => {
+  it("uses the city with its state when a country follows", () => {
+    const sf = fixture("fake-executive", { city: "Palo Alto", metro: "sf_bay_area" });
+    expect(sameMetro("San Jose, CA, USA", sf)).toBe(true);
+    const boston = fixture("fake-executive", { city: "Boston", metro: "boston" });
+    expect(sameMetro("Cambridge, MA, USA", boston)).toBe(true);
+    expect(sameMetro("Boston, MA, USA", boston)).toBe(true);
+  });
+});

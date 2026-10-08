@@ -21,7 +21,10 @@ const programCityKey = (city: string) =>
 // as written with a qualifier, because the profile has no state or country.
 function homeParts(homeCity: string): { name: string; key: string | null } {
   const name = normalizeCity(homeCity.split(",")[0] ?? "");
-  const whole = METROS[normalizeCity(homeCity)];
+  // "San Jose, CA, USA": try the whole text, then the city with its state or country.
+  const parts = homeCity.split(",");
+  const whole =
+    METROS[normalizeCity(homeCity)] ?? METROS[normalizeCity(parts.slice(0, 2).join(" "))];
   if (whole) return { name, key: whole };
   return { name, key: AMBIGUOUS_HOME_CITIES.includes(name) ? null : (METROS[name] ?? null) };
 }
