@@ -133,8 +133,13 @@ export const FACT_GROUPS = {
 
 const isGsa = (url: string | undefined) => {
   if (!url) return false;
-  const host = new URL(url).hostname;
-  return host === "gsa.gov" || host.endsWith(".gsa.gov");
+  // A malformed url is already reported by z.url(); superRefine still runs, so don't throw here.
+  try {
+    const host = new URL(url).hostname;
+    return host === "gsa.gov" || host.endsWith(".gsa.gov");
+  } catch {
+    return false;
+  }
 };
 
 export const ProgramSchema = ProgramObject.superRefine((p, ctx) => {

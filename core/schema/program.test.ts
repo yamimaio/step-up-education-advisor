@@ -158,6 +158,15 @@ describe("lodging", () => {
     expect(problems(p).join("\n")).toMatch(/lodging needs a source/);
   });
 
+  it("reports a url without a scheme as an issue instead of throwing", () => {
+    const p = clone(fakeExecutive);
+    p.sources = p.sources.map((s) =>
+      s.field === "lodgingPerNightUsd" ? { ...s, url: "www.gsa.gov/per-diem" } : s,
+    );
+    const out = problems(p);
+    expect(out.some((m) => m.startsWith("sources.") && m.includes(".url:"))).toBe(true);
+  });
+
   it("does not require gsa.gov outside the US", () => {
     const p = clone(fakeExecutive);
     p.country = "GB";
