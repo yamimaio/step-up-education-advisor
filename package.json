@@ -16,9 +16,12 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "ci": "npm run lint && npm run typecheck && npm run format:check && npm test"
+    "ci": "npm run lint && npm run typecheck && npm run format:check && npm test && npm run validate-data",
+    "validate-data": "tsx scripts/validate-data.ts",
+    "draft-records": "tsx scripts/draft-records.ts"
   },
   "dependencies": {
+    "json5": "2.2.3",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",

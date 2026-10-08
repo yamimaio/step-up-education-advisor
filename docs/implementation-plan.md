@@ -90,13 +90,23 @@ An ESLint `no-restricted-imports` rule fails the build if anything in `core/` im
 Everything in the plan's schema table, plus three additions from the decisions above:
 
 - `verification: { status: "draft" | "verified", verifiedBy: string | null }` (D7)
-- `lodgingPerNightUsd: number | null` with its own `sources` entry (GSA, date) (D8)
+- `lodgingPerNightUsd: { min, max } | null` with its own `sources` entry (GSA, date) (D8). GSA lodging varies by month, so this is the range across the fiscal year, and the travel estimate uses `max`. It is null for online programs
+- Changes after reading the first four research files (PR 2, approved Oct 8):
+  - `durationMonths` is nullable (the typical or fastest published length) and `durationMaxMonths` is the slowest allowed pace
+  - `credits`, `accreditation` and `tuitionIncludes` are nullable; for `accreditation`, `[]` means none or non-degree and null means not published
+  - `attendance: "none" | "residencies" | "recurring_weekends" | "recurring_evenings" | "recurring_daily"` (daily means full-time on campus) and `onsiteNote` (the published wording). The day and trip counts win when they exist; `attendance` classifies the pattern and says whether the student must live near campus
+  - `tuitionPerCourseUsd` and `courseCount`; `tuitionUsd` stays null when no total is published
+  - `lodgingIncluded: boolean | null`, so the travel estimate doesn't count lodging the tuition already covers
+  - `city` is the bare city name, null only for online programs; `state`; `country` is an ISO 3166 alpha-2 code, not fixed to US; `metro` groups cities that share a commute (Boston and Cambridge)
+  - `cohortExperienceBasis: "median" | "average" | "unspecified"`, set whenever the cohort years are
+  - `figureNotes`: a short caveat per field, shown next to the value (a price for the previous entering class, a range stored as its midpoint)
+  - sources carry `kind: "official_page" | "school_correspondence"`; a correspondence source needs no URL. `nextStartDate` stays out (DQ7)
 - `ratingNotes` as an object keyed by rating, not one string, so the card can show the right note per rating
 - `paymentOptions` as a list of fixed values, not free text: `installments`, `employer_sponsorship`, `loans`, `scholarships`, `early_payment_discount` (null when the page doesn't say). They match the user's `paymentPlan`: installments to installments, employer to employer_sponsorship, loans to loans; savings, mixed and no_preference need no match, and the card then lists every payment option the program publishes, so the user still learns how they could pay. A match or a gap is a line on the card ("Installments: offered" or "Installments: not published"). It never filters or scores a program, because schools often arrange payment on request
 
 `verifiedOn` and `confidence` are not stored. `verifiedOn` is computed as the oldest `checkedOn` in `sources`; confidence is computed per user (it depends on near misses).
 
-Validation rules beyond types: every program has at least one source for tuition (or tuition is null), one for schedule and one for class profile; ratings are integers 1 to 5; `onsiteDaysPerYear` is 0 when `format` is online.
+Validation rules beyond types: a fact group (tuition, schedule, class profile) needs at least one source whenever one of its fields has a value; ratings are integers 1 to 5; an online program has 0 on-site days, residencies and stretch, attendance `none`, and no lodging; every other program has a city; a US lodging rate needs a gsa.gov source; every source names a real program field and carries a real quote (never "not published").
 
 ### Profile (what `propose_profile` sends and the user confirms)
 
@@ -292,6 +302,12 @@ Each file holds: who they are, their true answers to all 17 fields, what they sa
 
 - Executive doctorates (part-time DBA or leadership doctorates for working senior leaders) as a possible seventh type after the challenge (agreed with Yami, Oct 8). PhDs stay out of scope.
 
+Engine follow-ups from the PR 2 schema changes (for step 3):
+
+- Travel: use lodging `max`; derive trips and nights from `residencyCount` and `onsiteDaysPerYear` when they exist, and only when they are null estimate from `attendance: "recurring_weekends"` (every other weekend is about 26 trips a year), labelled as an estimate; skip lodging when `lodgingIncluded` is true.
+- Location: resolve cities through a small city-to-metro table, so a user in Boston is local to Cambridge. Same metro means no airfare or lodging. A `recurring_evenings` or `recurring_daily` program outside the user's metro fails the location check, because it needs the student within commuting distance; the advisor can ask "could you commute weekly?" (step 5).
+- Unknown `durationMonths` or `tuitionUsd` follow the existing unknown-value rule; a program with `tuitionPerCourseUsd` and `courseCount` may show "about $X at N courses" as a labelled estimate.
+
 ## 12. Refinements to the approved build plan
 
 These came out of Yami's review on Oct 7 and 8 and take precedence over `docs/build-plan.md` where the two differ:
@@ -302,3 +318,4 @@ These came out of Yami's review on Oct 7 and 8 and take precedence over `docs/bu
 - Degree adjustment is graded: `no` −3, `unsure` −2, `preferred` −1 for MBA, EMBA and specialized master's (the approved plan used −3 for all three).
 - PhDs are out of scope and referred; executive doctorates are a follow-up (section 11).
 - Program research and ratings run in Perplexity, not Claude (D13); the build runs on Sonnet 5.5 with fresh-session code reviews (D15).
+- Program schema changed after reading the first four research files: lodging as a range, `attendance`, per-course tuition, `lodgingIncluded`, nullable duration, credits and accreditation, ISO `country`, `metro`, `figureNotes` and `source.kind` (section 3).
