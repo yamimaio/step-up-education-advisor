@@ -1,0 +1,139 @@
+# PR 3: Scoring engine (issue #5)
+
+## Context
+
+Step 3 builds the pure TypeScript engine from implementation plan section 4. It turns a confirmed `Profile` and the `Program[]` dataset into one `EngineResult`: the category verdict, the no-program trigger, the constraint checks per program, and three scenario shortlists. Every number on a card comes from this engine (rule 7), so each rule needs a named test. Section 12 and the section 11 follow-ups (travel, metro, unknown duration/tuition) take precedence over `docs/build-plan.md`. DQ10, DQ11 and DQ18 in `docs/build-steps.md` fix near-miss-at-0, the six contradiction predicates and city matching.
+
+Branch `step-3-engine` from `main` (PR 2 is merged). The PR body starts with `Closes #5`. After the build, a fresh **Opus 5.5** session reviews it with `/code-review --comment`.
+
+## Files
+
+All files sit in `core/engine/`. They are pure: no I/O, no `node:` imports, and `today` is passed in. Each `X.ts` has a `X.test.ts` beside it.
+
+| File | Exports |
+| --- | --- |
+| `types.ts` | `CheckId` (8), `CheckStatus`, `Check { id, status, value, limit, unit, unknown, note? }`, `ProgramEvaluation`, `CategoryResult`, `NoProgramResult`, `EngineResult`, `Contradiction` |
+| `constants.ts` | `TYPE_RATINGS` matrix, `NEED_WEIGHTS [3,2,1]`, `DEGREE_ADJUST {no:-3, unsure:-2, preferred:-1}`, `DEGREE_ADJUSTED_TYPES`, `REQUIRED_RULES_OUT`, `GROW_IN_ROLE_BONUS 2` + types, `NO_PROGRAM_THRESHOLD 4`, `NEAR_MISS_PCT 15`, `HOURS_PASS_PCT 25`, `HOURS_NEAR_PCT 50`, `SCENARIO_WEIGHTS`, `CATEGORY_BONUS 0.5`, `PEER_FIT`, `LOCATION_FIT`, `AIRFARE_MIDPOINTS`, `CONFIDENCE_WINDOW_DAYS 60`, `WEEKEND_TRIPS_PER_YEAR 26`, `METROS` (city → metro key) |
+| `normalize.ts` | `applyDeclinedDefaults(profile)` → the profile the engine actually uses plus `profileGaps` |
+| `metro.ts` | `normalizeCity`, `sameMetro(homeCity, program)` (DQ18 + metro table) |
+| `travel.ts` | `travelEstimate(program, profile)` |
+| `constraints.ts` | `overshoot()` helper, one function per check, `checkConstraints(program, profile, travel)` → `{ checks, status }` |
+| `categoryFit.ts` | `categoryFit(profile, programs, evaluations)` |
+| `noProgram.ts` | `noProgram(profile, category, evaluations)` |
+| `peerFit.ts` | `peerFit(profile, program)` → `{ points, text }` |
+| `locationFit.ts` | `locationFit(profile, program)` → 1 to 5 |
+| `confidence.ts` | `confidence(program, checks, today)` → `{ level, reasons[] }` |
+| `scenarios.ts` | `scenarioScores(...)`, `shortlists(...)` |
+| `contradictions.ts` | `checkContradictions(partial, programs)` (signature from DQ11) |
+| `evaluate.ts` | `evaluate(profile, programs, today)` |
+
+Also:
+- `core/index.ts` exports `evaluate`, `checkContradictions` and the engine types.
+- `tests/fixtures/profiles.ts` adds `workedExampleProfile` and a `makeProfile(overrides)` helper.
+- `.github/workflows/ci.yml` adds a coverage report for `core/engine` with no threshold (DQ15). `@vitest/coverage-v8` is already installed.
+- `docs/decisions.md` gets a "Step 3" section that records the defaults below.
+
+**Order inside `evaluate`** (from build-steps):
+1. Apply the declined-field defaults.
+2. Compute the travel estimate and the constraint checks for each program.
+3. Run category fit.
+4. Run the no-program rule.
+5. Compute peer fit, location fit, confidence and scenario scores for each program.
+6. Build the shortlists.
+7. List the profile gaps.
+
+## Rule → function → test
+
+**"Unknown-value rule"** (section 4) means the program doesn't publish a figure, so the record holds `null` (for example, no tuition total). The check is a **near miss** if the user set a limit for it and a **pass** if they didn't. Either way the card shows "not published" and confidence drops.
+
+`describe` titles are the rules in plain words, so the test list reads as the rulebook. `S8-n` marks the nine tests from section 8; `E` marks the build-steps edge tests.
+
+| Rule | Function | Test |
+| --- | --- | --- |
+| Needs weighted 3/2/1 × matrix (Strong 2, Some 1, Little 0) | `categoryFit` | **S8-1** "reproduces the plan's worked example": executive 11, EMBA and MBA out because of length, specialized master's 1, certificate 3, short course 3, run on the fixtures |
+| Degree `no` −3, `unsure` −2, `preferred` −1 on MBA, EMBA and specialized master's | `categoryFit` | one case per value |
+| Degree `required` rules out executive, certificate and short course | `categoryFit` | **S8-2** |
+| `grow_in_role` adds +2 to executive, certificate and short course | `categoryFit` | **S8-3** |
+| `step_up` adds nothing to any type; the matrix alone decides (MBA, EMBA and master's win through the degree and network ratings) | `categoryFit` | a `step_up` profile scores exactly its matrix subtotal plus degree adjustments |
+| A type with records but none passing or near-missing is out | `categoryFit` | covered by S8-1 (EMBA, MBA) |
+| A type with no records is never ruled out (D6) | `categoryFit` | **S8-9** |
+| A tie returns `tie: [A, B]`; `tieBreaker` resolves it | `categoryFit` | E: tie, and tie plus tieBreaker |
+| No type ≥ 4 → `no_type_fits` | `noProgram` | **S8-6a**: the degree is required but the user allows only 3 months. Executive, certificate and short course are ruled out by the degree rule; MBA, EMBA and master's are out on length; no type is left |
+| Nothing passes or near-misses → `nothing_passes` | `noProgram` | **S8-6b**: $3k budget, 2 h/week, 0 on-site days |
+| `goalClarity` unclear → `goal_unclear` | `noProgram` | **S8-6c** |
+| Near miss when 15% or less over the limit | `overshoot` | **S8-4**: 14% near miss and named, 16% fails. E: exactly 15% is a near miss, 15.01% fails |
+| A limit of 0 has no near miss (DQ10) | `overshoot` | E |
+| Tuition ≤ budget; null tuition with a budget set → near miss, "not published"; with no limit → pass | `checkTuition` | **S8-5**, including that both cases lower confidence |
+| Travel cost ≤ travel budget (when one is set) | `checkTravelBudget` | pass, near miss and fail; null budget passes |
+| On-site days and longest stretch | `checkOnsiteDays`, `checkLongestStretch` | pass, near miss and fail; null → unknown rule |
+| Length ≤ `maxProgramMonths` | `checkLength` | EMBA 24 against 12 fails (S8-1); null → unknown rule |
+| Hours: overlap or ≤ +25% passes with a note; ≤ +50% near miss; beyond fails | `checkHours` | E: overlap passes; 12 against 5–10 passes with "about 2 hours a week more"; 15 against 10 near miss; 16 against 10 fails |
+| Work-compatible when `keepWorking` (boolean, no near miss) | `checkWorkCompatible` | pass and fail |
+| Location: a full-time in-person program needs the home metro or relocation; evenings or daily attendance outside the metro fails; everything else passes and is left to the travel checks | `checkLocation` + `sameMetro` | E: in-person non-work-compatible fails unless same metro or relocating; Boston user is local to Cambridge; accent and case insensitive |
+| Program status = worst check | `checkConstraints` | small case |
+| Travel (D8 + §11): trips, nights, lodging max, airfare midpoint, `lodgingIncluded`, same metro → 0 | `travelEstimate` | E: D8 numbers (fake-executive from Buenos Aires: 3 × (1,250 + 5 × 365) = 9,225); airfare `unknown` → lodging only with the flag set; lodging included; weekends estimate labelled |
+| Location fit (D9): 3, +1 per matched value, appeal +0.5 and burden −1 for hybrid and in-person, clamped 1 to 5 | `locationFit` | E: clamps at 1 and at 5 |
+| Peer fit: `more_senior` below the user −1, at or above +0.5; `same_level` gap > 5 −1; otherwise 0 | `peerFit` | **S8-7**: 16 against median 5 gives −1, and the text says "about 5 years … you have 16" |
+| Confidence: high, medium or low (60 days, cost and on-site time from an official page, no near miss) | `confidence` | E: day 60 vs day 61; one condition missing → medium; draft → low (D7); a real near miss (10% over budget, all figures published) stays high |
+| Scenario score = weighted sum + 0.5 for the winning category + peer fit | `scenarioScores` | E: every weight row sums to 1; a hand-computed score |
+| Top 3 per scenario: passes first, near misses only fill empty slots and are labelled | `shortlists` | E |
+| The six contradiction rules (DQ11 predicates) | `checkContradictions` | **S8-8**: each rule fires on its example; a clean profile and an empty partial are quiet |
+| Declined fields get neutral defaults and appear in `profileGaps` | `applyDeclinedDefaults` | declined tuition → no limit, and a gap is listed |
+| Deterministic | `evaluate` | E: two runs are deep-equal; input not mutated |
+
+**Implementation notes:**
+- Percent checks use integer arithmetic (`value * 100 <= limit * (100 + pct)`), so the exactly-15% edge doesn't fail on float error.
+- Shortlist ties are broken by program id, so the order is deterministic.
+- Fixtures are parsed through `FixtureDatasetSchema` before use, so `evaluate` gets real `Program` objects.
+
+## Ambiguous rules and the defaults I'll use
+
+Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). ★ marks the ones that change results and that I'd like you to look at.
+
+1. ★ **The no-program "no type fits" example doesn't reproduce.** The plan's example is "the only real need is a new city". With a new city ranked first, the full-time MBA scores 3 × 2 = 6, or 3 even after the −3 degree adjustment plus its other needs, so the rule stays above 4. In practice the trigger fires only when the strong types are out. **Default:** keep the threshold at 4. Test 6a uses "a degree is required, but 3 months at most", which fires through rule-outs. I'll note that the plan's prose example doesn't fire the trigger.
+2. ★ **Programs of a type that is "out" in step 1.** If the degree is required, executive programs are ruled out, but an executive program can still pass every constraint. **Default:** programs of an out type are left out of the shortlists. They keep their evaluations, so the card or the advisor can still show them.
+3. ★ **Which length the length check uses.** **Default:** `durationMonths`, the fastest published pace. Null falls back to `durationMaxMonths`, and when both are null the unknown-value rule applies.
+4. ★ **Per-course tuition.** **Default:** the tuition check uses only `tuitionUsd`, so null follows the unknown-value rule. The "about $X at N courses" estimate goes in the check's `note` for the card and never decides pass or fail.
+5. ★ **Nights per trip (D8: on-site days ÷ residencies).** Five on-site days is 4 nights. **Default:** follow D8 as written (days = nights). It overestimates a little, it is labelled as an estimate, and it matches persona A's fixture numbers. I'll note it for Thursday's tuning.
+6. **Trips across years.** `residencyCount` is per year (schema comment). Trips = `residencyCount × ceil(durationMonths / 12)`.
+7. **Weekend programs with no counts.** Use 26 trips a year at 2 nights each, labelled as an estimate.
+8. **Missing data in the travel estimate.** If on-site counts or lodging are null (and lodging isn't included), the estimate is `unknown`, and the travel-budget check follows the unknown-value rule.
+9. **Hours compared against a program range.** The program's `min` is compared with the user's `max`. A program's `max` below the user's `min` passes, since needing fewer hours is fine. The note is the rounded gap between the program's `min` and the user's `max`.
+10. **Unknown-value rule for limits the user always sets.** `maxOnsiteDays`, `maxStretchDays`, `maxProgramMonths` and `hoursPerWeek` are always set unless declined. A null program value is therefore always a near miss. With today's data, many real programs will be near misses only because a figure is unpublished. That is the approved rule; I'll flag it for Thursday.
+11. **Declined fields.** The profile still carries a value, and the engine ignores it. Defaults:
+    - budgets and limits: no limit
+    - `peerPreference`: `doesnt_matter`
+    - `travelComfort`: `fine`
+    - `airfareRange`: `unknown`
+    - `degreeRequired`: no adjustment (not specified anywhere)
+    - `homeCity`: no metro match, so programs that need you local fail unless you'd relocate
+
+    `profileGaps` = the `declined` fields plus `airfareRange: unknown`.
+12. **No-program precedence when several triggers fire.** `goal_unclear`, then `nothing_passes`, then `no_type_fits`. An empty dataset counts as `nothing_passes`. Shortlists are still built ("if you decide to go anyway"), and with no winner there's no +0.5 bonus.
+13. **Winner when every type is out.** `winner` and `runnerUp` are `Category | null`, and `no_type_fits` fires.
+14. **Ties.** A tie exists only between the top two non-out scores. A three-way tie takes the first two in matrix order. `tieBreaker` makes that type the winner only if it's one of the tied pair.
+15. **`decidingNeeds` ("the two needs that decided it").** No formula is given. **Default:** the two needs where `weight × (winner rating − runner-up rating)` is largest, with ties broken by need rank.
+16. **Confidence (your decision, Oct 8: data gaps only).** The definition is build-plan.md's, read through section 4 ("confidence describes the data, not the fit"). There are four conditions:
+    - verified, with `verifiedOn` (the oldest `checkedOn`) within 60 days
+    - tuition published, from an `official_page` source
+    - on-site time published, from an `official_page` source
+    - no check that hit the unknown-value rule (a real fit near miss, like 10% over budget, does **not** count)
+
+    All four → high; exactly one missing → medium; two or more → low. A draft record is capped at low (D7). The reasons are returned for the card.
+
+    "Unsure" answers beyond `degreeRequired` stay out of step 3 (your decision). No issue for now.
+17. **Contradictions.**
+    - The signature takes `programs`, because DQ11's R2 needs the dataset.
+    - R2 counts only degree-granting types (MBA, EMBA, specialized master's) with a known `tuitionUsd` at or under the budget. A null budget never fires.
+    - Missing partial fields never fire a rule.
+    - Rules already in `resolvedTensions` are still returned, marked `resolved: true`, so the advisor can skip them.
+18. **Metro table contents.** A small seed: Boston/Cambridge, the SF Bay Area, New York, Chicago/Evanston, Washington DC, Philadelphia, New Haven, Los Angeles, plus an exact city-name match (DQ18). Unknown cities match only on exact name. You can extend it in `constants.ts`.
+
+## Verification
+
+- `./run npm test`: all engine tests pass, and the worked-example test's name says "reproduces the plan's worked example".
+- `./run npm run lint`: the core boundary rule is green (no `node:` or web imports in `core/engine`).
+- `./run npm run typecheck` and `./run npm run format:check`
+- `./run npx vitest run --coverage core/engine` prints a report; CI shows the same, with no gate.
+- Skim check: read the `describe` titles as the rule list above.
+- Then open the PR (`Closes #5`, decisions listed), and ask for the fresh Opus 5.5 review.
