@@ -20,6 +20,7 @@ export const Attendance = z.enum([
   "residencies",
   "recurring_weekends",
   "recurring_evenings",
+  "recurring_daily",
 ]);
 export type Attendance = z.infer<typeof Attendance>;
 

@@ -94,7 +94,7 @@ Everything in the plan's schema table, plus three additions from the decisions a
 - Changes after reading the first four research files (PR 2, approved Oct 8):
   - `durationMonths` is nullable (the typical or fastest published length) and `durationMaxMonths` is the slowest allowed pace
   - `credits`, `accreditation` and `tuitionIncludes` are nullable; for `accreditation`, `[]` means none or non-degree and null means not published
-  - `attendance: "none" | "residencies" | "recurring_weekends" | "recurring_evenings"` and `onsiteNote` (the published wording). The day and trip counts win when they exist; `attendance` classifies the pattern and says whether the student must live near campus
+  - `attendance: "none" | "residencies" | "recurring_weekends" | "recurring_evenings" | "recurring_daily"` (daily means full-time on campus) and `onsiteNote` (the published wording). The day and trip counts win when they exist; `attendance` classifies the pattern and says whether the student must live near campus
   - `tuitionPerCourseUsd` and `courseCount`; `tuitionUsd` stays null when no total is published
   - `lodgingIncluded: boolean | null`, so the travel estimate doesn't count lodging the tuition already covers
   - `city` is the bare city name, null only for online programs; `state`; `country` is an ISO 3166 alpha-2 code, not fixed to US; `metro` groups cities that share a commute (Boston and Cambridge)
@@ -305,7 +305,7 @@ Each file holds: who they are, their true answers to all 17 fields, what they sa
 Engine follow-ups from the PR 2 schema changes (for step 3):
 
 - Travel: use lodging `max`; derive trips and nights from `residencyCount` and `onsiteDaysPerYear` when they exist, and only when they are null estimate from `attendance: "recurring_weekends"` (every other weekend is about 26 trips a year), labelled as an estimate; skip lodging when `lodgingIncluded` is true.
-- Location: resolve cities through a small city-to-metro table, so a user in Boston is local to Cambridge. Same metro means no airfare or lodging. A `recurring_evenings` program outside the user's metro fails the location check, because it needs the student within commuting distance; the advisor can ask "could you commute weekly?" (step 5).
+- Location: resolve cities through a small city-to-metro table, so a user in Boston is local to Cambridge. Same metro means no airfare or lodging. A `recurring_evenings` or `recurring_daily` program outside the user's metro fails the location check, because it needs the student within commuting distance; the advisor can ask "could you commute weekly?" (step 5).
 - Unknown `durationMonths` or `tuitionUsd` follow the existing unknown-value rule; a program with `tuitionPerCourseUsd` and `courseCount` may show "about $X at N courses" as a labelled estimate.
 
 ## 12. Refinements to the approved build plan

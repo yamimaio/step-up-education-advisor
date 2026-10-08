@@ -378,7 +378,7 @@ export function convertResearch(input: {
   if (record.attendance === undefined) {
     throw new Error(
       `attendance can't be derived for ${id} (no residencies, not online). Set it in the overrides file: ` +
-        `recurring_weekends, recurring_evenings or residencies.`,
+        `recurring_weekends, recurring_evenings, recurring_daily or residencies.`,
     );
   }
 
