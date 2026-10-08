@@ -33,4 +33,4 @@ Docker Compose 2.24 or newer is required.
 - `core/`: data, schemas, engine and advisor rules. No web or model code; it never imports `app/` or `server/` (enforced by ESLint)
 - `server/`: model adapter and chat loop (website only)
 - `app/`: the Next.js page and `/api/chat`
-- `personas/`, `examples/`, `research/`, `docs/`
+- `personas/`, `examples/`, `docs/` (`docs/research/` holds the Perplexity research behind each program record)

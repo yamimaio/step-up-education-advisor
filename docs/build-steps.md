@@ -81,13 +81,13 @@ Commits end with the Co-Authored-By line. Anything found that's outside the step
   - `no-console: error` everywhere except `server/log.ts` (step 6) and `scripts/**`.
 - `vitest.config.ts`: node environment by default, aliases matching tsconfig, includes `**/*.test.ts(x)`
 - `tests/boundary.test.ts`: lints probe code through ESLint's Node API (`lintText` with `filePath: "core/__probe__.ts"`) and expects an error for `import x from "../server/x"`, `"@app/page"` and `"@anthropic-ai/sdk"`. A probe with a clean import must produce no error. This proves the rule bites and keeps biting.
-- `core/index.ts` (empty public API with a comment), `server/.gitkeep`, `personas/.gitkeep`, `examples/.gitkeep`, `research/.gitkeep`
+- `core/index.ts` (empty public API with a comment), `server/.gitkeep`, `personas/.gitkeep`, `examples/.gitkeep`, `docs/research/.gitkeep`
 - `Dockerfile`: multi-stage on `node:24-alpine` (deps → `npm ci`; build → `next build`; runner → standalone output as user `node`, `EXPOSE 3000`, `CMD ["node","server.js"]`). No key in any layer.
 - `.dockerignore`: `.env*` (keeps `.env.example`), `node_modules`, `.next`, `.git`, `research`
 - `docker-compose.yml`: service `web` (the production image: `build: .`, `ports: ["3000:3000"]`, `env_file: [{ path: .env, required: false }]` so the placeholder works before the key exists) plus the `dev` service above. `web` and `dev` both use port 3000, so run one at a time.
 - `.env.example`: `MODEL_API_KEY=` with a one-line comment saying it's server-only and never committed
 - `.gitignore`: Node defaults plus `.env`, `.env.*`, `!.env.example`, `.next`, `coverage`
-- `.prettierrc.json`, `.prettierignore` (ignores `docs/`, `research/`)
+- `.prettierrc.json`, `.prettierignore` (ignores `docs/`, which includes `docs/research/`)
 - `.github/workflows/ci.yml` (below)
 - `docs/decisions.md`: a log of the Design-question answers from this plan, one line each
 - `README.md`: a short what-it-is and how to run it (dev, Docker, tests). It grows on Saturday.
@@ -148,7 +148,7 @@ From here on, every command in this plan written as `npm …` means `./run npm �
 - `tests/fixtures/programs.ts`: six realistic but clearly fake records, one per type (`fake-executive`, `fake-emba`, …). They're shaped so the worked example works out: the executive program is 8 months, both MBAs are 24 months, and the specialized master's, certificate and short course fit inside 12 months.
 - `tests/fixtures/profiles.ts`: persona-A-like profile for the worked example
 - **Converter, built now and run in step 4** (rule 6): `scripts/draft-records.ts` + `scripts/lib/research.ts`
-  - Input: `research/<id>.md` (Perplexity Prompt 1 answer), `research/<id>-rating.md` (Prompt 2 answer), and `research/<id>-overrides.json` for the one field the research doesn't produce: `locationOffers` (see DQ6).
+  - Input: `docs/research/<id>.md` (Perplexity Prompt 1 answer), `docs/research/<id>-rating.md` (Prompt 2 answer), and `docs/research/<id>-overrides.json` for the one field the research doesn't produce: `locationOffers` (see DQ6).
   - Parse PART 1: take the first fenced code block that parses as an object (otherwise the first balanced `{…}` after "PART 1"), read with `json5` (allows `//` comments and trailing commas).
   - Map to a Program:
     - the file name becomes `id`
@@ -204,20 +204,20 @@ From here on, every command in this plan written as `npm …` means `./run npm �
 
 Can run in parallel with steps 5 and 6. It blocks only step 7's real run, and D7 means draft records still run.
 
-**One PR per program, merged as each one is verified.** Step 4 has a parent issue (opened with the other six) and one sub-issue per program, opened when that program's research files land in `research/`. Each program PR starts with `Closes #<sub-issue>`. The parent issue closes when the fourth sub-issue does (DQ12). Each program PR is its own short session: draft → you verify → merge.
+**One PR per program, merged as each one is verified.** Step 4 has a parent issue (opened with the other six) and one sub-issue per program, opened when that program's research files land in `docs/research/`. Each program PR starts with `Closes #<sub-issue>`. The parent issue closes when the fourth sub-issue does (DQ12). Each program PR is its own short session: draft → you verify → merge.
 
 **Programs and ids (the file names become the record ids):**
 
 | Program | Research file | Rating file |
 | --- | --- | --- |
-| MIT TLP | `research/mit-tlp.md` | `research/mit-tlp-rating.md` |
-| Wharton MBA for Executives, San Francisco | `research/wharton-emba-sf.md` | `research/wharton-emba-sf-rating.md` |
-| Northwestern MEM, part-time | `research/northwestern-mem-pt.md` | `research/northwestern-mem-pt-rating.md` |
-| Harvard Extension leadership certificate | `research/harvard-ext-<cert-slug>.md` | `research/harvard-ext-<cert-slug>-rating.md` |
+| MIT TLP | `docs/research/mit-tlp.md` | `docs/research/mit-tlp-rating.md` |
+| Wharton MBA for Executives, San Francisco | `docs/research/wharton-emba-sf.md` | `docs/research/wharton-emba-sf-rating.md` |
+| Northwestern MEM, part-time | `docs/research/northwestern-mem-pt.md` | `docs/research/northwestern-mem-pt-rating.md` |
+| Harvard Extension leadership certificate | `docs/research/harvard-ext-<cert-slug>.md` | `docs/research/harvard-ext-<cert-slug>-rating.md` |
 
 **Work per program PR** (branch `step-4-<id>`)
-1. Claude Code reads the pair with you, runs `npm run draft-records -- research/<id>` and fixes only *parsing* problems. Any fact that doesn't fit the schema goes back to you; it isn't edited away.
-2. It proposes `locationOffers` in `research/<id>-overrides.json`. That's one file per program, so parallel PRs never conflict on it.
+1. Claude Code reads the pair with you, runs `npm run draft-records -- docs/research/<id>` and fixes only *parsing* problems. Any fact that doesn't fit the schema goes back to you; it isn't edited away.
+2. It proposes `locationOffers` in `docs/research/<id>-overrides.json`. That's one file per program, so parallel PRs never conflict on it.
 3. It opens the PR with the one `draft` record. The body lists the file's "uncertain or conflicting" items and any rating marked `lowEvidence`.
 4. You verify each fact against its quote and link, and flip it to `"status": "verified", "verifiedBy": "Yami Maio"` in **your own commit on that PR** (message: `Verify <id> (verified by Yami Maio)`). Then you merge.
 5. If another program merged first, `programs.json` may conflict. The fix is to rebase and re-run `draft-records` for this id, since the records are sorted by id and the conflict is only where this one is inserted.
@@ -225,7 +225,7 @@ Can run in parallel with steps 5 and 6. It blocks only step 7's real run, and D7
 
 Program PRs are data plus your own verification, so they skip the fresh-session `/code-review` (DQ20). CI's `validate-data` is the automated check.
 
-**Files per PR:** one record in `core/data/programs.json`, `research/<id>.md`, `research/<id>-rating.md` and `research/<id>-overrides.json`, committed as provenance (DQ5).
+**Files per PR:** one record in `core/data/programs.json`, `docs/research/<id>.md`, `docs/research/<id>-rating.md` and `docs/research/<id>-overrides.json`, committed as provenance (DQ5).
 
 **Tests:** CI's `validate-data` on the real file. The first program PR also adds `core/data/load.test.ts`:
 - `loadPrograms()` returns records whose categories are all valid and whose ids are unique. It checks no fixed count, so it holds after each merge.
@@ -329,7 +329,7 @@ Each issue's body has the goal and the acceptance checklist. Each PR body starts
    - [ ] all nine engine tests from implementation plan section 8 pass
 
 4. **Step 4: First 4 program records from the Perplexity research** (parent issue)
-   Goal: verified records for MIT TLP, Wharton MBA for Executives (SF), Northwestern MEM (part-time) and a Harvard Extension leadership certificate, built from `research/` and checked by the schema. Each program is its own sub-issue and its own PR, merged as you verify it.
+   Goal: verified records for MIT TLP, Wharton MBA for Executives (SF), Northwestern MEM (part-time) and a Harvard Extension leadership certificate, built from `docs/research/` and checked by the schema. Each program is its own sub-issue and its own PR, merged as you verify it.
    - [ ] the records validate
    - [ ] Yami verifies each record and flips it to `verified` (the commit names the verifier)
    - [ ] four sub-issues closed, one per program
@@ -363,8 +363,8 @@ Work outside the steps gets its own issue, opened when it's needed. One I alread
 | DQ2 | The Day 2 plan's step 7 is "Friendly failures"; the implementation plan's step 7 is "Page" | Follow the implementation plan. Failures land in step 6 (`fallback.ts`, the error kinds, the nudge) and show on the page in step 7 |
 | DQ3 | Plan test 6 says results render with the API down, but results need a confirmed profile, which needs the model | The fallback covers failure **after** confirm (the server already has the profile and runs the engine). Failure before confirm shows the friendly message only. I'll note this in `docs/decisions.md` |
 | DQ4 | What counts toward the 40-message cap | **Every user turn, chip taps and confirms included**, because each one costs a model call. If persona A runs past about 30, I'll open an issue to retune it |
-| DQ5 | Commit `research/*.md`? | **Yes**, as provenance. The quotes are what you verify against, and they're small. Kept out of the Docker image |
-| DQ6 | `locationOffers` isn't in the Perplexity output | `research/<id>-overrides.json`, one file per program so parallel PRs don't conflict. Claude Code proposes values in that program's PR and you confirm. The converter fails if it's missing, so it's never left empty by accident |
+| DQ5 | Commit `docs/research/*.md`? | **Yes**, as provenance. The quotes are what you verify against, and they're small. Kept out of the Docker image |
+| DQ6 | `locationOffers` isn't in the Perplexity output | `docs/research/<id>-overrides.json`, one file per program so parallel PRs don't conflict. Claude Code proposes values in that program's PR and you confirm. The converter fails if it's missing, so it's never left empty by accident |
 | DQ7 | Perplexity fields that aren't in the schema: `tuitionIncludes`, `nextStartDate`, `country`, the median vs average basis, `lowEvidence` | Keep `tuitionIncludes` (the card needs it), `cohortExperienceBasis: "median" \| "average"`, `ratingLowEvidence: RatingKey[]` (shown on the card), and `country: "US"`. Drop `nextStartDate` for now (it goes stale fastest) |
 | DQ8 | Which numeric fields can be null | Nullable: `tuitionUsd`, `paymentOptions`, `hoursPerWeek`, `onsiteDaysPerYear`, `residencyCount`, `longestStretchDays`, `minExperienceYears`, the cohort fields and `lodgingPerNightUsd`, all handled by the engine's unknown-value rule. Required: `id`, `name`, `institution`, `category`, `credential`, `format`, `durationMonths`, `workCompatible`, `city`, ratings and sources |
 | DQ9 | Where `source.field` points | Record field names, one source per fact, as Perplexity returns them. The validator enforces the plan's three fact groups on top. It doesn't require a source for every field |
@@ -374,7 +374,7 @@ Work outside the steps gets its own issue, opened when it's needed. One I alread
 | DQ13 | Program facts for the cards | The client imports `loadPrograms()` from core (core is browser-safe; 4 to 12 records are tiny). This keeps the payload small and gets the future re-rank slider ready |
 | DQ14 | Strict tool schemas from zod | Generate with `z.toJSONSchema`, then run a unit test that checks the output stays inside the strict subset the claude-api skill documents (no unsupported keywords, `additionalProperties:false`, optional fields as nullable). If the generator can't comply, write the four schemas by hand and test them against zod |
 | DQ15 | Coverage gate in CI | Report only, no threshold. The named rule tests matter more than a percentage on Day 2 |
-| DQ16 | Prettier | Yes, `format:check` in CI, with `docs/` and `research/` ignored so your prose is never reformatted |
+| DQ16 | Prettier | Yes, `format:check` in CI, with `docs/` (including `docs/research/`) ignored so your prose is never reformatted |
 | DQ17 | A local fake mode | `MODEL_FAKE=1` runs the page against the scripted persona A with no spend. Useful while building step 7 |
 | DQ18 | City matching for travel (is the program in the home city?) | Case-insensitive and accent-insensitive equality on the city name. If a city matches, there's no airfare or lodging |
 | DQ19 | A secret scanner in CI (for example gitleaks) | Not on Day 2. `.gitignore` and `.dockerignore` plus `check-bundle` cover the paths that matter. Add it Thursday, before the public deploy |

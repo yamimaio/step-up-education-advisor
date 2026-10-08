@@ -2,8 +2,8 @@
 
 Two prompts per program, each run in its own Perplexity thread:
 
-1. **Prompt 1, research** (Deep Research): paste the research instructions followed by one program block. Save the whole answer as a file, for example `research/mit-tlp.md`.
-2. **Prompt 2, rating** (a thinking model, in a new thread): paste the rating prompt and then the whole research answer where it says so. Use the **same model for all 12 programs**, so the ratings are comparable. Save the answer as `research/mit-tlp-rating.md`.
+1. **Prompt 1, research** (Deep Research): paste the research instructions followed by one program block. Save the whole answer as a file, for example `docs/research/mit-tlp.md`.
+2. **Prompt 2, rating** (a thinking model, in a new thread): paste the rating prompt and then the whole research answer where it says so. Use the **same model for all 12 programs**, so the ratings are comparable. Save the answer as `docs/research/mit-tlp-rating.md`.
 
 Then you review both files with Claude and open the pull request with the `draft` record; the schema check in CI catches any field that doesn't fit. You verify each fact against its quote and link, and the verifying commit names you.
 
