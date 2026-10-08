@@ -91,6 +91,11 @@ describe("part 1 headings", () => {
     expect(extractPart1(`prompt text\n\n${h}\n\n${block}`).name).toBe("X");
   });
 
+  it("skips an example block that is not the program record", () => {
+    const text = `PART 1\n\`\`\`json\n{ "note": "example" }\n\`\`\`\n${block}`;
+    expect(extractPart1(text).name).toBe("X");
+  });
+
   it("falls back to a bare object when there is no fence", () => {
     expect(extractPart1('PART 1\n{ "name": "Y", "a": 1, }').name).toBe("Y");
   });
@@ -125,6 +130,53 @@ describe("failures", () => {
       "see page",
     );
     expect(() => convertResearch(s)).toThrow(/single number 365/);
+  });
+
+  it("refuses a lodging quote that mixes in meals, unless the overrides give the range", () => {
+    const s = sample();
+    s.research = s.research.replace(
+      "Boston / Cambridge ... $365 ... $213 ... $305 ... $365",
+      "Lodging $190 ... M&IE $79",
+    );
+    expect(() => convertResearch(s)).toThrow(/more than lodging/);
+    const ok = convertResearch({
+      ...s,
+      overrides: { ...(s.overrides as object), lodgingPerNightUsd: { min: 190, max: 190 } },
+    });
+    expect(ok.record.lodgingPerNightUsd).toEqual({ min: 190, max: 190 });
+  });
+
+  it("refuses overrides that set id, sources, ratings or verification", () => {
+    for (const key of ["id", "sources", "ratings", "verification"]) {
+      const s = sample();
+      s.overrides = { ...(s.overrides as object), [key]: {} };
+      expect(() => convertResearch(s)).toThrow(new RegExp(`sets ${key}, which it may not`));
+    }
+  });
+
+  it("appends extraSources from the overrides", () => {
+    const s = sample();
+    const extra = {
+      field: "hoursPerWeek",
+      url: "https://example.edu/fake-sample/workload",
+      quote: "About 10 hours a week",
+      checkedOn: "2026-10-01",
+      kind: "official_page",
+    };
+    s.overrides = { ...(s.overrides as object), extraSources: [extra] };
+    expect(convertResearch(s).record.sources.at(-1)).toEqual(extra);
+  });
+
+  it("marks a source with no url as school_correspondence and says so", () => {
+    const s = sample();
+    s.research = s.research.replace(/("field": "durationMonths",\s*)"url": "[^"]*",\s*/, "$1");
+    expect(s.research).not.toMatch(/durationMonths",\s*"url"/);
+    const { record, notes } = convertResearch(s);
+    expect(record.sources.find((x) => x.field === "durationMonths")?.kind).toBe(
+      "school_correspondence",
+    );
+    expect(notes.join("\n")).toMatch(/durationMonths.*school_correspondence/);
+    expect(recordProblems(record)).toEqual([]);
   });
 
   it("reports schema problems per field instead of fixing them", () => {

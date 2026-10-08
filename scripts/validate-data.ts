@@ -5,7 +5,13 @@ import { validateDataset } from "../core/schema/dataset";
 // Usage: tsx scripts/validate-data.ts [path/to/programs.json]
 const file =
   process.argv[2] ?? fileURLToPath(new URL("../core/data/programs.json", import.meta.url));
-const today = new Date().toISOString().slice(0, 10);
+// Local date: checkedOn is written in local time, so UTC could be a day behind it.
+const now = new Date();
+const today = [
+  now.getFullYear(),
+  String(now.getMonth() + 1).padStart(2, "0"),
+  String(now.getDate()).padStart(2, "0"),
+].join("-");
 
 let data: unknown;
 try {

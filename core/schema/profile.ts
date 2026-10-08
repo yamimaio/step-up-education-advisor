@@ -51,7 +51,11 @@ export type Profile = z.infer<typeof ProfileSchema>;
 export const PROFILE_FIELDS = Object.keys(ProfileObject.shape);
 
 // What the interview has collected so far: every field optional, and needs may still be short.
+// Nested objects can be set piecemeal too (a degree level before its field).
 export const PartialProfileSchema = ProfileObject.partial().extend({
+  degree: ProfileObject.shape.degree.partial().optional(),
+  careerGoal: ProfileObject.shape.careerGoal.partial().optional(),
+  resolvedTensions: z.array(ProfileObject.shape.resolvedTensions.element.partial()).optional(),
   needs: z
     .array(Need)
     .max(3)

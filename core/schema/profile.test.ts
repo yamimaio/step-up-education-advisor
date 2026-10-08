@@ -37,6 +37,15 @@ describe("PartialProfileSchema", () => {
     expect(PartialProfileSchema.safeParse({ needs: ["senior_network"] }).success).toBe(true);
   });
 
+  it("accepts nested objects set piecemeal", () => {
+    expect(PartialProfileSchema.safeParse({ degree: { level: "master" } }).success).toBe(true);
+    expect(PartialProfileSchema.safeParse({ careerGoal: { kind: "step_up" } }).success).toBe(true);
+    expect(PartialProfileSchema.safeParse({ resolvedTensions: [{ rule: "R1" }] }).success).toBe(
+      true,
+    );
+    expect(PartialProfileSchema.safeParse({ degree: { level: "phd" } }).success).toBe(false);
+  });
+
   it("still rejects bad values and a fourth need", () => {
     expect(PartialProfileSchema.safeParse({ travelComfort: "love" }).success).toBe(false);
     const needs = ["leadership_skills", "senior_network", "deep_expertise", "graduate_degree"];

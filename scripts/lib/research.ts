@@ -50,7 +50,7 @@ export function extractPart1(markdown: string): Raw {
   const fenced = [...rest.matchAll(/```[a-z]*\n([\s\S]*?)```/gi)].map((m) => m[1]!);
   for (const block of fenced) {
     const obj = parseObject(block);
-    if (obj) return obj;
+    if (obj && "name" in obj) return obj;
   }
   for (const candidate of balancedObjects(rest)) {
     const obj = parseObject(candidate);
@@ -139,7 +139,34 @@ const SOURCE_FIELD_MAP: Record<string, string> = {
 const normalizeSourceField = (field: string) =>
   SOURCE_FIELD_MAP[field] ?? (field.startsWith("paymentOptions.") ? "paymentOptions" : field);
 
-export type Overrides = Partial<ProgramInput> & { locationOffers: ProgramInput["locationOffers"] };
+// The only keys an overrides file may set: facts the research JSON doesn't produce, plus hand
+// fixes for ones it gets wrong. Never id, sources, ratings or verification.
+const OVERRIDE_KEYS = [
+  "locationOffers",
+  "attendance",
+  "onsiteNote",
+  "metro",
+  "state",
+  "city",
+  "durationMonths",
+  "durationMaxMonths",
+  "credits",
+  "tuitionPerCourseUsd",
+  "courseCount",
+  "lodgingIncluded",
+  "lodgingPerNightUsd",
+  "cohortExperienceBasis",
+  "figureNotes",
+  "extraSources",
+] as const;
+
+export type Overrides = Partial<
+  Pick<ProgramInput, Exclude<(typeof OVERRIDE_KEYS)[number], "extraSources">>
+> & {
+  locationOffers: ProgramInput["locationOffers"];
+  /** Sources to append, for example quotes the research kept in its Part 2 tables. */
+  extraSources?: ProgramInput["sources"];
+};
 
 export type Converted = {
   record: ProgramInput;
@@ -176,16 +203,30 @@ const PROGRAM_KEYS_FROM_RESEARCH = new Set([
   "sources",
 ]);
 
-function lodgingFrom(raw: Raw, sources: Raw[], online: boolean, notes: string[]) {
+function lodgingFrom(
+  raw: Raw,
+  sources: Raw[],
+  online: boolean,
+  notes: string[],
+  override: ProgramInput["lodgingPerNightUsd"] | undefined,
+) {
+  if (override !== undefined) return override;
   if (online) {
     if (raw.lodgingPerNightUsd != null)
       notes.push("lodgingPerNightUsd dropped: the program is online.");
     return null;
   }
   const source = sources.find((s) => s.field === "lodgingPerNightUsd");
-  const amounts = [...String(source?.quote ?? "").matchAll(/\$\s?([\d,]+(?:\.\d+)?)/g)].map((m) =>
+  const quote = String(source?.quote ?? "");
+  const amounts = [...quote.matchAll(/\$\s?([\d,]+(?:\.\d+)?)/g)].map((m) =>
     Number(m[1]!.replace(/,/g, "")),
   );
+  // A quote that mixes in meals or totals would give a wrong range, and travel uses the max.
+  if (amounts.length > 0 && /m\s?&\s?ie|meals?|incidental|total|taxes? of/i.test(quote)) {
+    throw new Error(
+      `The lodging quote mentions more than lodging ("${quote}"). Provide lodgingPerNightUsd {min,max} in the overrides file.`,
+    );
+  }
   if (amounts.length > 0) {
     const range = { min: Math.min(...amounts), max: Math.max(...amounts) };
     notes.push(`lodgingPerNightUsd set to ${range.min}–${range.max} from the GSA quote.`);
@@ -214,7 +255,15 @@ export function convertResearch(input: {
   if (!isObject(input.overrides) || !Array.isArray(input.overrides.locationOffers)) {
     throw new Error(`The overrides file must set locationOffers for ${id} (DQ6).`);
   }
-  const overrides = input.overrides as Overrides;
+  const unknownKeys = Object.keys(input.overrides).filter(
+    (k) => !(OVERRIDE_KEYS as readonly string[]).includes(k),
+  );
+  if (unknownKeys.length > 0) {
+    throw new Error(
+      `The overrides file for ${id} sets ${unknownKeys.join(", ")}, which it may not. Allowed: ${OVERRIDE_KEYS.join(", ")}.`,
+    );
+  }
+  const { extraSources = [], ...overrides } = input.overrides as Overrides;
 
   for (const key of Object.keys(raw)) {
     if (!PROGRAM_KEYS_FROM_RESEARCH.has(key))
@@ -253,7 +302,7 @@ export function convertResearch(input: {
       ? null
       : { min: (hMin ?? hMax) as number, max: (hMax ?? hMin) as number };
 
-  const lodging = lodgingFrom(raw, rawSources, online, notes);
+  const lodging = lodgingFrom(raw, rawSources, online, notes, overrides.lodgingPerNightUsd);
 
   const sources: Record<string, unknown>[] = [];
   const seen = new Set<string>();
@@ -270,7 +319,10 @@ export function convertResearch(input: {
     const key = `${field}|${s.url}|${quote}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    sources.push({ field, url: s.url, quote, checkedOn: s.checkedOn, kind: "official_page" });
+    // A fact without a page is something the school told us directly.
+    const kind = s.url ? "official_page" : "school_correspondence";
+    if (!s.url) notes.push(`Source for "${field}" has no url, so it is school_correspondence.`);
+    sources.push({ field, url: s.url, quote, checkedOn: s.checkedOn, kind });
   }
 
   const cohortYears = (raw.cohortMedianExperienceYears as number | null | undefined) ?? null;
@@ -318,7 +370,7 @@ export function convertResearch(input: {
     ratingNotes: ratings.ratingNotes,
     ratingLowEvidence: ratings.ratingLowEvidence,
     figureNotes: {},
-    sources: sources as ProgramInput["sources"],
+    sources: [...sources, ...extraSources] as ProgramInput["sources"],
     verification: { status: "draft", verifiedBy: null },
     ...overrides,
   };
