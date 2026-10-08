@@ -70,3 +70,23 @@ describe("Shortlists: passes first, near misses only fill empty slots", () => {
     expect(result.scenarios.network).not.toContain("fake-executive");
   });
 });
+
+describe("Scenario ordering is stable", () => {
+  it("breaks ties by code unit, not by locale", () => {
+    const programs = [
+      fixture("fake-executive", { id: "fake-h" }),
+      fixture("fake-executive", { id: "fake-ch" }),
+    ];
+    const result = evaluate(makeProfile(), programs, today);
+    expect(result.scenarios.network).toEqual(["fake-ch", "fake-h"]);
+  });
+
+  it("rounds float noise so equal scores still tie on id", () => {
+    const a = { network: 2, depth: 2, practicality: 4, costValue: 4 };
+    const b = { network: 2, depth: 4, practicality: 4, costValue: 2 };
+    const peer = { points: 0, text: "" };
+    const sa = scenarioScores({ category: "executive", ratings: a }, 3, peer, null);
+    const sb = scenarioScores({ category: "executive", ratings: b }, 3, peer, null);
+    expect(sa.network).toBe(sb.network);
+  });
+});

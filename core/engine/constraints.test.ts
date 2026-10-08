@@ -164,7 +164,7 @@ describe("Location needs the home metro only for full-time in-person and commuti
   it("fails a full-time in-person program unless local or relocating", () => {
     const mba = fixture("fake-mba");
     expect(checkLocation(mba, eff({ homeCity: "Buenos Aires" })).status).toBe("fail");
-    expect(checkLocation(mba, eff({ homeCity: "Cambridge" })).status).toBe("pass");
+    expect(checkLocation(mba, eff({ homeCity: "Cambridge, MA" })).status).toBe("pass");
     expect(checkLocation(mba, eff({ homeCity: "Buenos Aires", relocate: true })).status).toBe(
       "pass",
     );
@@ -199,5 +199,94 @@ describe("A program's status is its worst check", () => {
     expect(run("fake-specialized-masters").status).toBe("near_miss");
     expect(run("fake-emba")).toMatchObject({ status: "fail" });
     expect(run("fake-emba").checks).toHaveLength(8);
+  });
+});
+
+describe("An unpublished figure against a limit of 0 fails (DQ10)", () => {
+  it("fails on-site days and stretch when the user allows none", () => {
+    const profile = eff({ maxOnsiteDays: 0, maxStretchDays: 0 });
+    const program = fixture("fake-executive", {
+      onsiteDaysPerYear: null,
+      longestStretchDays: null,
+    });
+    const { checks } = checkConstraints(program, profile, travelEstimate(program, profile));
+    const get = (id: string) => checks.find((c) => c.id === id);
+    expect(get("onsiteDays")).toMatchObject({ status: "fail", unknown: true });
+    expect(get("longestStretch")).toMatchObject({ status: "fail", unknown: true });
+  });
+
+  it("is still a near miss against a limit above 0", () => {
+    const program = fixture("fake-executive", { onsiteDaysPerYear: null });
+    expect(checkOnsiteDays(program, eff({ maxOnsiteDays: 5 }))).toMatchObject({
+      status: "near_miss",
+      unknown: true,
+    });
+  });
+});
+
+describe("The travel budget with airfare unknown", () => {
+  const away = { homeCity: "Buenos Aires" };
+
+  it("never passes on a lodging-only total", () => {
+    const profile = eff({ ...away, airfareRange: "unknown", travelBudgetUsd: 2000 });
+    const emba = fixture("fake-emba");
+    const check = checkTravelBudget(travelEstimate(emba, profile), profile);
+    expect(check).toMatchObject({ status: "near_miss", unknown: true });
+    expect(check.note).toMatch(/Airfare unknown/);
+  });
+
+  it("fails at a budget of 0, and still fails when lodging alone is over", () => {
+    const zero = eff({ ...away, airfareRange: "unknown", travelBudgetUsd: 0 });
+    const emba = fixture("fake-emba");
+    expect(checkTravelBudget(travelEstimate(emba, zero), zero).status).toBe("fail");
+    const low = eff({ ...away, airfareRange: "unknown", travelBudgetUsd: 1000 });
+    const exec = fixture("fake-executive");
+    expect(checkTravelBudget(travelEstimate(exec, low), low).status).toBe("fail");
+  });
+
+  it("is unchanged with no travel budget", () => {
+    const profile = eff({ ...away, airfareRange: "unknown", travelBudgetUsd: null });
+    const emba = fixture("fake-emba");
+    expect(checkTravelBudget(travelEstimate(emba, profile), profile).unknown).toBe(false);
+  });
+});
+
+describe("Boundary arithmetic ignores float noise", () => {
+  it("treats exactly 15% over as a near miss for non-integers", () => {
+    expect(overshoot(8.05, 7)).toBe("near_miss");
+    expect(overshoot(16.1, 14)).toBe("near_miss");
+    expect(overshoot(8.06, 7)).toBe("fail");
+  });
+
+  it("passes a float product equal to the limit", () => {
+    expect(overshoot(5000.000000000001, 5000)).toBe("pass");
+  });
+});
+
+describe("Card notes read correctly", () => {
+  it("skips the hours note when the gap rounds to zero", () => {
+    const program = fixture("fake-executive", { hoursPerWeek: { min: 10.4, max: 12 } });
+    const check = checkHours(program, eff({ hoursPerWeek: { min: 5, max: 10 } }));
+    expect(check.status).toBe("pass");
+    expect(check.note).toBeUndefined();
+  });
+
+  it("says '1 course' and skips the note for 0 courses", () => {
+    const base = { tuitionUsd: null, tuitionPerCourseUsd: 8100 };
+    const one = fixture("fake-certificate", { ...base, courseCount: 1 });
+    expect(checkTuition(one, eff()).note).toMatch(/at 1 course \(estimate\)/);
+    const none = fixture("fake-certificate", { ...base, courseCount: 0 });
+    expect(checkTuition(none, eff()).note).toBe("not published");
+  });
+});
+
+describe("A declined relocation answer is not a rule-out", () => {
+  it("passes a full-time program elsewhere, with a note", () => {
+    const profile = eff({ homeCity: "Buenos Aires", relocate: true, declined: ["relocate"] });
+    expect(profile.relocate).toBeNull();
+    expect(checkLocation(fixture("fake-mba"), profile)).toMatchObject({
+      status: "pass",
+      note: "may require relocating",
+    });
   });
 });

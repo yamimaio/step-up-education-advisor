@@ -1,6 +1,6 @@
 import { verifiedOn } from "../schema/derived";
 import type { Program } from "../schema/program";
-import { CONFIDENCE_WINDOW_DAYS } from "./constants";
+import { CHECK_LABELS, CONFIDENCE_WINDOW_DAYS } from "./constants";
 import type { Check, ConfidenceResult } from "./types";
 
 const ONSITE_FIELDS = [
@@ -40,7 +40,7 @@ export function confidence(program: Program, checks: Check[], today: Date): Conf
 
   const unknowns = checks.filter((c) => c.unknown);
   if (unknowns.length > 0) {
-    reasons.push(`Not published: ${unknowns.map((c) => c.id).join(", ")}.`);
+    reasons.push(`Not published: ${unknowns.map((c) => CHECK_LABELS[c.id]).join(", ")}.`);
   }
 
   const missing = [fresh, costOk, onsiteOk, unknowns.length === 0].filter((ok) => !ok).length;

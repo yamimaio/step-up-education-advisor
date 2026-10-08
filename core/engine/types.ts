@@ -37,6 +37,8 @@ export type EffectiveProfile = Omit<
   | "maxStretchDays"
   | "homeCity"
   | "degreeRequired"
+  | "yearsExperience"
+  | "relocate"
 > & {
   tuitionBudgetUsd: number | null;
   travelBudgetUsd: number | null;
@@ -46,6 +48,9 @@ export type EffectiveProfile = Omit<
   maxStretchDays: number | null;
   homeCity: string | null;
   degreeRequired: Profile["degreeRequired"] | null;
+  // Declined: no experience-based points or text; no location rule-out.
+  yearsExperience: number | null;
+  relocate: boolean | null;
 };
 
 export interface TravelEstimate {

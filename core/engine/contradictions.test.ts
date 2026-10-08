@@ -57,3 +57,28 @@ describe("The six contradiction rules (S8-8)", () => {
     expect(result[0]?.text.length).toBeGreaterThan(0);
   });
 });
+
+describe("Declined fields never fire a rule", () => {
+  it("ignores the placeholder a declined field carries", () => {
+    expect(
+      ids({ needs: ["senior_network"], maxOnsiteDays: 0, declined: ["maxOnsiteDays"] }),
+    ).toEqual([]);
+    expect(
+      ids({ degreeRequired: "required", tuitionBudgetUsd: 5, declined: ["tuitionBudgetUsd"] }),
+    ).toEqual([]);
+  });
+
+  it("still fires when a different field was declined", () => {
+    expect(ids({ needs: ["senior_network"], maxOnsiteDays: 0, declined: ["homeCity"] })).toEqual([
+      "R1",
+    ]);
+  });
+});
+
+describe("R4 fires at the lowest hours chip", () => {
+  it("fires at 0 to 5 hours and not at 5 to 10", () => {
+    const needs = ["deep_expertise" as const];
+    expect(ids({ needs, hoursPerWeek: { min: 0, max: 5 } })).toEqual(["R4"]);
+    expect(ids({ needs, hoursPerWeek: { min: 5, max: 10 } })).toEqual([]);
+  });
+});

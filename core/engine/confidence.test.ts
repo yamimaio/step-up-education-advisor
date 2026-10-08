@@ -27,9 +27,22 @@ describe("Confidence describes the data, not the fit", () => {
   });
 
   it("is medium with one condition missing and low with two", () => {
+    expect(confidence(fixture(), [pass], day(61)).level).toBe("medium");
+    expect(confidence(fixture(), [pass], day(0)).level).toBe("high");
+    // An unpublished price is also an unknown-value check, so it counts twice (default 16).
     const noTuition = fixture("fake-executive", { tuitionUsd: null });
-    expect(confidence(noTuition, [pass], day(0)).level).toBe("medium");
-    expect(confidence(noTuition, [pass], day(61)).level).toBe("low");
+    const unknown: Check = { ...pass, status: "near_miss", value: null, unknown: true };
+    expect(confidence(noTuition, [unknown], day(0)).level).toBe("low");
+  });
+
+  it("names unknown checks in plain words", () => {
+    const reasons = confidence(
+      fixture(),
+      [{ ...pass, id: "travelBudget", unknown: true }],
+      day(0),
+    ).reasons.join(" ");
+    expect(reasons).toContain("travel cost");
+    expect(reasons).not.toContain("travelBudget");
   });
 
   it("drops when a check hit the unknown-value rule (S8-5)", () => {

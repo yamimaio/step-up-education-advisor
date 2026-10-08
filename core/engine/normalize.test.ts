@@ -50,3 +50,24 @@ describe("Declined fields get neutral defaults and appear in profileGaps", () =>
     );
   });
 });
+
+describe("Declined fields outside the limits", () => {
+  it("neutralises keepWorking, relocate and yearsExperience", () => {
+    const { profile } = applyDeclinedDefaults(
+      makeProfile({
+        keepWorking: true,
+        relocate: false,
+        yearsExperience: 0,
+        declined: ["keepWorking", "relocate", "yearsExperience"],
+      }),
+    );
+    expect(profile).toMatchObject({ keepWorking: false, relocate: null, yearsExperience: null });
+  });
+
+  it("lists each gap once and ignores names that are not profile fields", () => {
+    const { profileGaps } = applyDeclinedDefaults(
+      makeProfile({ declined: ["homeCity", "homeCity", "tuitionBudget"] }),
+    );
+    expect(profileGaps).toEqual(["homeCity", "airfareRange"]);
+  });
+});

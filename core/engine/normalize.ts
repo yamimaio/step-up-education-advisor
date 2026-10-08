@@ -1,4 +1,4 @@
-import type { Profile } from "../schema/profile";
+import { PROFILE_FIELDS, type Profile } from "../schema/profile";
 import type { EffectiveProfile } from "./types";
 
 // Declined fields keep a value in the profile, and the engine ignores it: limits become
@@ -8,7 +8,9 @@ export function applyDeclinedDefaults(profile: Profile): {
   profile: EffectiveProfile;
   profileGaps: string[];
 } {
-  const declined = new Set(profile.declined);
+  // Unknown names are ignored and repeats collapse; only real profile fields count.
+  const declinedFields = [...new Set(profile.declined)].filter((f) => PROFILE_FIELDS.includes(f));
+  const declined = new Set(declinedFields);
   const out = (field: string) => declined.has(field);
 
   const effective: EffectiveProfile = {
@@ -24,9 +26,13 @@ export function applyDeclinedDefaults(profile: Profile): {
     peerPreference: out("peerPreference") ? "doesnt_matter" : profile.peerPreference,
     travelComfort: out("travelComfort") ? "fine" : profile.travelComfort,
     airfareRange: out("airfareRange") ? "unknown" : profile.airfareRange,
+    // No constraint, no rule-out and no experience figure when the user chose not to say.
+    keepWorking: out("keepWorking") ? false : profile.keepWorking,
+    relocate: out("relocate") ? null : profile.relocate,
+    yearsExperience: out("yearsExperience") ? null : profile.yearsExperience,
   };
 
-  const profileGaps = [...profile.declined];
+  const profileGaps = [...declinedFields];
   if (effective.airfareRange === "unknown" && !profileGaps.includes("airfareRange")) {
     profileGaps.push("airfareRange");
   }

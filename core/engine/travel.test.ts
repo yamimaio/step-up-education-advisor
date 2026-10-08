@@ -37,7 +37,9 @@ describe("Travel estimate (D8 and the section 11 follow-ups)", () => {
   });
 
   it("is zero in the home metro, for online programs and with no on-site time", () => {
-    expect(travelEstimate(fixture(), { ...buenosAires, homeCity: "Cambridge" }).totalUsd).toBe(0);
+    expect(travelEstimate(fixture(), { ...buenosAires, homeCity: "Cambridge, MA" }).totalUsd).toBe(
+      0,
+    );
     expect(travelEstimate(fixture("fake-certificate"), buenosAires).totalUsd).toBe(0);
   });
 
@@ -51,5 +53,52 @@ describe("Travel estimate (D8 and the section 11 follow-ups)", () => {
     expect(travelEstimate(noCounts, buenosAires).kind).toBe("unknown");
     const noLength = fixture("fake-executive", { durationMonths: null });
     expect(travelEstimate(noLength, buenosAires).kind).toBe("unknown");
+  });
+});
+
+describe("Travel estimate: published counts and relocation", () => {
+  it("is zero for a hybrid program with no on-site days", () => {
+    const hybrid = fixture("fake-executive", { onsiteDaysPerYear: 0 });
+    expect(travelEstimate(hybrid, buenosAires)).toMatchObject({ kind: "none", totalUsd: 0 });
+  });
+
+  it("keeps a published weekend trip count when on-site days are null", () => {
+    const emba = fixture("fake-emba", {
+      residencyCount: 12,
+      onsiteDaysPerYear: null,
+      durationMonths: 12,
+    });
+    const t = travelEstimate(emba, buenosAires);
+    expect(t).toMatchObject({ trips: 12, nightsPerTrip: 2, tripsEstimated: false });
+    expect(t.totalUsd).toBe(12 * 1250);
+    expect(t.notes.join(" ")).toMatch(/Nights per trip estimated/);
+  });
+
+  it("names the figure that is missing", () => {
+    const noDays = fixture("fake-executive", { onsiteDaysPerYear: null });
+    expect(travelEstimate(noDays, buenosAires).notes).toEqual([
+      "On-site days a year not published.",
+    ]);
+    const noTrips = fixture("fake-executive", { residencyCount: null });
+    expect(travelEstimate(noTrips, buenosAires).notes).toEqual(["Number of trips not published."]);
+    const neither = fixture("fake-executive", { residencyCount: null, onsiteDaysPerYear: null });
+    expect(travelEstimate(neither, buenosAires).notes).toEqual([
+      "On-site days and trips not published.",
+    ]);
+  });
+
+  it("needs no recurring travel for a user who would relocate to a full-time program", () => {
+    const mba = fixture("fake-mba");
+    const t = travelEstimate(mba, { ...buenosAires, relocate: true });
+    expect(t).toMatchObject({ kind: "none", totalUsd: 0 });
+    expect(travelEstimate(mba, { ...buenosAires, relocate: false }).kind).not.toBe("none");
+  });
+
+  it("mentions the GSA rate only when lodging is charged", () => {
+    const paid = travelEstimate(fixture("fake-executive"), buenosAires).notes.join(" ");
+    expect(paid).toMatch(/GSA/);
+    const included = travelEstimate(fixture("fake-emba"), buenosAires).notes.join(" ");
+    expect(included).toMatch(/Tuition includes lodging/);
+    expect(included).not.toMatch(/GSA/);
   });
 });

@@ -133,10 +133,8 @@ export const WEEKEND_NIGHTS_PER_TRIP = 2;
 // `metro` key; either is looked up here. Extend as the dataset grows.
 export const METROS: Record<string, string> = {
   boston: "boston",
-  cambridge: "boston",
   "san francisco": "sf_bay_area",
   oakland: "sf_bay_area",
-  "san jose": "sf_bay_area",
   berkeley: "sf_bay_area",
   "palo alto": "sf_bay_area",
   stanford: "sf_bay_area",
@@ -148,11 +146,41 @@ export const METROS: Record<string, string> = {
   brooklyn: "new_york",
   chicago: "chicago",
   evanston: "chicago",
-  washington: "washington_dc",
   "washington dc": "washington_dc",
   "washington d c": "washington_dc",
-  arlington: "washington_dc",
+  "cambridge ma": "boston",
+  "san jose ca": "sf_bay_area",
+  "arlington va": "washington_dc",
   philadelphia: "philadelphia",
   "new haven": "new_haven",
   "los angeles": "los_angeles",
+};
+
+// Names shared by several well-known cities. A home city written as just one of these is
+// not matched to a metro (the profile has no state or country); "Cambridge, MA" and
+// "San Jose, CA" are, through the qualified entries in METROS.
+export const AMBIGUOUS_HOME_CITIES: readonly string[] = [
+  "cambridge",
+  "arlington",
+  "washington",
+  "san jose",
+];
+
+// Plain words for the card (confidence reasons name checks by these).
+export const CHECK_LABELS = {
+  tuition: "tuition",
+  travelBudget: "travel cost",
+  onsiteDays: "on-site days a year",
+  longestStretch: "longest stretch away",
+  length: "program length",
+  hours: "hours a week",
+  workCompatible: "work compatibility",
+  location: "location",
+} as const;
+
+// Program records are curated, so their bare city names are trusted where a user's are not.
+export const PROGRAM_CITY_METROS: Record<string, string> = {
+  cambridge: "boston",
+  "san jose": "sf_bay_area",
+  washington: "washington_dc",
 };

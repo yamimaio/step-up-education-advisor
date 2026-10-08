@@ -7,9 +7,12 @@ const DEGREE_TYPES = ["mba", "emba", "specialized_masters"];
 // The six rules (DQ11). A rule needs every field it reads; a missing one never fires it.
 // Rules already in resolvedTensions are still returned, marked resolved.
 export function checkContradictions(
-  partial: PartialProfile,
+  input: PartialProfile,
   programs: Pick<Program, "category" | "tuitionUsd">[],
 ): Contradiction[] {
+  // A declined field counts as missing: its placeholder value never fires a rule.
+  const partial: PartialProfile = { ...input };
+  for (const field of input.declined ?? []) delete (partial as Record<string, unknown>)[field];
   const needs = partial.needs ?? [];
   const top = needs[0];
   const found: Omit<Contradiction, "resolved">[] = [];
@@ -52,12 +55,12 @@ export function checkContradictions(
   }
   if (
     partial.hoursPerWeek !== undefined &&
-    partial.hoursPerWeek.max < 5 &&
+    partial.hoursPerWeek.max <= 5 &&
     needs.includes("deep_expertise")
   ) {
     found.push({
       id: "R4",
-      text: "You want deep expertise, but you can give under 5 hours a week. Depth usually takes more time than that.",
+      text: "You want deep expertise, but you can give 5 hours a week or fewer. Depth usually takes more time than that.",
     });
   }
   if (

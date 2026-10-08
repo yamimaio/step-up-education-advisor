@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { categoryFit } from "./categoryFit";
 import { applyDeclinedDefaults } from "./normalize";
 import { makeProfile } from "../../tests/fixtures/profiles";
+import type { Need } from "../schema/enums";
 import type { Profile } from "../schema/profile";
 
 // With no program records no type is ruled out on length or cost (D6), so the scores are
@@ -41,14 +42,16 @@ describe("The degree answer adjusts MBA, EMBA and specialized master's", () => {
 
 describe("A required degree rules out executive, certificate and short course (S8-2)", () => {
   it("marks all three out and leaves the degree types", () => {
-    const { scores, winner } = score({ ...degreeFirst, degreeRequired: "required" });
+    const { scores, winner, tie } = score({ ...degreeFirst, degreeRequired: "required" });
     expect(scores).toMatchObject({
       executive: "out",
       certificate: "out",
       short_course: "out",
       mba: 11,
     });
-    expect(winner).not.toBeNull();
+    // MBA and EMBA tie at 11, and a tie the formula can't break has no winner yet.
+    expect(tie).toEqual(["mba", "emba"]);
+    expect(winner).toBeNull();
   });
 });
 
@@ -150,5 +153,43 @@ describe("The two needs that decided it", () => {
     );
     expect(result.winner).toBeNull();
     expect(result.decidingNeeds).toEqual([]);
+  });
+});
+
+describe("An unresolved tie has no winner", () => {
+  const tied = {
+    needs: ["leadership_skills", "deep_expertise", "graduate_degree"] as Need[],
+    degreeRequired: "required" as const,
+  };
+
+  it("leaves winner, runner-up and deciding needs empty while the pair is tied", () => {
+    const r = score(tied);
+    expect(r.tie).toEqual(["mba", "emba"]);
+    expect(r).toMatchObject({ winner: null, runnerUp: null, decidingNeeds: [] });
+  });
+
+  it("names the winner once the user picks one of the pair", () => {
+    const r = score({ ...tied, tieBreaker: "emba" });
+    expect(r).toMatchObject({ winner: "emba", runnerUp: "mba" });
+    expect(r.tie).toBeUndefined();
+  });
+});
+
+describe("A ruled-out type says which checks ruled it out", () => {
+  it("names the failed checks in plain words", () => {
+    const profile = applyDeclinedDefaults(makeProfile({ maxProgramMonths: 3 })).profile;
+    const programs = [{ id: "a", category: "mba" as const }];
+    const checks = [
+      {
+        id: "length" as const,
+        status: "fail" as const,
+        value: 24,
+        limit: 3,
+        unit: "",
+        unknown: false,
+      },
+    ];
+    const r = categoryFit(profile, programs, [{ id: "a", status: "fail", checks }]);
+    expect(r.reasons.mba.join(" ")).toMatch(/within your limits \(program length\)/);
   });
 });

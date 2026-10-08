@@ -1,20 +1,29 @@
 import type { Program } from "../schema/program";
 import { HOURS_NEAR_PCT, HOURS_PASS_PCT, NEAR_MISS_PCT } from "./constants";
-import { sameMetro } from "./metro";
+import { needsLocalPresence, sameMetro } from "./metro";
 import type { Check, CheckId, CheckStatus, EffectiveProfile, TravelEstimate } from "./types";
+
+// Compare after rounding to six decimals, so 8.05 against 7 is exactly 15% over and a float
+// product like 5000.000000000001 equals 5000.
+const SCALE = 1_000_000;
+const scaled = (n: number) => Math.round(n * SCALE);
 
 // Pass at or under the limit; near miss when over by NEAR_MISS_PCT or less; otherwise fail.
 // A limit of 0 has no near miss (DQ10). Integer arithmetic keeps exactly 15% on the right side.
 export function overshoot(value: number, limit: number, pct: number = NEAR_MISS_PCT): CheckStatus {
-  if (value <= limit) return "pass";
-  if (limit === 0) return "fail";
-  return value * 100 <= limit * (100 + pct) ? "near_miss" : "fail";
+  const v = scaled(value);
+  const l = scaled(limit);
+  if (v <= l) return "pass";
+  if (l === 0) return "fail";
+  return v * 100 <= l * (100 + pct) ? "near_miss" : "fail";
 }
 
 const NOT_PUBLISHED = "not published";
 
 // The unknown-value rule: the program doesn't publish the figure. A near miss if the user set
 // a limit, a pass if not. Either way the card says "not published" and confidence drops.
+// A limit of 0 is the exception (DQ10): any published figure above 0 would fail it, and an
+// unpublished figure here belongs to a program with time to spend, so it fails.
 function limitCheck(
   id: CheckId,
   value: number | null,
@@ -25,7 +34,7 @@ function limitCheck(
   if (value === null) {
     return {
       id,
-      status: limit === null ? "pass" : "near_miss",
+      status: limit === null ? "pass" : limit === 0 ? "fail" : "near_miss",
       value: null,
       limit,
       unit,
@@ -42,17 +51,30 @@ export function checkTuition(program: Program, profile: EffectiveProfile): Check
   if (
     program.tuitionUsd === null &&
     program.tuitionPerCourseUsd !== null &&
-    program.courseCount !== null
+    program.courseCount !== null &&
+    program.courseCount > 0
   ) {
     const total = program.tuitionPerCourseUsd * program.courseCount;
-    note = `about $${total.toLocaleString("en-US")} at ${program.courseCount} courses (estimate)`;
+    const courses = program.courseCount === 1 ? "course" : "courses";
+    note = `about $${total.toLocaleString("en-US")} at ${program.courseCount} ${courses} (estimate)`;
   }
   return limitCheck("tuition", program.tuitionUsd, profile.tuitionBudgetUsd, "USD", note);
 }
 
 export function checkTravelBudget(travel: TravelEstimate, profile: EffectiveProfile): Check {
-  const check = limitCheck("travelBudget", travel.totalUsd, profile.travelBudgetUsd, "USD");
+  const limit = profile.travelBudgetUsd;
+  const check = limitCheck("travelBudget", travel.totalUsd, limit, "USD");
   if (check.unknown) check.note = travel.notes.join(" ") || check.note;
+  // With airfare unknown the total covers lodging only: it can fail the budget on its own, but
+  // it can never be shown to pass, so a pass becomes an unknown near miss (a fail at a limit of 0).
+  if (travel.lodgingOnly && limit !== null && check.status === "pass") {
+    return {
+      ...check,
+      status: limit === 0 ? "fail" : "near_miss",
+      unknown: true,
+      note: travel.notes.join(" "),
+    };
+  }
   return check;
 }
 
@@ -83,17 +105,17 @@ export function checkHours(program: Program, profile: EffectiveProfile): Check {
   const value = hours.min === hours.max ? hours.min : `${hours.min}-${hours.max}`;
   const limit = user ? (user.min === user.max ? user.max : `${user.min}-${user.max}`) : null;
   const check = { id: "hours" as const, value, limit, unit: "hours a week", unknown: false };
-  if (!user || hours.min <= user.max) return { ...check, status: "pass" };
+  if (!user || scaled(hours.min) <= scaled(user.max)) return { ...check, status: "pass" };
   const status =
-    hours.min * 100 <= user.max * (100 + HOURS_PASS_PCT)
+    scaled(hours.min) * 100 <= scaled(user.max) * (100 + HOURS_PASS_PCT)
       ? "pass"
       : overshoot(hours.min, user.max, HOURS_NEAR_PCT);
   const more = Math.round(hours.min - user.max);
-  const unit = more === 1 ? "hour" : "hours";
+  if (more < 1) return { ...check, status };
   return {
     ...check,
     status,
-    note: `about ${more} ${unit} a week more than you planned`,
+    note: `about ${more} ${more === 1 ? "hour" : "hours"} a week more than you planned`,
   };
 }
 
@@ -109,15 +131,12 @@ export function checkWorkCompatible(program: Program, profile: EffectiveProfile)
   };
 }
 
-// A full-time in-person program needs the home metro or relocation. Evenings or daily
-// attendance outside the metro does too. Everything else is left to the travel checks.
+// Programs that need the home metro pass for a local user or one who would relocate. A user
+// who declined the relocation question is not ruled out; the card says it may need a move.
 export function checkLocation(program: Program, profile: EffectiveProfile): Check {
   const local = sameMetro(profile.homeCity, program);
-  const fullTimeInPerson = program.format === "in_person" && !program.workCompatible;
-  const commuting =
-    program.attendance === "recurring_evenings" || program.attendance === "recurring_daily";
-  const needsLocal = program.format !== "online" && (fullTimeInPerson || commuting);
-  const ok = !needsLocal || local || profile.relocate;
+  const needsLocal = needsLocalPresence(program);
+  const ok = !needsLocal || local || profile.relocate !== false;
   const check: Check = {
     id: "location",
     status: ok ? "pass" : "fail",
@@ -126,7 +145,8 @@ export function checkLocation(program: Program, profile: EffectiveProfile): Chec
     unit: "",
     unknown: false,
   };
-  if (needsLocal && !local && profile.relocate) check.note = "requires relocating";
+  if (needsLocal && !local && profile.relocate === true) check.note = "requires relocating";
+  if (needsLocal && !local && profile.relocate === null) check.note = "may require relocating";
   if (needsLocal && !ok) check.note = "requires living near campus";
   return check;
 }

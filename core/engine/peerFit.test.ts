@@ -32,3 +32,14 @@ describe("Peer fit", () => {
     expect(peerFit(you("more_senior"), { cohortMedianExperienceYears: null }).points).toBe(0);
   });
 });
+
+describe("A declined experience figure", () => {
+  it("gives no points and no comparison", () => {
+    const r = peerFit(
+      { yearsExperience: null, peerPreference: "more_senior" },
+      { cohortMedianExperienceYears: 14 },
+    );
+    expect(r.points).toBe(0);
+    expect(r.text).toBe("Most classmates have about 14 years of experience.");
+  });
+});

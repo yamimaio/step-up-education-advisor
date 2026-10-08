@@ -26,17 +26,17 @@ export function evaluate(profile: Profile, programs: Program[], today: Date): En
   const category = categoryFit(
     p,
     programs,
-    first.map((f) => ({ id: f.program.id, status: f.status })),
+    first.map((f) => ({ id: f.program.id, status: f.status, checks: f.checks })),
   );
   const noProgramResult = noProgram(
     p,
     category,
-    first.map((f) => ({ status: f.status })),
+    first.map((f) => ({ category: f.program.category, status: f.status })),
   );
 
   // 5. Peer fit, location fit, confidence and scenario scores. With a tie there is no winner
   // yet, so no category bonus.
-  const bonusWinner = category.tie ? null : category.winner;
+  const bonusWinner = category.winner;
   const evaluations: ProgramEvaluation[] = first.map(({ program, travel, checks, status }) => {
     const peer = peerFit(p, program);
     const loc = locationFit(p, program);

@@ -18,6 +18,7 @@ describe("Category fit on the fixtures", () => {
     });
     expect(category.winner).toBe("executive");
     expect(category.runnerUp).toBe("certificate");
+    expect(category.reasons.emba.join(" ")).toContain("program length");
     expect(category.reasons.emba.join(" ")).toMatch(
       /no program of this type is within your limits/,
     );
@@ -82,10 +83,50 @@ describe("evaluate", () => {
     expect(result.profileGaps).toEqual(["tuitionBudgetUsd", "airfareRange"]);
   });
 
-  it("shows unpublished tuition as a lower confidence for the draft master's", () => {
+  it("caps the draft master's at low confidence (D7) and keeps the verified executive high", () => {
     const { programs } = evaluate(workedExampleProfile, fixtureDataset(), today);
     const masters = programs.find((p) => p.id === "fake-specialized-masters");
     expect(masters?.confidence.level).toBe("low");
     expect(programs.find((p) => p.id === "fake-executive")?.confidence.level).toBe("high");
+  });
+});
+
+describe("A tie gets no category bonus", () => {
+  const tie = {
+    needs: ["leadership_skills", "deep_expertise", "graduate_degree"] as const,
+    degreeRequired: "required" as const,
+    tuitionBudgetUsd: 250000,
+    maxProgramMonths: 24,
+    keepWorking: false,
+    maxOnsiteDays: 300,
+    maxStretchDays: 300,
+    hoursPerWeek: { min: 40, max: 60 },
+    travelBudgetUsd: null,
+  };
+  const mba = (r: ReturnType<typeof evaluate>) =>
+    r.programs.find((p) => p.id === "fake-mba")?.scenarioScores.network ?? 0;
+
+  it("adds 0.5 only once the user picks the winner", () => {
+    const profile = makeProfile({ ...tie, needs: [...tie.needs] });
+    const open = evaluate(profile, fixtureDataset(), today);
+    expect(open.category.tie).toEqual(["mba", "emba"]);
+    const picked = evaluate({ ...profile, tieBreaker: "mba" }, fixtureDataset(), today);
+    expect(picked.category.winner).toBe("mba");
+    expect(mba(picked) - mba(open)).toBeCloseTo(0.5, 10);
+  });
+});
+
+describe("Declined answers are not constraints", () => {
+  it("does not fail the MBA on a declined keepWorking", () => {
+    const profile = makeProfile({
+      keepWorking: true,
+      tuitionBudgetUsd: 250000,
+      maxProgramMonths: 24,
+      declined: ["keepWorking"],
+    });
+    const mba = evaluate(profile, fixtureDataset(), today).programs.find(
+      (p) => p.id === "fake-mba",
+    );
+    expect(mba?.checks.find((c) => c.id === "workCompatible")?.status).toBe("pass");
   });
 });

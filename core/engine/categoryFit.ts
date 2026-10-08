@@ -2,6 +2,7 @@ import type { Category, Need } from "../schema/enums";
 import type { Program } from "../schema/program";
 import {
   CATEGORY_ORDER,
+  CHECK_LABELS,
   DEGREE_ADJUST,
   DEGREE_ADJUSTED_TYPES,
   GROW_IN_ROLE_BONUS,
@@ -10,9 +11,9 @@ import {
   REQUIRED_RULES_OUT,
   TYPE_RATINGS,
 } from "./constants";
-import type { CategoryResult, EffectiveProfile, ProgramEvaluation } from "./types";
+import type { Check, CategoryResult, EffectiveProfile, ProgramEvaluation } from "./types";
 
-type Evaluated = Pick<ProgramEvaluation, "id" | "status">;
+type Evaluated = Pick<ProgramEvaluation, "id" | "status"> & { checks?: Check[] };
 
 // Step 1: pick the type of program before any specific program.
 export function categoryFit(
@@ -22,6 +23,7 @@ export function categoryFit(
 ): CategoryResult {
   const scores = {} as Record<Category, number | "out">;
   const reasons = {} as Record<Category, string[]>;
+  const byId = new Map(evaluations.map((e) => [e.id, e]));
   const statusById = new Map(evaluations.map((e) => [e.id, e.status]));
 
   for (const category of CATEGORY_ORDER) {
@@ -44,7 +46,19 @@ export function categoryFit(
     }
     // D6: a type with no records is never ruled out here.
     if (records.length > 0 && !reachable) {
-      why.push("Out: no program of this type is within your limits.");
+      // Name what rules the type out: the failed checks, most common first.
+      const failed = new Map<string, number>();
+      for (const p of records) {
+        for (const c of byId.get(p.id)?.checks ?? []) {
+          if (c.status === "fail") failed.set(c.id, (failed.get(c.id) ?? 0) + 1);
+        }
+      }
+      const names = [...failed.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([id]) => CHECK_LABELS[id as keyof typeof CHECK_LABELS]);
+      why.push(
+        `Out: no program of this type is within your limits${names.length ? ` (${names.join(", ")})` : ""}.`,
+      );
       scores[category] = "out";
       continue;
     }
@@ -83,6 +97,9 @@ export function categoryFit(
       runnerUp = pair.find((c) => c !== profile.tieBreaker) ?? null;
     } else {
       tie = pair;
+      // A tie the formula can't break has no winner until the user chooses.
+      winner = null;
+      runnerUp = null;
     }
   }
 
