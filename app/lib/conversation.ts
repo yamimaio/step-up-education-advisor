@@ -1,11 +1,8 @@
+import { WRAP_UP_NOTE } from "@core/advisor/wrapUp";
 import { blocksOf, type MessageParam } from "./chatTypes";
 
 // What the user sees of the history: the user's words, the chips they tapped, their answer to
 // the card and the advisor's text. Thinking, tool calls and server-tool results stay hidden.
-
-// The server's wrap-up note near the message cap (docs/chat-api.md, "Message cap"): a text block
-// it adds to a user message. It stays in the history, which is append-only, but is never shown.
-export const WRAP_UP_PREFIX = "[Step Up note]";
 
 export type Turn =
   | { kind: "user"; text: string }
@@ -38,14 +35,42 @@ function labelsOf(chosen: unknown): string[] {
   );
 }
 
+// An assistant message whose tool calls the server all refused with is_error: the model's own
+// text there is never shown, the same rule as the server's `text` (docs/chat-api.md).
+function rejectedTurns(history: MessageParam[]): Set<MessageParam> {
+  const refused = new Set(
+    history.flatMap((m) =>
+      blocksOf(m).flatMap((b) =>
+        b.type === "tool_result" && b.is_error === true && typeof b.tool_use_id === "string"
+          ? [b.tool_use_id]
+          : [],
+      ),
+    ),
+  );
+  return new Set(
+    history.filter((m) => {
+      if (m.role !== "assistant") return false;
+      const ids = blocksOf(m).flatMap((b) =>
+        b.type === "tool_use" && typeof b.id === "string" ? [b.id] : [],
+      );
+      return ids.length > 0 && ids.every((id) => refused.has(id));
+    }),
+  );
+}
+
 export function toTurns(history: MessageParam[]): Turn[] {
   const calls = new Map<string, ToolCall>();
   const turns: Turn[] = [];
+  const rejected = rejectedTurns(history);
   for (const message of history) {
     for (const block of blocksOf(message)) {
       if (block.type === "text" && typeof block.text === "string") {
-        const note = message.role === "user" && block.text.startsWith(WRAP_UP_PREFIX);
-        if (!note && block.text.trim()) turns.push({ kind: message.role, text: block.text });
+        // The server's wrap-up note near the message cap (docs/chat-api.md, "Message cap"): it
+        // stays in the history, which is append-only, but is never shown. Matched by its whole
+        // text, so a user's own words are never hidden.
+        const note = message.role === "user" && block.text === WRAP_UP_NOTE;
+        const hidden = note || rejected.has(message);
+        if (!hidden && block.text.trim()) turns.push({ kind: message.role, text: block.text });
       } else if (block.type === "tool_use" && typeof block.id === "string") {
         calls.set(block.id, {
           name: String(block.name),

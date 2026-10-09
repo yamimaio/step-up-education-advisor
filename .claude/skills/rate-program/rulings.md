@@ -59,3 +59,10 @@ A ruling that generalizes also changes `rating-prompt.md`; the ruling stays here
 - **Facts:** "You must complete 19 course units at Wharton to earn your degree from our program."
 - **Why:** "broad rather than deep in one field" was an inference, not a fact from the research. The note became "A general MBA of 19 course units."
 - **Applies when:** writing any `ratingNotes` line. Judgments go in `reasoning`.
+
+## R9. A published breakdown's median beats a stated average
+
+- **Program:** MIT TLP (`mit-tlp`), executive. **Need:** senior_network. **Rating:** 5 (Oct 9).
+- **Facts:** the July 2026 brochure states "an average of 19 years of professional experience" and publishes the split 25+ years 21%, 20-25 years 29%, 15-20 years 26%, 10-15 years 17%, less than 10 years 7%. Exactly half the participants have 20+ years, so the median is 20. The record stores 20 with `cohortExperienceBasis: median`, and `figureNotes` gives the stated average.
+- **Why:** the rubric is built on medians, and a breakdown shows where the middle participant sits. An average is used only when no median or breakdown is published. Taking the higher of several figures was considered and rejected: it only ever moves ratings up and favours programs with more sources.
+- **Applies when:** a school publishes an experience breakdown by bands, with or without an average. Store the lower edge of the band holding the middle participant. This supersedes R1 for MIT TLP; R1 still covers programs with no class profile.

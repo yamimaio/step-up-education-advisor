@@ -8,7 +8,7 @@ A draft record built from `docs/research/harvard-ext-org-behavior.md`. The first
 
 - `attendance: none` follows from format online (converter rule); `locationOffers` is my proposal (travel_ease, affordability), not a researched fact.
 - Research Part 1 gives `lodgingPerNightUsd: 365`; dropped by the converter because the program is online.
-- `durationMonths: 8` is the fastest pace; `durationMaxMonths` is null (no quote for the slowest pace on this program's page).
+- `durationMonths: 8` is the fastest pace; `durationMaxMonths: 36` is the slowest, from the program page: "If you prefer a more flexible pace, you have up to three years to finish." (set in the overrides file).
 
 **From the research file's "uncertain or conflicting" list:**
 
@@ -23,9 +23,11 @@ A draft record built from `docs/research/harvard-ext-org-behavior.md`. The first
 - **The accreditation field is intentionally empty under the requested schema for a non-degree certificate.** Harvard Extension School itself states that it is NECHE-accredited, but no separate programmatic accreditation is published for this certificate.
 - **No primary on-site city exists for the program.** Cambridge is Harvard Extension School’s institutional location, but all four certificate courses are online and no residency is required.
 
-**Ratings marked low evidence:** network, practicality, costValue.
+**Ratings marked low evidence:** none. senior_network was re-rated 1 → 3 under R9 (rate-program v2; see the last block of `harvard-ext-org-behavior-rating.md`).
 
 ## Fields, quotes and URLs
+
+Every source in the record, with the value it backs. **no quote** means the value was derived or proposed.
 
 | Field | Value | Verbatim quote | URL |
 | --- | --- | --- | --- |
@@ -35,29 +37,32 @@ A draft record built from `docs/research/harvard-ext-org-behavior.md`. The first
 | credential | Graduate Certificate | Program Type Graduate Certificate (checked 2026-10-08) | https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/ |
 | format | online | Format Online (checked 2026-10-08) | https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/ |
 | durationMonths | 8 | Finish in 8 Months – 3 Years (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
-| attendance | none | **no quote** | |
+| credits | null | Complete the four certificate courses for graduate credit. (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
 | onsiteDaysPerYear | 0 | All graduate certificates may be completed entirely through online education. (checked 2026-10-08) | https://extension.harvard.edu/about/faq/ |
 | residencyCount | 0 | All graduate certificates may be completed entirely through online education. (checked 2026-10-08) | https://extension.harvard.edu/about/faq/ |
 | longestStretchDays | 0 | The Organizational Behavior Graduate Certificate includes four online courses (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
 | workCompatible | true | The courses can be completed on a part-time basis, allowing many to continue working full time. (checked 2026-10-08) | https://extension.harvard.edu/academics/graduate-certificates/ |
 | country | US | 51 Brattle Street Cambridge, MA 02138 (checked 2026-10-08) | https://extension.harvard.edu/registration-admissions/for-students/support-and-services/sexual-assault-and-harassment-resources/ |
 | tuitionUsd | 14320 | Tuition $14,320 (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
-| tuitionPerCourseUsd | 3580 | Tuition $3,580 per course (checked 2026-10-08) | https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/ |
-| courseCount | 4 | The Organizational Behavior Graduate Certificate includes four online courses (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
 | tuitionIncludes | Tuition for four courses at the published 2026–27 rate of $3,580 per course. Harvard states that books, course materials, supplies, equipment, and certain transaction-related fees may be additional; lodging and meals are not included. | some courses may require additional lab fees or the purchase of specific books and materials relevant to that class (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/ |
-| paymentOptions | ["installments","employer_sponsorship","loans","scholarships"] | These interest-free plans allow you to pay your tuition in four installments. (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/payment-options/ |
-| paymentOptions | ["installments","employer_sponsorship","loans","scholarships"] | You can use TAP to pursue an undergraduate or graduate degree or certificate (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/harvard-employees/ |
-| paymentOptions | ["installments","employer_sponsorship","loans","scholarships"] | You may consider applying for a credit-based private student loan (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/ |
-| paymentOptions | ["installments","employer_sponsorship","loans","scholarships"] | Limited scholarship funds are available for non-admitted students at Harvard Extension School. (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/ |
+| paymentOptions | ["installments", "employer_sponsorship", "loans", "scholarships"] | These interest-free plans allow you to pay your tuition in four installments. (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/payment-options/ |
+| paymentOptions | ["installments", "employer_sponsorship", "loans", "scholarships"] | You can use TAP to pursue an undergraduate or graduate degree or certificate (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/harvard-employees/ |
+| paymentOptions | ["installments", "employer_sponsorship", "loans", "scholarships"] | You may consider applying for a credit-based private student loan (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/ |
+| paymentOptions | ["installments", "employer_sponsorship", "loans", "scholarships"] | Limited scholarship funds are available for non-admitted students at Harvard Extension School. (checked 2026-10-08) | https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/ |
 | cohortSeniority | Select certificate-earner titles published by the school: Business Analyst, Customer Success Manager, Director of Operations, Program Manager, Principal, and Vice President; the school does not say these titles represent a majority. | They hold such titles as: Business Analyst ... Director of Operations ... Principal ... Vice President (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
-| locationOffers | ["travel_ease","affordability"] | **no quote** | |
-| credits | (null in the record) | Complete the four certificate courses for graduate credit. (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
+| courseCount | 4 | The Organizational Behavior Graduate Certificate includes four online courses (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
+| tuitionPerCourseUsd | 3580 | Tuition $3,580 per course (checked 2026-10-08) | https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/ |
+| cohortMedianExperienceYears | 11 | Years of employment 0–4 years 14% 5–10 years 30% 11–20 years 34% 21+ years 22% ... Data pertains to academic year 2024. (checked 2026-10-09) | https://extension.harvard.edu/wp-content/uploads/sites/8/2024/05/HES-Fast-Facts-Certificates-Organizational-Behavior.pdf |
+| durationMaxMonths | 36 | If you prefer a more flexible pace, you have up to three years to finish. (checked 2026-10-08) | https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/ |
+| attendance | none | **no quote** | |
+| locationOffers | ["travel_ease", "affordability"] | **no quote** | |
 
-**Ratings** (from `harvard-ext-org-behavior-rating.md`):
+**Ratings** (from the last block of `harvard-ext-org-behavior-rating.md`):
 
-| Rating | Score | Note |
+| Need | Score | Note |
 | --- | --- | --- |
-| network (low evidence) | 3 | Online synchronous instruction is available, and certificate earners receive affiliate Harvard Extension Alumni Association membership; no in-person time is required, while a fixed cohort, seniority mix and alumni activity are not established (low evidence). |
-| depth | 3 | Four required graduate-credit courses meet the credit-bearing certificate tier; featured faculty are identified, but total credit hours and a research/thesis requirement are not published. |
-| practicality (low evidence) | 4 | Part-time study compatible with full-time work, an 8-month–3-year completion window, online delivery and applied leadership practice support 4 rather than 5; participant-organization projects and program-specific weekly workload are not documented (low evidence). |
-| costValue (low evidence) | 4 | Tuition is $14,320 for four graduate-credit courses over 8 months–3 years; the research includes a school-published comparison of $3,580 per course versus $5,476 at peer institutions, supporting favorable value, but peer duration and credential comparability are not documented (low evidence). |
+| leadership_skills | 4 | Required organizational behavior and conflict management courses, with electives such as Leading Through Change. |
+| deep_expertise | 3 | Four graduate-credit courses in organizational behavior, without a capstone. |
+| graduate_degree | 3 | Courses can count toward a Harvard Extension master's in management or industrial-organizational psychology. |
+| senior_network | 3 | In 2024, over half of students had 11+ years of employment; online, with no required time together. |
+| new_industry_or_city | 3 | Career webinars, advising and career fairs are open to certificate students. |

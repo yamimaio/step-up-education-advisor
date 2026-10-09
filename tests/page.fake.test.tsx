@@ -2,29 +2,29 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { BadRequest, fakeChat } from "@app/api/chat/fake";
+import { POST } from "@app/api/chat/route";
 import type { ChatRequest } from "@app/lib/chatTypes";
 import Home from "@app/page";
 
-// The whole page against the scripted Stage 1 interview (app/api/chat/fake.ts) through a mocked
-// fetch: persona A's answers (personas/A.md) from the first message to the verdict.
+// The whole page against the real /api/chat route through a mocked fetch. MODEL_FAKE=1 makes the
+// route serve persona A's scripted advisor (server/model/personaA.ts), so the server's rewrites,
+// checks and engine run for real with no model call: persona A's answers (personas/A.md) from
+// the first message to the verdict.
 
 let requests: ChatRequest[] = [];
 
 beforeEach(() => {
   requests = [];
+  vi.stubEnv("MODEL_FAKE", "1");
+  // The route logs one line of numbers per request; keep the test output clean.
+  vi.spyOn(console, "info").mockImplementation(() => {});
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (_url: string, init: RequestInit) => {
-      const body = JSON.parse(String(init.body)) as ChatRequest;
-      requests.push(body);
-      try {
-        return Response.json(fakeChat(body.messages));
-      } catch (e) {
-        if (e instanceof BadRequest)
-          return Response.json({ error: "bad_request" }, { status: 400 });
-        throw e;
-      }
+    vi.fn(async (url: string, init: RequestInit) => {
+      requests.push(JSON.parse(String(init.body)) as ChatRequest);
+      return POST(
+        new Request(new URL(url, "http://localhost"), { method: "POST", body: init.body }),
+      );
     }),
   );
 });
@@ -32,9 +32,11 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
-describe("the Stage 1 page with the fake route", () => {
+describe("the Stage 1 page with the real route on the fake model", () => {
   it("shows the wordmark and the privacy notice before the first message", () => {
     render(<Home />);
     expect(screen.getByRole("heading", { name: "Step Up" })).toBeTruthy();
@@ -50,7 +52,7 @@ describe("the Stage 1 page with the fake route", () => {
 
     await user.type(input(), "I've led engineering teams for twelve years.{Enter}");
     await tap("Step up to a bigger leadership role");
-    await screen.findByText("What does that look like for you, in a sentence or two?");
+    await screen.findByText("In your own words, what would that step up look like?");
     await user.type(input(), "Move into an executive role{Enter}");
     await tap("A senior network");
     await tap("Leadership skills");
@@ -119,11 +121,11 @@ describe("the Stage 1 page with the fake route", () => {
     const log = screen.getByRole("log", { name: "Conversation" });
     await user.type(screen.getByLabelText("Your message"), "Hello{Enter}");
     const chip = await screen.findByRole("button", { name: "Step up to a bigger leadership role" });
-    expect(log.textContent).toContain("Which of these is closer to what you want next?");
+    expect(log.textContent).toContain("Let's find the step that fits. First, your goal.");
     await waitFor(() => expect(document.activeElement).toBe(chip));
     // After a typed answer with no chips, focus goes back to the input box.
     await user.click(chip);
-    await screen.findByText("What does that look like for you, in a sentence or two?");
+    await screen.findByText("In your own words, what would that step up look like?");
     await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText("Your message")));
   });
 });

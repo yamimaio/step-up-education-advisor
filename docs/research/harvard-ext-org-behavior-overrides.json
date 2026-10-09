@@ -17,6 +17,14 @@
       "quote": "Years of employment 0–4 years 14% 5–10 years 30% 11–20 years 34% 21+ years 22% ... Data pertains to academic year 2024.",
       "checkedOn": "2026-10-09",
       "kind": "official_page"
+    },
+    {
+      "field": "durationMaxMonths",
+      "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+      "quote": "If you prefer a more flexible pace, you have up to three years to finish.",
+      "checkedOn": "2026-10-08",
+      "kind": "official_page"
     }
-  ]
+  ],
+  "durationMaxMonths": 36
 }

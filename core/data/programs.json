@@ -7,7 +7,7 @@
     "credential": "Graduate Certificate",
     "format": "online",
     "durationMonths": 8,
-    "durationMaxMonths": null,
+    "durationMaxMonths": 36,
     "credits": null,
     "attendance": "none",
     "onsiteNote": null,
@@ -207,6 +207,13 @@
         "quote": "Years of employment 0–4 years 14% 5–10 years 30% 11–20 years 34% 21+ years 22% ... Data pertains to academic year 2024.",
         "checkedOn": "2026-10-09",
         "kind": "official_page"
+      },
+      {
+        "field": "durationMaxMonths",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "If you prefer a more flexible pace, you have up to three years to finish.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
       }
     ],
     "verification": {
@@ -214,5 +221,198 @@
       "verifiedBy": null
     },
     "locationOffers": ["travel_ease", "affordability"]
+  },
+  {
+    "id": "mit-tlp",
+    "name": "Blended Professional Certificate: Technology Leadership Program",
+    "institution": "MIT Professional Education",
+    "category": "executive",
+    "credential": "Certificate of Completion from MIT Professional Education",
+    "format": "hybrid",
+    "durationMonths": 8,
+    "durationMaxMonths": null,
+    "credits": "42 CEUs",
+    "attendance": "residencies",
+    "onsiteNote": "3 residential weeks and 14+ live online sessions",
+    "onsiteDaysPerYear": 15,
+    "residencyCount": 3,
+    "longestStretchDays": 5,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "Cambridge",
+    "state": "Massachusetts",
+    "campusAddress": "700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
+    "campusLat": 42.3625,
+    "campusLon": -71.0955,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 28000,
+    "tuitionPerCourseUsd": null,
+    "courseCount": null,
+    "tuitionIncludes": null,
+    "lodgingIncluded": null,
+    "paymentOptions": null,
+    "minExperienceYears": 6,
+    "accreditation": [],
+    "cohortMedianExperienceYears": 20,
+    "cohortExperienceBasis": "median",
+    "cohortSeniority": "Technology leaders and experienced practitioners; relevant roles include C-level positions, Heads of Engineering/Technology, engineering managers, product managers, team leaders, senior functional managers, and delivery heads.",
+    "lodgingPerNightUsd": {
+      "min": 213,
+      "max": 365
+    },
+    "ratings": {
+      "leadership_skills": 5,
+      "deep_expertise": 3,
+      "graduate_degree": 2,
+      "senior_network": 5,
+      "new_industry_or_city": 2
+    },
+    "ratingNotes": {
+      "leadership_skills": "Leadership is the core: leading strategic change, the human side of technology, and innovation teams.",
+      "deep_expertise": "Several technology strategy modules and strategy projects throughout, without academic credit.",
+      "graduate_degree": "Certificate of completion with 42 CEUs; no stated path to a graduate degree.",
+      "senior_network": "Half of past participants have 20+ years of experience, across 20+ industries; three residential weeks at MIT.",
+      "new_industry_or_city": "An MIT Professional Education alumni LinkedIn group; no career services published."
+    },
+    "ratingLowEvidence": ["deep_expertise", "new_industry_or_city"],
+    "figureNotes": {
+      "campusLat": "Derived from campusAddress (approximate, from the street address).",
+      "campusLon": "Derived from campusAddress (approximate, from the street address).",
+      "cohortMedianExperienceYears": "Median from the brochure's experience breakdown (July 2026): half of past participants have 20+ years.",
+      "onsiteDaysPerYear": "Three Monday-to-Friday weeks on campus in the 2026-27 schedule, which MIT says is subject to change; travel days not counted."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Blended Professional Certificate: Technology Leadership Program",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "MIT Professional Education",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "All the participants who successfully complete Technology Leadership Program will receive a Certificate of Completion from MIT Professional Education.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Location MIT Campus & Live-Online",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Program Length 8 Months",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "CEUs 42",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "Experience a unique blended learning journey featuring 3 residential weeks and 14+ live online sessions",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Program Fee $28,000",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
+        "quote": "The program fee is USD 28,000",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "minExperienceYears",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "A minimum of 6+ years of work experience in functional, technical, or business roles.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortSeniority",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "Relevant roles include: C-level positions including CEOs, CTOs, COOs, CIOs, Chief Architects, etc.; Head of Engineering, Head of Technology; Engineering managers, product managers, and team leaders with a significant team size and budget responsibility.",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "lodgingPerNightUsd",
+        "url": "https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&city=Boston&state=MA&fiscal_year=2027",
+        "quote": "Boston / Cambridge ... $365 [October], $213 [November–February], $305 [March–August], $365 [September].",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "campusAddress",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://d1vwxdpzbgdqj.cloudfront.net/s3-public-files/mit-tlp/mittlpprogram_schedule.pdf",
+        "quote": "Module 2 On Campus Sept 21 - 25, 2026 ... Module 4 On Campus Jan 25 - 29, 2027 ... Module 6 On Campus 26 April - 30 April, 2027 ... *Program schedule is subject to change",
+        "checkedOn": "2026-10-09",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://d1vwxdpzbgdqj.cloudfront.net/s3-public-files/mit-tlp/mittlpprogram_schedule.pdf",
+        "quote": "Module 2 On Campus Sept 21 - 25, 2026 ... Module 4 On Campus Jan 25 - 29, 2027 ... Module 6 On Campus 26 April - 30 April, 2027 ... *Program schedule is subject to change",
+        "checkedOn": "2026-10-09",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://d1vwxdpzbgdqj.cloudfront.net/s3-public-files/mit-tlp/mittlpprogram_schedule.pdf",
+        "quote": "Module 2 On Campus Sept 21 - 25, 2026 ... Module 3 Live Online Oct, 2026 - Jan, 2027 ... Module 4 On Campus Jan 25 - 29, 2027 ... Module 5 Live Online Feb - April, 2027 ... Module 6 On Campus 26 April - 30 April, 2027",
+        "checkedOn": "2026-10-09",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "quote": "Typical Work Experience 25+ years 21% 20-25 years 29% 15-20 years 26% 10-15 years 17% Less than 10 years 7%",
+        "checkedOn": "2026-10-09",
+        "kind": "school_correspondence"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["network_density", "industry_hub"]
   }
 ]
