@@ -3,6 +3,7 @@ import { evaluate } from "./evaluate";
 import {
   cohortText,
   formatFit,
+  ordinal,
   programScore,
   rankPrograms,
   seniorPeersRating,
@@ -82,7 +83,7 @@ describe("Senior peers comes from the cohort figure when it is published", () =>
     formatPreference: "no_preference",
     travelComfort: "fine",
   } as const;
-  const none = { kind: "none", trips: 0, tripsEstimated: false } as const;
+  const none = { kind: "none", trips: 0, tripsPerYear: 0, tripsEstimated: false } as const;
 
   it("ignores the record's rating when the figure exists", () => {
     const program = fixture("fake-executive", { cohortMedianExperienceYears: 8 });
@@ -133,8 +134,8 @@ describe("Format fit (section 3a)", () => {
 });
 
 describe("Travel fit (section 3a)", () => {
-  const trips = { kind: "estimate", trips: 3, tripsEstimated: false } as const;
-  const none = { kind: "none", trips: 0, tripsEstimated: false } as const;
+  const trips = { kind: "estimate", trips: 3, tripsPerYear: 3, tripsEstimated: false } as const;
+  const none = { kind: "none", trips: 0, tripsPerYear: 0, tripsEstimated: false } as const;
 
   it("is 5 for someone who enjoys travel when the program needs trips, else 3", () => {
     expect(travelFit("appeal", trips)).toEqual({
@@ -157,12 +158,31 @@ describe("Travel fit (section 3a)", () => {
   });
 
   it("says when the trip count is estimated or unknown", () => {
-    expect(travelFit("appeal", { kind: "estimate", trips: 26, tripsEstimated: true }).text).toBe(
-      "About 26 trips to campus, which you said you enjoy.",
-    );
-    expect(travelFit("burden", { kind: "unknown", trips: null, tripsEstimated: false }).text).toBe(
-      "Needs travel to campus, which you said is a burden.",
-    );
+    expect(
+      travelFit("appeal", { kind: "estimate", trips: 26, tripsPerYear: 26, tripsEstimated: true })
+        .text,
+    ).toBe("About 26 trips to campus, which you said you enjoy.");
+    expect(
+      travelFit("burden", {
+        kind: "unknown",
+        trips: null,
+        tripsPerYear: null,
+        tripsEstimated: false,
+      }).text,
+    ).toBe("Needs travel to campus, which you said is a burden.");
+  });
+
+  it("gives the yearly count for a program longer than a year (review #86)", () => {
+    // A 2-year EMBA with 6 residencies a year: 12 trips in all, 6 a year.
+    const emba = { kind: "estimate", trips: 12, tripsPerYear: 6, tripsEstimated: false } as const;
+    expect(travelFit("burden", emba).text).toBe("6 trips a year, which you said is a burden.");
+    const viaEngine = evaluate(
+      { ...personaAProfile, maxProgramMonths: 24 },
+      [fixture("fake-executive", { durationMonths: 13 })],
+      today,
+    ).programs[0];
+    expect(viaEngine?.travelEstimate).toMatchObject({ trips: 6, tripsPerYear: 3 });
+    expect(viaEngine?.score.travel.text).toBe("3 trips a year, which you said you enjoy.");
   });
 
   it("needs no trips from a user who lives within commuting distance", () => {
@@ -179,7 +199,7 @@ describe("Travel fit (section 3a)", () => {
 });
 
 describe("The why line names the two needs that contributed most", () => {
-  const none = { kind: "none", trips: 0, tripsEstimated: false } as const;
+  const none = { kind: "none", trips: 0, tripsPerYear: 0, tripsEstimated: false } as const;
   const program = (ratings: Partial<Record<string, number>>) =>
     fixture("fake-certificate", {
       ratings: { ...fixture("fake-certificate").ratings, ...ratings },
@@ -225,6 +245,7 @@ const ev = (
     status: "pass",
     locationFit: 3,
     totalCostUsd: 30000,
+    travelEstimate: { lodgingOnly: false },
     score: {
       total,
       needs: [],
@@ -289,6 +310,54 @@ describe("Order", () => {
       "fake-dear",
       "fake-unknown",
     ]);
+  });
+
+  it("compares a lodging-only cost by its known part, and puts it behind only on a tie (review #86)", () => {
+    const lodgingOnly = { lodgingOnly: true } as ProgramEvaluation["travelEstimate"];
+    const r = rank(
+      [
+        // $60k online vs $15k tuition + $3k lodging, airfare still to add.
+        ev("fake-online", { totalCostUsd: 60000 }),
+        ev("fake-travel", { totalCostUsd: 18000, travelEstimate: lodgingOnly }),
+        ev("fake-a-travel-even", { totalCostUsd: 30000, travelEstimate: lodgingOnly }),
+        ev("fake-z-even", { totalCostUsd: 30000 }),
+      ],
+      confirmed,
+    );
+    expect(ids(r.ranked)).toEqual([
+      "fake-travel",
+      "fake-z-even",
+      "fake-a-travel-even",
+      "fake-online",
+    ]);
+  });
+
+  it("words every position, past eighth", () => {
+    const r = rank(
+      Array.from({ length: 12 }, (_, i) => ev(`fake-${String(i).padStart(2, "0")}`)),
+      confirmed,
+    );
+    expect(r.ranked.slice(7).map((x) => x.why)).toEqual([
+      "Ranked eighth.",
+      "Ranked ninth.",
+      "Ranked tenth.",
+      "Ranked eleventh.",
+      "Ranked twelfth.",
+    ]);
+  });
+
+  it.each([
+    [1, "first"],
+    [13, "thirteenth"],
+    [20, "twentieth"],
+    [21, "twenty-first"],
+    [42, "forty-second"],
+    [99, "ninety-ninth"],
+    [100, "100th"],
+    [111, "111th"],
+    [122, "122nd"],
+  ])("ordinal %s is %s", (n, word) => {
+    expect(ordinal(n)).toBe(word);
   });
 
   it("leaves out failures and programs of a ruled-out type", () => {
@@ -434,12 +503,10 @@ describe("Format fit at weight 2", () => {
 describe("Total cost for breaking ties", () => {
   it("adds tuition and travel, and is unknown when either part is", () => {
     const program = { tuitionUsd: 30000, tuitionPerCourseUsd: null, courseCount: null };
-    expect(totalCost(program, { totalUsd: 9225, lodgingOnly: false })).toBe(39225);
-    expect(totalCost(program, { totalUsd: null, lodgingOnly: false })).toBeNull();
-    // Lodging only: the airfare is missing, so the total isn't known.
-    expect(totalCost(program, { totalUsd: 5475, lodgingOnly: true })).toBeNull();
-    expect(
-      totalCost({ ...program, tuitionUsd: null }, { totalUsd: 0, lodgingOnly: false }),
-    ).toBeNull();
+    expect(totalCost(program, { totalUsd: 9225 })).toBe(39225);
+    expect(totalCost(program, { totalUsd: null })).toBeNull();
+    // Lodging only (airfare unknown) still adds its known part; byRank handles the rest.
+    expect(totalCost(program, { totalUsd: 5475 })).toBe(35475);
+    expect(totalCost({ ...program, tuitionUsd: null }, { totalUsd: 0 })).toBeNull();
   });
 });

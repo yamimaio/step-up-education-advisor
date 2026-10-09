@@ -15,6 +15,7 @@ describe("Travel estimate (D8 and the section 11 follow-ups)", () => {
   it("multiplies trips by the program years, rounded up", () => {
     const t = travelEstimate(fixture("fake-executive", { durationMonths: 13 }), buenosAires);
     expect(t.trips).toBe(6);
+    expect(t.tripsPerYear).toBe(3);
   });
 
   it("covers lodging only, with the flag set, when airfare is unknown", () => {

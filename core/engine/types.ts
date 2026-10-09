@@ -72,7 +72,9 @@ export interface TravelEstimate {
   // none: no trips needed (online, within commuting distance, no on-site time). unknown: a figure is missing.
   kind: "none" | "estimate" | "unknown";
   totalUsd: number | null;
+  // Over the whole program, and in a year of it (the same for a program of a year or less).
   trips: number | null;
+  tripsPerYear: number | null;
   nightsPerTrip: number | null;
   airfarePerTripUsd: number | null;
   lodgingPerNightUsd: number | null;
@@ -138,7 +140,8 @@ export interface ProgramEvaluation {
   // Location values only; breaks ties.
   locationFit: number;
   travelEstimate: TravelEstimate;
-  // Tuition plus the travel estimate; null when either isn't fully known. Breaks ties.
+  // Tuition plus the travel estimate (lodging only when the airfare range is unknown, as
+  // travelEstimate.lodgingOnly says); null when either is unknown. Breaks ties.
   totalCostUsd: number | null;
   confidence: ConfidenceResult;
   score: ProgramScore;

@@ -7,6 +7,7 @@ const base: TravelEstimate = {
   kind: "none",
   totalUsd: 0,
   trips: 0,
+  tripsPerYear: 0,
   nightsPerTrip: 0,
   airfarePerTripUsd: null,
   lodgingPerNightUsd: null,
@@ -21,6 +22,7 @@ const unknown = (note: string, earlier: string[] = []): TravelEstimate => ({
   kind: "unknown",
   totalUsd: null,
   trips: null,
+  tripsPerYear: null,
   nightsPerTrip: null,
   notes: [...earlier, note],
 });
@@ -73,25 +75,29 @@ export function travelEstimate(
   const weekends = program.attendance === "recurring_weekends";
 
   let trips: number;
+  let perYear: number;
   let nights: number;
   let tripsEstimated = false;
   if (count && days !== null) {
-    trips = (program.residencyCount as number) * years;
+    perYear = program.residencyCount as number;
+    trips = perYear * years;
     nights = days / (program.residencyCount as number);
   } else if (count && weekends) {
     // The trip count is published; only the nights per trip are a guess.
-    trips = (program.residencyCount as number) * years;
+    perYear = program.residencyCount as number;
+    trips = perYear * years;
     nights = WEEKEND_NIGHTS_PER_TRIP;
     notes.push(`Nights per trip estimated at ${WEEKEND_NIGHTS_PER_TRIP}.`);
   } else if (weekends && days !== null) {
     // No trip count, but the school publishes its on-site days: count weekends from those.
-    const perYear = Math.max(1, Math.ceil(days / WEEKEND_NIGHTS_PER_TRIP));
+    perYear = Math.max(1, Math.ceil(days / WEEKEND_NIGHTS_PER_TRIP));
     trips = perYear * years;
     nights = days / perYear;
     tripsEstimated = true;
     notes.push(`Trip count estimated from the ${days} published on-site days a year.`);
   } else if (weekends) {
-    trips = WEEKEND_TRIPS_PER_YEAR * years;
+    perYear = WEEKEND_TRIPS_PER_YEAR;
+    trips = perYear * years;
     nights = WEEKEND_NIGHTS_PER_TRIP;
     tripsEstimated = true;
     notes.push(
@@ -126,6 +132,7 @@ export function travelEstimate(
     kind: "estimate",
     totalUsd: cents(trips * (airfare ?? 0) + lodging),
     trips,
+    tripsPerYear: perYear,
     nightsPerTrip: nights,
     airfarePerTripUsd: airfare,
     lodgingPerNightUsd: lodgingRate,

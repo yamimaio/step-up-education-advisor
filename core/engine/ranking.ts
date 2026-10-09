@@ -70,14 +70,19 @@ export function formatFit(
 // read against how they feel about travel. The travel estimate already decides "no trips".
 export function travelFit(
   comfort: EffectiveProfile["travelComfort"],
-  travel: Pick<TravelEstimate, "kind" | "trips" | "tripsEstimated">,
+  travel: Pick<TravelEstimate, "kind" | "trips" | "tripsPerYear" | "tripsEstimated">,
 ): Fit {
   const needsTrips = travel.kind !== "none";
   if (comfort === "fine" || !needsTrips) return { fit: TRAVEL_FIT.neutral, text: null };
+  // A program longer than a year gives the yearly count, so two schedules compare like for like.
+  const count = (n: number, rest: string) =>
+    `${travel.tripsEstimated ? "About " : ""}${n} trip${n === 1 ? "" : "s"} ${rest}`;
   const trips =
     travel.trips === null
       ? "Needs travel to campus"
-      : `${travel.tripsEstimated ? "About " : ""}${travel.trips} trip${travel.trips === 1 ? "" : "s"} to campus`;
+      : travel.tripsPerYear !== null && travel.tripsPerYear !== travel.trips
+        ? count(travel.tripsPerYear, "a year")
+        : count(travel.trips, "to campus");
   return comfort === "appeal"
     ? { fit: TRAVEL_FIT.wanted, text: `${trips}, which you said you enjoy.` }
     : { fit: TRAVEL_FIT.burden, text: `${trips}, which you said is a burden.` };
@@ -94,7 +99,7 @@ export function programScore(
     | "cohortExperienceBasis"
   >,
   profile: Pick<EffectiveProfile, "needs" | "formatPreference" | "travelComfort">,
-  travel: Pick<TravelEstimate, "kind" | "trips" | "tripsEstimated">,
+  travel: Pick<TravelEstimate, "kind" | "trips" | "tripsPerYear" | "tripsEstimated">,
 ): ProgramScore {
   const cohort = cohortText(program);
   const needs: NeedScore[] = profile.needs.map((need, i) => {
@@ -134,18 +139,58 @@ export function programScore(
   };
 }
 
-// Tuition plus the travel estimate, for breaking ties. Null when either part isn't fully known: a
-// missing figure, or a lodging-only estimate because the airfare range is unknown.
+// Tuition plus the travel estimate, for breaking ties. Null when either is unknown. With the
+// airfare range unknown the estimate covers lodging only (travel.lodgingOnly); byRank compares
+// that known part and puts it behind a complete total only when the two are equal.
 export function totalCost(
   program: Pick<Program, "tuitionUsd" | "tuitionPerCourseUsd" | "courseCount">,
-  travel: Pick<TravelEstimate, "totalUsd" | "lodgingOnly">,
+  travel: Pick<TravelEstimate, "totalUsd">,
 ): number | null {
   const tuition = tuitionTotal(program);
-  if (tuition === null || travel.totalUsd === null || travel.lodgingOnly) return null;
+  if (tuition === null || travel.totalUsd === null) return null;
   return tuition.usd + travel.totalUsd;
 }
 
-const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth"];
+const ONES = [
+  "",
+  "first",
+  "second",
+  "third",
+  "fourth",
+  "fifth",
+  "sixth",
+  "seventh",
+  "eighth",
+  "ninth",
+];
+const TEENS = [
+  "tenth",
+  "eleventh",
+  "twelfth",
+  "thirteenth",
+  "fourteenth",
+  "fifteenth",
+  "sixteenth",
+  "seventeenth",
+  "eighteenth",
+  "nineteenth",
+];
+const DIGIT_SUFFIX: Record<number, string> = { 1: "st", 2: "nd", 3: "rd" };
+const TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+
+// "first" … "ninety-ninth", so every card in the uncapped list reads the same way. A category
+// with 100 or more programs falls back to digits ("100th").
+export function ordinal(n: number): string {
+  if (n < 10) return ONES[n] ?? "";
+  if (n < 20) return TEENS[n - 10] ?? "";
+  if (n < 100) {
+    const tens = TENS[Math.floor(n / 10)] ?? "";
+    const ones = n % 10;
+    return ones === 0 ? `${tens.slice(0, -1)}ieth` : `${tens}-${ONES[ones]}`;
+  }
+  const suffix = [11, 12, 13].includes(n % 100) ? "th" : (DIGIT_SUFFIX[n % 10] ?? "th");
+  return `${n}${suffix}`;
+}
 
 // "Ranked first for senior peers (cohort median 18 years) and leadership skills."
 function whyLine(lead: string, score: ProgramScore): string {
@@ -158,13 +203,16 @@ function whyLine(lead: string, score: ProgramScore): string {
 
 const byId = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-// Higher score; then higher location fit, lower known total cost (unknown last), id.
+// Higher score; then higher location fit, lower total cost (unknown last; on equal costs a
+// lodging-only estimate goes behind a complete one, since its airfare is still to add), id.
 function byRank(a: ProgramEvaluation, b: ProgramEvaluation): number {
   const cost = (e: ProgramEvaluation) => e.totalCostUsd ?? Infinity;
+  const partial = (e: ProgramEvaluation) => Number(e.travelEstimate.lodgingOnly);
   return (
     b.score.total - a.score.total ||
     b.locationFit - a.locationFit ||
     (cost(a) === cost(b) ? 0 : cost(a) < cost(b) ? -1 : 1) ||
+    partial(a) - partial(b) ||
     byId(a.id, b.id)
   );
 }
@@ -192,7 +240,7 @@ export function rankPrograms(
     .sort(passFirst)
     .map((e, i): RankedProgram => ({
       id: e.id,
-      why: whyLine(`Ranked ${ORDINALS[i] ?? `#${i + 1}`}`, e.score),
+      why: whyLine(`Ranked ${ordinal(i + 1)}`, e.score),
     }));
   const instead = ranked.length === 0;
   const other = instead ? access.alternative : runnerUp;
