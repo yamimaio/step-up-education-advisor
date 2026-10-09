@@ -44,11 +44,12 @@ export function confidence(program: Program, checks: Check[], today: Date): Conf
   if (!costOk) reasons.push("Tuition is not published on an official page.");
 
   // A program that needs the student near campus publishes a schedule ("weekday evenings")
-  // rather than a day count, so an official schedule source is its on-site evidence. A missing
-  // count still shows as an unknown on-site days check, so it lowers confidence once, not twice.
+  // rather than a day count, so an official source on any schedule field (the same fields as
+  // for other programs, `format` included) is its on-site evidence. A missing count still shows
+  // as an unknown on-site days check, so it lowers confidence once, not twice.
   const onsiteOk =
-    (program.onsiteDaysPerYear !== null && officialFor(program, ONSITE_FIELDS)) ||
-    (needsLocalPresence(program) && officialFor(program, ["attendance", "onsiteNote"]));
+    (program.onsiteDaysPerYear !== null || needsLocalPresence(program)) &&
+    officialFor(program, ONSITE_FIELDS);
   if (!onsiteOk) reasons.push("On-site time is not published on an official page.");
 
   const unknowns = checks.filter((c) => c.unknown);

@@ -131,6 +131,25 @@ describe("A local program's published schedule is its on-site evidence", () => {
     expect(reasons.join(" ")).not.toMatch(/On-site time/);
   });
 
+  it("counts a schedule source on `format` too, so a missing count lowers confidence once", () => {
+    // The fixture master's has its schedule sourced on `format` only, and no day count.
+    const masters = fixture("fake-specialized-masters", {
+      verification: { status: "verified", verifiedBy: "Fixture Author" },
+      onsiteDaysPerYear: null,
+    });
+    expect(masters.sources.map((s) => s.field)).not.toContain("attendance");
+    const [p] = evaluatePrograms(
+      makeProfile({ tuitionBudgetUsd: 60000 }),
+      recommendCategory(workedExampleProfile, [masters]).category,
+      [masters],
+      day(0),
+    ).programs;
+    expect(p?.confidence).toEqual({
+      level: "medium",
+      reasons: ["Not published: on-site days a year."],
+    });
+  });
+
   it("still asks for a day count from a program reached by travel", () => {
     const { reasons } = confidence(scheduleOnly("fake-executive"), [pass], day(0));
     expect(reasons.join(" ")).toMatch(/On-site time is not published/);
