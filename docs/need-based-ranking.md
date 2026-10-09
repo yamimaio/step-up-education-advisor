@@ -35,9 +35,10 @@ Category table after the map (before any change Yami makes in the #22 review):
 
 Each program record carries `ratings` keyed by the five needs, integers 1 to 5, with `ratingNotes` keyed the same way and `ratingLowEvidence` listing needs rated on thin evidence. The old `network`, `depth`, `practicality` and `costValue` ratings are removed.
 
-- **Where the numbers come from:** the Perplexity rating prompt (Prompt 2 in `docs/perplexity-program-prompts.md`). It starts from the program's category default (the table above) and moves a rating only on quoted evidence, saying so in the note ("category default 3 → 5 because …"). This is the "program facts override the category" step.
+- **Where the numbers come from:** the Perplexity rating prompt (Prompt 2 in `docs/perplexity-program-prompts.md`). It starts from the program's category default (the table above) and moves a rating only on quoted evidence, saying so in its `reasoning` ("default 3 → 5 because …"). This is the "program facts override the category" step. For senior peers and career change, a 4 or 5 needs facts that meet that level, and with no facts at all the rating is the default or 3, whichever is lower (Yami's review, issue #87). `ratingNotes` are the short, card-ready lines (at most 20 words, no URLs); the `reasoning` stays in the rating file.
 - **Senior peers is derived from facts when it can be.** When `cohortMedianExperienceYears` is published, the engine computes the rating from it and ignores the prompt's value: under 5 years → 1, 5–9 → 2, 10–14 → 3, 15–19 → 4, 20 or more → 5. The card says "cohort median N years". When it is null, the record's value is used and confidence drops.
-- **Degree follows a factual rubric** in the prompt: 5 awards a graduate degree; 3 its credits officially count toward a graduate degree (quoted); 2 academic credit or CEUs with no stated path; 1 no credit.
+- **When the median is null**, the prompt uses the latest published class profile (an average counts; say which class), or a published target audience when admission is by application (Yami's review, issue #87: MIT TLP's C-level target is enforced by admission).
+- **Degree follows a factual rubric** in the prompt: 5 awards a graduate degree; 4 all its credits officially count toward a named graduate degree (quoted); 3 some of its credits do (quoted); 2 academic credit or CEUs with no stated path; 1 no credit.
 
 ## 3. Program score and order
 

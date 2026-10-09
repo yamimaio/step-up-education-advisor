@@ -143,3 +143,15 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - Yami confirmed both defaults on Oct 9: the 1 to 5 scale everywhere, and ranking inside the confirmed category.
 - Format preference (Oct 9): new `formatPreference`; program format is read from `format` (`hybrid` = blended). Format fit 5 / 3 / 1, no preference 3, weight 2.
 - Travel comfort stays (Yami, Oct 9: format and travel are different traits) and scores 1 × travel fit: appeal 5 / burden 1 when the program needs trips for this user, 3 otherwise; fine 3. It leaves location fit. R5 is unchanged.
+
+## Rating rules from the review of the first 4 ratings (issue #87, Oct 9)
+
+Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM and Harvard Extension (PRs #27, #29, #31, #33). Rules added to Prompt 2 and `docs/need-based-ranking.md`:
+
+- Senior peers and career change: a 4 or 5 needs facts that meet that level. With no facts on the need, the rating is the category default or 3, whichever is lower. Leadership and depth keep the category default unless facts move them.
+- Yami: a published target audience counts as the cohort when admission is by application. MIT TLP targets C-level leaders and admits by application, so it keeps senior peers 5 (Yami's own cohort averages about 22 years).
+- The most recent published class profile counts for cohort facts in both prompts, matching B1 (Wharton's Class of 2028, average 13-14 years → 3).
+- Career change: 3 needs career services open to these students, quoted; a network alone is 2.
+- Every rubric level 1 to 5 is defined. Degree gains a 4: all credits officially count toward a named graduate degree.
+- The rating answer is one valid JSON block. `ratingNotes` are card-ready (at most 20 words, no URLs); the evidence goes in a `reasoning` field that stays in the rating file.
+- The 4 rating files keep Perplexity's answer as provenance and add a "Reviewed ratings" block with the values the records use.
