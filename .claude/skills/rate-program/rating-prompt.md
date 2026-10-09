@@ -46,7 +46,7 @@ senior_network (how senior the classmates are, and time together):
   3 = median 10 to 14 years, or mostly managers
   4 = median 15 to 19 years, or mostly directors and VPs
   5 = median 20+ years, or mostly C-level and VPs, with sustained in-person time
-  Use a median or average from the most recent published class profile, even when it describes an earlier class; say which class. A published target audience (for example "C-level positions including CEOs, CTOs") counts as the cohort when admission is by application.
+  Use a median or average from the most recent published class profile, even when it describes an earlier class; say which class. When the profile also publishes an experience breakdown (share of the class per band of years), use the median that breakdown implies instead of an average: the lower edge of the band that holds the middle participant (when exactly half the class is at or above a band's lower edge, that edge). The record stores that number with `cohortExperienceBasis: median`. A published target audience (for example "C-level positions including CEOs, CTOs") counts as the cohort when admission is by application.
 new_industry_or_city (support for changing industry, role or city):
   1 = designed for staying in the current role, no career services
   2 = an alumni or professional network only, with no career services for these students
