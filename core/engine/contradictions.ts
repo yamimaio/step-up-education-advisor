@@ -17,6 +17,9 @@ export function checkContradictions(
   const needs = partial.needs ?? [];
   const top = needs[0];
   const found: Omit<Contradiction, "resolved">[] = [];
+  const degreePrices = programs
+    .filter((p) => DEGREE_TYPES.includes(p.category))
+    .flatMap((p) => tuitionTotal(p)?.usd ?? []);
 
   if (
     top === "senior_network" &&
@@ -32,15 +35,10 @@ export function checkContradictions(
     partial.degreeRequired === "required" &&
     partial.tuitionBudgetUsd !== undefined &&
     partial.tuitionBudgetUsd !== null &&
-    // A per-course price counts through its estimate (price × courses), as on the card.
-    !programs.some((p) => {
-      const total = tuitionTotal(p);
-      return (
-        DEGREE_TYPES.includes(p.category) &&
-        total !== null &&
-        total.usd <= (partial.tuitionBudgetUsd as number)
-      );
-    })
+    // Evidence is the degree programs with a known price; a per-course price counts through its
+    // estimate (price × courses), as on the card. With no known price, the rule stays quiet.
+    degreePrices.length > 0 &&
+    degreePrices.every((usd) => usd > (partial.tuitionBudgetUsd as number))
   ) {
     found.push({
       id: "R2",

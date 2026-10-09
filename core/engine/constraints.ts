@@ -76,7 +76,11 @@ export function checkTuition(program: Program, profile: EffectiveProfile): Check
     const courses = program.courseCount === 1 ? "course" : "courses";
     note = `about $${total.usd.toLocaleString("en-US")} at ${program.courseCount} ${courses} (estimate)`;
   }
-  return limitCheck("tuition", program.tuitionUsd, profile.tuitionBudgetUsd, "USD", note);
+  const check = limitCheck("tuition", program.tuitionUsd, profile.tuitionBudgetUsd, "USD", note);
+  // A per-course price is published, so the figure isn't missing: the check is not `unknown` and
+  // confidence doesn't drop. It still decides only on the total (default 4).
+  if (total?.estimated) return { ...check, unknown: false, note: `priced per course; ${note}` };
+  return check;
 }
 
 export function checkTravelBudget(travel: TravelEstimate, profile: EffectiveProfile): Check {
@@ -95,39 +99,28 @@ export function checkTravelBudget(travel: TravelEstimate, profile: EffectiveProf
   return check;
 }
 
-// A program that needs the student near campus has no time away: the student commutes or
-// relocates (travel.ts counts no trips for it), and the location check decides. The time-away
-// limits don't apply to it, so they pass with a note and never count as unpublished.
-function fromHome(id: CheckId, value: number | null, limit: number | null, unit: string): Check {
-  return {
-    id,
-    status: "pass",
-    value,
-    limit,
-    unit,
-    unknown: false,
-    note: "no time away: you'd attend from near campus",
-  };
-}
-
+// On-site days apply to every program: commuting doesn't remove days on campus, and "None" (0)
+// means the user can't be on site at all.
 export function checkOnsiteDays(program: Program, profile: EffectiveProfile): Check {
-  const args = [
-    "onsiteDays",
-    program.onsiteDaysPerYear,
-    profile.maxOnsiteDays,
-    "days a year",
-  ] as const;
-  return needsLocalPresence(program) ? fromHome(...args) : limitCheck(...args);
+  return limitCheck("onsiteDays", program.onsiteDaysPerYear, profile.maxOnsiteDays, "days a year");
 }
 
+// The longest stretch is time away from home. A program that needs the student near campus has
+// none: the student commutes or relocates (travel.ts counts no trips for it), and the location
+// check decides. So it passes with a note and never counts as unpublished.
 export function checkLongestStretch(program: Program, profile: EffectiveProfile): Check {
-  const args = [
-    "longestStretch",
-    program.longestStretchDays,
-    profile.maxStretchDays,
-    "days",
-  ] as const;
-  return needsLocalPresence(program) ? fromHome(...args) : limitCheck(...args);
+  if (needsLocalPresence(program)) {
+    return {
+      id: "longestStretch",
+      status: "pass",
+      value: program.longestStretchDays,
+      limit: profile.maxStretchDays,
+      unit: "days",
+      unknown: false,
+      note: "no time away: you'd attend from near campus",
+    };
+  }
+  return limitCheck("longestStretch", program.longestStretchDays, profile.maxStretchDays, "days");
 }
 
 // The fastest published pace; null falls back to the slowest, and both null is unknown.
@@ -151,9 +144,11 @@ export function checkHours(
 ): Check {
   const user = profile.hoursPerWeek;
   const hours = program.hoursPerWeek;
-  if (hours === null) return limitCheck("hours", null, user ? user.max : null, "hours a week");
-  const value = hours.min === hours.max ? hours.min : `${hours.min}-${hours.max}`;
+  // The user's range, shown the same way whether or not the program publishes its hours.
   const limit = user ? (user.min === user.max ? user.max : `${user.min}-${user.max}`) : null;
+  if (hours === null)
+    return { ...limitCheck("hours", null, user ? user.max : null, "hours a week"), limit };
+  const value = hours.min === hours.max ? hours.min : `${hours.min}-${hours.max}`;
   const check = { id: "hours" as const, value, limit, unit: "hours a week", unknown: false };
   if (!user || scaled(hours.min) <= scaled(user.max)) return { ...check, status: "pass" };
   const status =

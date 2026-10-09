@@ -77,7 +77,7 @@ Also:
 | A limit of 0 has no near miss (DQ10) | `overshoot` | E |
 | Tuition ≤ budget; null tuition with a budget set → near miss, "not published"; with no limit → pass | `checkTuition` | **S8-5**, including that both cases lower confidence |
 | Travel cost ≤ travel budget (when one is set) | `checkTravelBudget` | pass, near miss and fail; null budget passes |
-| On-site days and longest stretch, for programs reached by travel; a program that needs the student near campus has no time away and passes both with a note | `checkOnsiteDays`, `checkLongestStretch` | pass, near miss and fail; null → unknown rule; a local full-time or evening program passes both, even with nulls |
+| On-site days for every program; longest stretch for programs reached by travel (a program that needs the student near campus has no time away and passes it with a note) | `checkOnsiteDays`, `checkLongestStretch` | pass, near miss and fail; null → unknown rule; a local MBA's 240 days fail a limit of 10; a local evening program passes the stretch even with a null; a multi-week residency is reached by travel |
 | Length ≤ `maxProgramMonths` | `checkLength` | EMBA 24 against 12 fails (S8-1); null → unknown rule |
 | Hours: overlap or ≤ +25% passes with a note; ≤ +50% near miss; beyond fails | `checkHours` | E: overlap passes; 12 against 5–10 passes with "about 2 hours a week more"; 15 against 10 near miss; 16 against 10 fails |
 | Work-compatible when `keepWorking` (boolean, no near miss) | `checkWorkCompatible` | pass and fail |

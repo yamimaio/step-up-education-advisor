@@ -80,7 +80,17 @@ describe("Unknown values follow the unknown-value rule (S8-5)", () => {
   it("puts an estimate from per-course tuition in the note, never deciding the result", () => {
     const check = checkTuition(fixture("fake-specialized-masters"), eff({ tuitionBudgetUsd: 1 }));
     expect(check.status).toBe("near_miss");
-    expect(check.note).toBe("not published; about $50,000 at 10 courses (estimate)");
+    expect(check.note).toBe("priced per course; about $50,000 at 10 courses (estimate)");
+    // The per-course price is published, so the figure isn't missing.
+    expect(check.unknown).toBe(false);
+  });
+
+  it("stays unknown when neither a total nor a per-course price is published", () => {
+    const none = fixture("fake-specialized-masters", {
+      tuitionPerCourseUsd: null,
+      courseCount: null,
+    });
+    expect(checkTuition(none, eff())).toMatchObject({ unknown: true, note: "not published" });
   });
 });
 
@@ -282,20 +292,30 @@ describe("A declined home does not turn a commuting program's travel into a data
   });
 });
 
-describe("Time-away limits don't apply to a program that needs the student near campus", () => {
+describe("The longest stretch away doesn't apply to a program that needs the student near campus", () => {
   const local = { ...CAMBRIDGE_MA, maxOnsiteDays: 20, maxStretchDays: 7 };
 
-  it("passes on-site days and longest stretch for a full-time program the user commutes to", () => {
-    const mba = fixture("fake-mba");
-    for (const check of [checkOnsiteDays(mba, eff(local)), checkLongestStretch(mba, eff(local))]) {
-      expect(check).toMatchObject({ status: "pass", unknown: false });
-      expect(check.note).toMatch(/no time away/);
-    }
+  it("passes the longest stretch for a full-time program the user commutes to", () => {
+    const check = checkLongestStretch(fixture("fake-mba"), eff(local));
+    expect(check).toMatchObject({ status: "pass", unknown: false });
+    expect(check.note).toMatch(/no time away/);
+  });
+
+  it("still checks on-site days: commuting doesn't remove days on campus", () => {
+    // 240 days a year against 10, and an evening program against "None".
+    expect(checkOnsiteDays(fixture("fake-mba"), eff({ ...local, maxOnsiteDays: 10 })).status).toBe(
+      "fail",
+    );
+    expect(
+      checkOnsiteDays(fixture("fake-specialized-masters"), eff({ ...local, maxOnsiteDays: 0 }))
+        .status,
+    ).toBe("fail");
   });
 
   it("lets a local full-time MBA pass when every other limit fits", () => {
     const profile = eff({
       ...local,
+      maxOnsiteDays: 250,
       keepWorking: false,
       maxProgramMonths: 24,
       hoursPerWeek: { min: 40, max: 60 },
@@ -305,16 +325,38 @@ describe("Time-away limits don't apply to a program that needs the student near 
     expect(checkConstraints(mba, profile, travelEstimate(mba, profile)).status).toBe("pass");
   });
 
-  it("does not count an unpublished on-site figure as a gap for an evening program", () => {
+  it("does not count an unpublished stretch as a gap for an evening program, but does count days", () => {
     const masters = fixture("fake-specialized-masters", {
       onsiteDaysPerYear: null,
       longestStretchDays: null,
     });
-    expect(checkOnsiteDays(masters, eff(local))).toMatchObject({ status: "pass", unknown: false });
     expect(checkLongestStretch(masters, eff(local))).toMatchObject({
       status: "pass",
       unknown: false,
     });
+    expect(checkOnsiteDays(masters, eff(local))).toMatchObject({
+      status: "near_miss",
+      unknown: true,
+    });
+  });
+
+  it("treats a multi-week residency as travel, even when it isn't work-compatible", () => {
+    const residency = fixture("fake-executive", {
+      format: "in_person",
+      workCompatible: false,
+      residencyCount: 1,
+      onsiteDaysPerYear: 49,
+      longestStretchDays: 49,
+    });
+    const away = eff({
+      ...BUENOS_AIRES,
+      relocate: true,
+      maxStretchDays: 14,
+      airfareRange: "1000_1500",
+    });
+    expect(checkLongestStretch(residency, away).status).toBe("fail");
+    expect(travelEstimate(residency, away).kind).toBe("estimate");
+    expect(checkLocation(residency, { ...away, relocate: false }).status).toBe("pass");
   });
 
   it("still applies them to a blended program the user travels to", () => {
@@ -335,6 +377,18 @@ describe("The airfare-unknown note is kept whatever the travel-budget status", (
     }
     expect(status(5000).status).toBe("near_miss");
     expect(status(1000).status).toBe("fail");
+  });
+});
+
+describe("The hours limit is shown the same way whether or not the program publishes hours", () => {
+  it("is the user's range in both cases", () => {
+    const user = eff({ hoursPerWeek: { min: 5, max: 10 } });
+    expect(checkHours(fixture("fake-executive"), user).limit).toBe("5-10");
+    expect(checkHours(fixture("fake-executive", { hoursPerWeek: null }), user)).toMatchObject({
+      limit: "5-10",
+      status: "near_miss",
+      unknown: true,
+    });
   });
 });
 

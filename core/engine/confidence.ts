@@ -1,6 +1,7 @@
 import { verifiedOn } from "../schema/derived";
 import type { Program } from "../schema/program";
 import { CHECK_LABELS, CONFIDENCE_WINDOW_DAYS } from "./constants";
+import { needsLocalPresence } from "./distance";
 import type { Check, ConfidenceResult } from "./types";
 
 const ONSITE_FIELDS = [
@@ -42,7 +43,12 @@ export function confidence(program: Program, checks: Check[], today: Date): Conf
       officialFor(program, ["tuitionPerCourseUsd"]));
   if (!costOk) reasons.push("Tuition is not published on an official page.");
 
-  const onsiteOk = program.onsiteDaysPerYear !== null && officialFor(program, ONSITE_FIELDS);
+  // A program that needs the student near campus publishes a schedule ("weekday evenings")
+  // rather than a day count, so an official schedule source is its on-site evidence. A missing
+  // count still shows as an unknown on-site days check, so it lowers confidence once, not twice.
+  const onsiteOk =
+    (program.onsiteDaysPerYear !== null && officialFor(program, ONSITE_FIELDS)) ||
+    (needsLocalPresence(program) && officialFor(program, ["attendance", "onsiteNote"]));
   if (!onsiteOk) reasons.push("On-site time is not published on an official page.");
 
   const unknowns = checks.filter((c) => c.unknown);

@@ -83,6 +83,27 @@ describe("R4 fires at the lowest hours chip", () => {
   });
 });
 
+describe("R2 needs a known degree price", () => {
+  it("stays quiet on an empty dataset", () => {
+    expect(
+      checkContradictions({ degreeRequired: "required", tuitionBudgetUsd: 200000 }, []),
+    ).toEqual([]);
+  });
+
+  it("ignores a degree program with no known price", () => {
+    const unpriced = [fixture("fake-mba", { tuitionUsd: null })];
+    expect(
+      checkContradictions({ degreeRequired: "required", tuitionBudgetUsd: 200000 }, unpriced),
+    ).toEqual([]);
+    const both = [...unpriced, fixture("fake-emba")];
+    expect(
+      checkContradictions({ degreeRequired: "required", tuitionBudgetUsd: 100000 }, both).map(
+        (c) => c.id,
+      ),
+    ).toEqual(["R2"]);
+  });
+});
+
 describe("R2 counts a degree program priced per course", () => {
   // fake-specialized-masters: no total, 10 courses at $5,000, so about $50,000.
   const masters = [fixture("fake-specialized-masters")];

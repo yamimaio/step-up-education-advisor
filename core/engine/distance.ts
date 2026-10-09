@@ -31,11 +31,16 @@ export function withinCommute(
 }
 
 // A full-time in-person program needs the student near campus or relocating. Evenings or daily
-// attendance outside commuting distance do too. Everything else is left to the travel checks.
+// attendance outside commuting distance do too. Everything else is left to the travel checks,
+// including a residential program that isn't work-compatible (a multi-week residency): the
+// student flies in for it, so its stretch and travel cost still apply.
 export function needsLocalPresence(
   program: Pick<Program, "format" | "workCompatible" | "attendance">,
 ): boolean {
-  const fullTimeInPerson = program.format === "in_person" && !program.workCompatible;
+  const fullTimeInPerson =
+    program.format === "in_person" &&
+    !program.workCompatible &&
+    program.attendance !== "residencies";
   const commuting =
     program.attendance === "recurring_evenings" || program.attendance === "recurring_daily";
   return program.format !== "online" && (fullTimeInPerson || commuting);

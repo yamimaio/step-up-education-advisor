@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { confidence } from "./confidence";
 import type { Check } from "./types";
 import { fixture } from "../../tests/fixtures/dataset";
+import { makeProfile, workedExampleProfile } from "../../tests/fixtures/profiles";
+import { recommendCategory } from "./direction";
+import { evaluatePrograms } from "./search";
 
 // The fixtures were checked on 2026-10-01.
 const day = (n: number) => new Date(Date.UTC(2026, 9, 1 + n));
@@ -85,6 +88,18 @@ describe("A price published per course counts as a published price", () => {
     expect(reasons.join(" ")).not.toMatch(/Tuition is not published/);
   });
 
+  it("keeps a fresh, sourced per-course record off 'not published' through the real pipeline", () => {
+    const result = evaluatePrograms(
+      makeProfile({ tuitionBudgetUsd: 60000 }),
+      recommendCategory(workedExampleProfile, [masters]).category,
+      [masters],
+      day(0),
+    );
+    const [p] = result.programs;
+    expect(p?.checks.find((c) => c.id === "tuition")?.unknown).toBe(false);
+    expect(p?.confidence.reasons.join(" ")).not.toMatch(/tuition/i);
+  });
+
   it("still says so when the per-course price has no official source", () => {
     const unsourced = {
       ...masters,
@@ -93,5 +108,31 @@ describe("A price published per course counts as a published price", () => {
     expect(confidence(unsourced, [pass], day(0)).reasons.join(" ")).toMatch(
       /Tuition is not published/,
     );
+  });
+});
+
+describe("A local program's published schedule is its on-site evidence", () => {
+  const scheduleOnly = (id: string) => {
+    const base = fixture(id, {
+      verification: { status: "verified", verifiedBy: "Fixture Author" },
+      onsiteDaysPerYear: null,
+    });
+    return {
+      ...base,
+      sources: [
+        ...base.sources.filter((s) => s.field !== "format"),
+        { ...base.sources[0]!, field: "attendance", quote: "Classes meet on weekday evenings." },
+      ],
+    };
+  };
+
+  it("counts an official attendance source for an evening program with no day count", () => {
+    const { reasons } = confidence(scheduleOnly("fake-specialized-masters"), [pass], day(0));
+    expect(reasons.join(" ")).not.toMatch(/On-site time/);
+  });
+
+  it("still asks for a day count from a program reached by travel", () => {
+    const { reasons } = confidence(scheduleOnly("fake-executive"), [pass], day(0));
+    expect(reasons.join(" ")).toMatch(/On-site time is not published/);
   });
 });
