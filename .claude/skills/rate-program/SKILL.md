@@ -14,14 +14,14 @@ Files in this skill:
 
 ## Rules
 
-- Use only the facts in `docs/research/<id>.md`. Don't search the web, and don't use what you know about the program, even when you are sure. Yami's first-hand knowledge enters only through a ruling.
+- Start from the facts in `docs/research/<id>.md` and `docs/research/<id>-overrides.json`. When a rating turns on a fact the research lacks or got wrong, verify it on the school's own pages or documents (a web search is fine for finding them) and add it to the overrides file: the value, plus an `extraSources` entry with the URL, the verbatim quote and `checkedOn`. `docs/decisions.md` lists the facts the overrides file may set. Never use what you know about the program without such a source. Yami's first-hand knowledge enters only through a ruling.
 - Every card note (`ratingNotes`) states facts from the research. Judgments go in `reasoning` (R8).
-- Never change the research file, the overrides or `core/data/programs.json`. The converter reads the ratings from the rating file.
+- Never change the research file or edit `core/data/programs.json` by hand. The overrides file changes only to add a verified fact as above. The converter (`draft-records --force docs/research/<id>`) reads the ratings from the rating file and the facts from the overrides.
 
 ## Steps
 
 1. Read `rating-prompt.md` and `rulings.md` in full.
-2. Read `docs/research/<id>.md`, and take the category from its Part 1 JSON.
+2. Read `docs/research/<id>.md` and `docs/research/<id>-overrides.json`, and take the category from the research's Part 1 JSON.
 3. Rate each need as the prompt says: start from the category default and apply the rubric and the evidence rules. When a ruling matches the case, follow it and cite it ("per R4"). When no ruling fits and the call is close, say so in the report instead of picking quietly.
 4. If `docs/research/<id>-rating.md` already holds a Perplexity answer, compare need by need, and list each difference with its reason.
 5. Write the result at the end of `docs/research/<id>-rating.md`, replacing an earlier block from this skill and leaving Perplexity's answer as provenance. If the file doesn't exist, create it with only this block:
@@ -66,4 +66,4 @@ Prompt and skill changes go in their own issue and PR, separate from the step 4 
 ## Changelog
 
 - v1 (Oct 9, 2026): first version. The rating prompt moved here from `docs/perplexity-program-prompts.md`, with the rules from issue #87. Rulings R1 to R8 come from Yami's review of MIT TLP, Wharton EMBA SF, Northwestern MEM and Harvard Extension.
-- v2 (Oct 9, 2026): R9 and the senior_network rubric line: a published experience breakdown gives the median, which beats a stated average (Yami, MIT TLP review).
+- v2 (Oct 9, 2026): R9 and the senior_network rubric line: a published experience breakdown gives the median, which beats a stated average (Yami, MIT TLP review). Facts the research lacks may now be verified on official pages and added to the overrides file with a source (Yami: re-rate every program ourselves, verifying where needed).
