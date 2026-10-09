@@ -69,6 +69,12 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - Declined `goalClarity` → `clear`, because the AI marks a goal unclear only after follow-ups, so a declined value must never read as "unclear" and fire `goal_unclear`. Declined `locationValues` → `[]`, so no location-fit points. Same class as the declined `careerGoal` default.
 - Test fixtures: `BOSTON`, `CAMBRIDGE_MA`, `CHICAGO`, `BUENOS_AIRES` and `NO_HOME` (with `NO_HOME_DECLINED`) in `tests/fixtures/profiles.ts`. The worked example is now set in Boston with Boston coordinates; before the merge from main it had Boston's name and Buenos Aires coordinates. The worked-example scores are unchanged.
 
+### Rating matrix changes (Yami's review of PR #22)
+- A rating answers "how strongly does this type address this need for our target user (a senior leader)?", not "could this type teach it at all?" (comment in `constants.ts`).
+- ★ Full-time MBA, leadership skills: Strong (2) → Some (1). ★ Graduate certificate, graduate degree: Some (1) → Little (0), because a certificate is not a degree. Both are changed in `TYPE_RATINGS` and in the table in `docs/build-plan.md`. The worked example is unchanged (executive 11, EMBA and MBA out, master's 1, certificate 3, short course 3). The hand-computed scores in `categoryFit.test.ts` moved with the matrix, and the tie tests use a degree x3, new city x2, network x1 profile, since MBA and EMBA no longer tie on the old needs.
+- Other cells were not re-read against the principle above. That is a separate pass if wanted.
+- **After the challenge, not built:** a small program-level bonus for a non-degree program whose `credits` count toward a degree (Harvard's graduate credit, MIT TLP's credit), added to its scenario scores for a user who needs a degree. Open points for then: the `credits` field is free text ("none", "42 CEUs", "16 graduate credits") and Harvard's is `null` in the research, so it may need a structured field rather than reading the words.
+
 ## Structured home location (issue #35)
 
 - `homeCity` was one free-text string, and the engine had to parse spellings like "Cambridge, MA" and "Washington, D.C.". The profile now holds `homeCity` (non-empty), `homeRegion` (string or null) and `homeCountry` (two-letter ISO code, same rule as `country` in the program schema). The model fills them in from the conversation.

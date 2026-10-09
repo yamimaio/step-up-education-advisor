@@ -3,10 +3,12 @@ import type { Profile } from "../schema/profile";
 
 // Everything Thursday's tuning might touch lives here.
 
-// Strong = 2, Some = 1, Little = 0 (docs/build-plan.md, Step 1).
+// Strong = 2, Some = 1, Little = 0 (docs/build-plan.md, Step 1). A rating answers "how strongly
+// does this type address this need for our target user (a senior leader)?", not "could this
+// type teach it at all?".
 export const TYPE_RATINGS: Record<Category, Record<Need, 0 | 1 | 2>> = {
   mba: {
-    leadership_skills: 2,
+    leadership_skills: 1,
     deep_expertise: 1,
     graduate_degree: 2,
     senior_network: 0,
@@ -33,10 +35,12 @@ export const TYPE_RATINGS: Record<Category, Record<Need, 0 | 1 | 2>> = {
     senior_network: 2,
     new_industry_or_city: 1,
   },
+  // A certificate is not a degree. Credit that counts toward one is a program fact; see
+  // docs/decisions.md (post-challenge).
   certificate: {
     leadership_skills: 1,
     deep_expertise: 1,
-    graduate_degree: 1,
+    graduate_degree: 0,
     senior_network: 0,
     new_industry_or_city: 0,
   },

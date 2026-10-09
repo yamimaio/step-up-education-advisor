@@ -100,7 +100,7 @@ describe("evaluate", () => {
 
 describe("A tie gets no category bonus", () => {
   const tie = {
-    needs: ["leadership_skills", "deep_expertise", "graduate_degree"] as const,
+    needs: ["graduate_degree", "new_industry_or_city", "senior_network"] as const,
     degreeRequired: "required" as const,
     tuitionBudgetUsd: 250000,
     maxProgramMonths: 24,
