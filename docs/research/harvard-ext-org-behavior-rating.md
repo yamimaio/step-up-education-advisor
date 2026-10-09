@@ -87,7 +87,7 @@ Changes from Perplexity's answer:
 - No rating changes. leadership_skills 4 now matches a defined level (required leadership courses, not built for experienced leaders), so it leaves lowEvidence.
 - graduate_degree stays 3, not the new 4: not every certificate course counts toward the master's.
 
-## Reviewed ratings (rate-program v2, 2026-10-09; reviewed by: pending)
+## Reviewed ratings (rate-program v2, 2026-10-09; reviewed by: Yami)
 
 Re-rated under rate-program v2 (R9). Harvard's 2024 fast facts for this certificate publish years of employment by band; that fact was verified on the school's PDF and added to `harvard-ext-org-behavior-overrides.json` with its quote.
 
@@ -111,7 +111,7 @@ Re-rated under rate-program v2 (R9). Harvard's 2024 fast facts for this certific
     "leadership_skills": "Stays 4 from Yami's Oct 9 review: required leadership courses, not built for experienced leaders (level 4).",
     "deep_expertise": "Category default 3 stands: four graduate-credit courses in one field, no capstone.",
     "graduate_degree": "Stays 3 per R7: only courses that fulfil both certificate and degree requirements count toward the master's.",
-    "senior_network": "default 1 → 3 because, per R9, the 2024 fast facts ('Years of employment 0–4 years 14% 5–10 years 30% 11–20 years 34% 21+ years 22%') put the middle student in the 11-20 band; its lower edge, 11, is in the 10 to 14 band. Close call: courses are online with open enrollment, so classmates change course by course and there is no time together; the rubric's 'no cohort' level was not applied because each course has classmates. The engine derives the same 3 from the record's 11.",
+    "senior_network": "default 1 → 3 because, per R9, the 2024 fast facts ('Years of employment 0–4 years 14% 5–10 years 30% 11–20 years 34% 21+ years 22%') put the middle student in the 11-20 band; its lower edge, 11, is in the 10 to 14 band. Close call, agreed by Yami: courses are online with open enrollment, so classmates change course by course and there is no time together; the rubric's 'no cohort' level was not applied because each course has classmates. The engine derives the same 3 from the record's 11.",
     "new_industry_or_city": "Stays 3: career webinars, advising and career fairs are open to certificate students."
   },
   "lowEvidence": []
