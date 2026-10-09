@@ -87,9 +87,9 @@ Changes from Perplexity's answer:
 - No rating changes. leadership_skills 4 now matches a defined level (required leadership courses, not built for experienced leaders), so it leaves lowEvidence.
 - graduate_degree stays 3, not the new 4: not every certificate course counts toward the master's.
 
-## Reviewed ratings (rate-program v2, 2026-10-09; reviewed by: Yami)
+## Reviewed ratings (rate-program v2, 2026-10-09; reviewed by: pending)
 
-Re-rated under rate-program v2 (R9). Harvard's 2024 fast facts for this certificate publish years of employment by band; that fact was verified on the school's PDF and added to `harvard-ext-org-behavior-overrides.json` with its quote.
+Full re-review of all five needs under rate-program v2, from the research, the overrides and Harvard's own pages checked on 2026-10-09: the program page, the 2024 fast facts PDF, the certificate policy page, the Extension career services page and the Leading Through Change course page. The re-check confirmed every rating; no fact a rating rests on was missing or wrong, so the overrides file gains nothing new.
 
 ```json
 {
@@ -108,17 +108,22 @@ Re-rated under rate-program v2 (R9). Harvard's 2024 fast facts for this certific
     "new_industry_or_city": "Career webinars, advising and career fairs are open to certificate students."
   },
   "reasoning": {
-    "leadership_skills": "Stays 4 from Yami's Oct 9 review: required leadership courses, not built for experienced leaders (level 4).",
-    "deep_expertise": "Category default 3 stands: four graduate-credit courses in one field, no capstone.",
-    "graduate_degree": "Stays 3 per R7: only courses that fulfil both certificate and degree requirements count toward the master's.",
+    "leadership_skills": "default 3 → 4 because leadership is a major strand with required courses: '1 organizational behavior course; 1 conflict management course', and MGMT E-4000 covers 'leadership, power, and organizational design'. The program page's outcomes include 'Apply principles of leadership, power, and performance management' and 'lead teams through complexity'. Not 5: it is 'Designed for professionals seeking to elevate their leadership and management capabilities', not for experienced leaders, with no experience requirement and 14% of 2024 students at 0-4 years. Leading Through Change (MGMT E-4030) lists this certificate under 'This Course May Contribute to'.",
+    "deep_expertise": "Category default 3 stands: 'four online courses' in one field (organizational behavior), level 3. Not 4: four courses are not a degree-length program. No capstone, project or thesis appears on the program page.",
+    "graduate_degree": "Stays 3 per R7: 'you can earn this graduate certificate along the way by completing courses that fulfill both certificate and degree requirements' (master's in management or industrial-organizational psychology), but 'Not every certificate course counts toward a degree'. The 2024 fast facts add that 52% of earners also earned an ALM; that shows use of the path, not that every credit counts.",
     "senior_network": "default 1 → 3 because, per R9, the 2024 fast facts ('Years of employment 0–4 years 14% 5–10 years 30% 11–20 years 34% 21+ years 22%') put the middle student in the 11-20 band; its lower edge, 11, is in the 10 to 14 band. Close call, agreed by Yami: courses are online with open enrollment, so classmates change course by course and there is no time together; the rubric's 'no cohort' level was not applied because each course has classmates. The engine derives the same 3 from the record's 11.",
-    "new_industry_or_city": "Stays 3: career webinars, advising and career fairs are open to certificate students."
+    "new_industry_or_city": "default 1 → 3 because career services are open to certificate students: 'Access to career resources, including webinars, advising, and career fairs' (program page); the certificate policy page adds 'CARC offers monthly Virtual Drop-in Career Advising for all certificate students' and the 'annual Harvard Extension School Virtual Career Fair'. Not 4: the job database (Crimson Careers), advising appointments, career fairs and career-change services of the Mignone Center sit under 'Admitted Degree Candidates and Alumni Only' on the Extension career services page, so certificate students get no recruiting channel or dedicated switcher support."
   },
   "lowEvidence": []
 }
 ```
 
-Changes from the reviewed block above:
+Changes:
 
-- senior_network 1 → 3 per R9, from the 2024 fast facts' experience breakdown; it leaves lowEvidence.
+- From the previous reviewed block: no rating or note changes. The reasoning now covers every need with the quotes checked on Harvard's pages; before, only senior_network had been re-examined under v2.
+- From Perplexity's answer: senior_network 1 → 3 per R9, and it leaves lowEvidence; leadership_skills leaves lowEvidence because it matches level 4 exactly.
 
+Close calls:
+
+- leadership_skills 4 or 5: leadership is the subject of the certificate, but the rubric's 5 needs teaching built for experienced leaders, and the audience is any professional.
+- new_industry_or_city 3 or 4: the annual virtual career fair is open to certificate students and employers use it to market jobs, but the rubric names career fairs at level 3; the recruiting tools are for degree candidates only.

@@ -23,7 +23,7 @@ A draft record built from `docs/research/harvard-ext-org-behavior.md`. The first
 - **The accreditation field is intentionally empty under the requested schema for a non-degree certificate.** Harvard Extension School itself states that it is NECHE-accredited, but no separate programmatic accreditation is published for this certificate.
 - **No primary on-site city exists for the program.** Cambridge is Harvard Extension School’s institutional location, but all four certificate courses are online and no residency is required.
 
-**Ratings marked low evidence:** none. senior_network was re-rated 1 → 3 under R9 (rate-program v2; see the last block of `harvard-ext-org-behavior-rating.md`).
+**Ratings marked low evidence:** none. All five needs were re-reviewed under rate-program v2 on Oct 9, with the quotes re-checked on Harvard's pages; only senior_network changed (1 → 3 under R9). Close calls: leadership_skills 4 or 5, new_industry_or_city 3 or 4 (see the last block of `harvard-ext-org-behavior-rating.md`).
 
 ## Fields, quotes and URLs
 
