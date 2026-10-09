@@ -54,7 +54,7 @@ Risk to watch: a few people do need logistics up front ("I can't travel at all",
 
 ## What I'd change in the repo (smallest path)
 
-1. **Reshape #35 and PR #39; close #37 and #38 (spelling bugs that disappear).** Keep the structured home fields from #35 and add `homeLat`/`homeLon` (filled by the model) plus campus coordinates on each program. Delete `places.ts`, `normalize.ts`, `metro.ts` and `METRO_STATES`; `sameMetro` becomes a distance check. This is less code, not more.
+1. **Reshape #35 and PR #39; close #37 and #38 (spelling bugs that disappear).** Keep the structured home fields from #35 and add `homeLat`/`homeLon` (filled by the model) plus campus coordinates on each program. Delete `places.ts`, `metro.ts` and `METRO_STATES` (`normalize.ts` stays for `applyDeclinedDefaults`); `sameMetro` becomes a distance check. This is less code, not more.
 2. Merge #22 with that change, and stop polishing the engine. Remaining Low findings become issues.
 3. Server and advisor (#25, step 6): two tool pauses, `propose_direction` (then the category verdict) and `propose_search` (then the shortlists).
 4. Next priority, above everything else: **one real conversation with persona A**, stage 1 only if needed. Day 3's checkpoint is someone using it without instructions, and only a real conversation tells us whether the UX works.

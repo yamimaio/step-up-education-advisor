@@ -1,4 +1,20 @@
 {
   "locationOffers": ["network_density", "industry_hub"],
-  "metro": "boston"
+  "metro": "boston",
+  "campusAddress": "1 Fixture Way, Boston, MA 02110",
+  "campusLat": 42.3601,
+  "campusLon": -71.0589,
+  "figureNotes": {
+    "campusLat": "Derived from campusAddress.",
+    "campusLon": "Derived from campusAddress."
+  },
+  "extraSources": [
+    {
+      "field": "campusAddress",
+      "url": "https://example.edu/fake-sample",
+      "quote": "Campus: 1 Fixture Way, Boston, MA 02110",
+      "checkedOn": "2026-10-01",
+      "kind": "official_page"
+    }
+  ]
 }
