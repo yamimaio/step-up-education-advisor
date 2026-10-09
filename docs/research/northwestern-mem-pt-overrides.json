@@ -1,5 +1,7 @@
 {
-  "locationOffers": ["industry_hub"],
+  "locationOffers": [
+    "industry_hub"
+  ],
   "attendance": "recurring_evenings",
   "onsiteNote": "Classes held Monday - Thursday evenings + Saturday mornings",
   "durationMonths": 24,
@@ -10,7 +12,9 @@
   "figureNotes": {
     "tuitionPerCourseUsd": "2026-27 rate; the Fall 2027 rate is not published.",
     "courseCount": "A minimum; the school publishes no fixed total.",
-    "durationMonths": "The school publishes a 2-3 year range for the part-time option."
+    "durationMonths": "The school publishes a 2-3 year range for the part-time option.",
+    "campusLat": "Derived from campusAddress (approximate, from the street address).",
+    "campusLon": "Derived from campusAddress (approximate, from the street address)."
   },
   "extraSources": [
     {
@@ -36,6 +40,16 @@
       "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/",
       "quote": "$8,100 per course for part-time students",
       "checkedOn": "2026-10-08"
+    },
+    {
+      "field": "campusAddress",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+      "quote": "Northwestern University 2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208",
+      "checkedOn": "2026-10-08",
+      "kind": "official_page"
     }
-  ]
+  ],
+  "campusAddress": "2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208",
+  "campusLat": 42.0565,
+  "campusLon": -87.6753
 }
