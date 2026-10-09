@@ -88,3 +88,50 @@ describe("toTurns and the wrap-up note", () => {
     expect(md).toContain(typed);
   });
 });
+
+describe("toTurns and turns the server rejected", () => {
+  const rejected: MessageParam = {
+    role: "assistant",
+    content: [
+      { type: "text", text: "Here's what I understood." },
+      { type: "tool_use", id: "p1", name: "propose_direction", input: {} },
+    ],
+  };
+  const refusal: MessageParam = {
+    role: "user",
+    content: [{ type: "tool_result", tool_use_id: "p1", content: "not tapped", is_error: true }],
+  };
+  const retry: MessageParam = {
+    role: "assistant",
+    content: [
+      { type: "text", text: "Quick one first: how many hours a week?" },
+      {
+        type: "tool_use",
+        id: "a2",
+        name: "ask_choice",
+        input: { field: "hoursPerWeek", question: "Hours a week" },
+      },
+    ],
+  };
+
+  it("hides the text of a turn whose tool call got is_error, and shows the next one", () => {
+    const history = [{ role: "user" as const, content: "hi" }, rejected, refusal, retry];
+    expect(toTurns(history)).toEqual([
+      { kind: "user", text: "hi" },
+      { kind: "assistant", text: "Quick one first: how many hours a week?" },
+    ]);
+    const md = buildTranscript({ history, verdict: null, fallbackText: null, date: new Date() });
+    expect(md).not.toContain("Here's what I understood.");
+  });
+
+  it("still shows a turn whose tool call succeeded", () => {
+    const ok: MessageParam = {
+      role: "user",
+      content: [{ type: "tool_result", tool_use_id: "p1", content: '{"confirmed":true}' }],
+    };
+    expect(toTurns([{ role: "user", content: "hi" }, rejected, ok])[1]).toEqual({
+      kind: "assistant",
+      text: "Here's what I understood.",
+    });
+  });
+});

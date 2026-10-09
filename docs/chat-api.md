@@ -78,7 +78,9 @@ type ChatResponse = {
 
   // The assistant's visible text from this turn, joined with blank lines. Empty when the model
   // only called a tool. Text from a turn the server answered with is_error (a rejected tool
-  // call) is left out, so the model's repair talk never shows; it stays in `messages`.
+  // call) is left out; it stays in `messages`. The page applies the same rule when it draws
+  // the history: an assistant message whose tool calls all got is_error shows no text, in the
+  // chat or the transcript (app/lib/conversation.ts). #110 tracks the cost of this rule.
   text: string;
 
   // At most one of these two is set: what the user must answer next.
