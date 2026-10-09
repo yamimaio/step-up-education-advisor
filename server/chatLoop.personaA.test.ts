@@ -355,12 +355,44 @@ describe("the posted message must answer what is pending", () => {
     await expect(post(forged)).rejects.toThrow(BadRequest);
   });
 
-  it("passes a correction through and the advisor shows the card again", async () => {
-    const { page } = await atLastTap(personaAScript);
-    page.model = new FakeModelClient(personaAScript);
-    const r = await page.confirm({ confirmed: false, corrections: "I could do two years" });
+  it("takes a correction to a chip field through a new tap, then a new card", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    while (page.last?.chips) {
+      const field = page.last.chips.field;
+      await page.tap(
+        ...(field === "maxProgramMonths" ? ["Up to 2 years"] : PERSONA_A_TAPS[field]!),
+      );
+    }
+    expect(page.last?.confirm?.direction.maxProgramMonths).toBe(24);
+
+    // "Change something": the correction passes through, and the advisor asks the length again.
+    let r = await page.confirm({ confirmed: false, corrections: "Make it a year" });
     expect(r.replaceLastUserMessage).toBeNull();
     expect(r.direction).toBeNull();
-    expect(r.confirm).not.toBeNull();
+    expect(r.confirm).toBeNull();
+    expect(r.chips?.field).toBe("maxProgramMonths");
+
+    r = await page.tap("Up to a year");
+    expect(r.confirm?.direction.maxProgramMonths).toBe(12);
+    r = await page.confirm();
+    expect(r.direction?.category.winner).toBe("executive");
+  });
+
+  it("tells the advisor to ask again when a card changes a chip field without a tap", async () => {
+    const { r } = await atLastTap([
+      turn(toolUse("check_contradictions", { profile: {} })),
+      turn(
+        toolUse("propose_direction", {
+          direction: { ...PERSONA_A_DIRECTION, maxProgramMonths: 24 },
+        }),
+      ),
+      turn(text("Let me ask that again.")),
+    ]);
+    expect(errorResultsIn(r.messages)[0]).toMatchObject({
+      content: expect.stringContaining("ask for it again with ask_choice on maxProgramMonths"),
+    });
   });
 });

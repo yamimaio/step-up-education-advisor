@@ -121,6 +121,13 @@ function answered(
   return null;
 }
 
+// How many times the advisor has shown the chips for this field.
+const askedTimes = (request: ModelRequest, field: Field) =>
+  request.messages
+    .flatMap((m) => (typeof m.content === "string" ? [] : m.content))
+    .filter((b) => b.type === "tool_use" && (b.input as { field?: unknown }).field === field)
+    .length;
+
 // True when the advisor has already shown the chips for this field.
 const asked = (request: ModelRequest, field: Field) =>
   request.messages.some(
@@ -162,12 +169,22 @@ export function personaAScript(request: ModelRequest): ModelTurn {
     if (field === "careerGoalKind") {
       return turn(text("In your own words, what would that step up look like?"));
     }
+    // A field asked a second time is a correction from the card: go back to the card.
+    if (askedTimes(request, field) > 1) return check(request);
     const next = CHIP_ORDER[CHIP_ORDER.indexOf(field) + 1];
     return next ? turn(askBlock(next)) : check(request);
   }
   if (call.name === "check_contradictions") return propose(request, "Here's what I understood.");
-  // propose_direction: the verdict after a confirm; after a correction, the card again.
+  // propose_direction: the verdict after a confirm. After a correction, the length is asked
+  // again (the answer persona tests correct): a chip field changes only through a new tap.
   return hasConfirmedDirection(request.messages)
     ? turn(text(VERDICT_TEXT))
-    : propose(request, "Thanks, here's the card again.");
+    : turn(
+        text("Got it. Let's set that again."),
+        toolUse(
+          "ask_choice",
+          { field: "maxProgramMonths", question: QUESTIONS.maxProgramMonths },
+          `toolu_a_maxProgramMonths_${request.messages.length}`,
+        ),
+      );
 }

@@ -134,7 +134,7 @@ When the user confirms, the page sends `{ confirmed: true }`. The server:
 
 If the model fails after a confirm, the response still carries `direction` and a template explanation in `text` (`server/fallback.ts`), with `notice` set, `replaceLastUserMessage` null and `messages` empty. The page shows the verdict card and the template text but does not add them to the history.
 
-On a correction, the server passes `{ confirmed: false, corrections }` through as the tool result, and the advisor updates the answers and calls `propose_direction` again (a new card, a new `toolUseId`).
+On a correction, the server passes `{ confirmed: false, corrections }` through as the tool result, and the advisor updates the answers and calls `propose_direction` again (a new card, a new `toolUseId`). A correction to a chip field goes through `ask_choice` on that field first, because the card only takes a chip field from the latest tap; a card that changes it without a new tap gets `is_error` telling the advisor to ask again.
 
 ### Validation the server does on `propose_direction`
 

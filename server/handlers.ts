@@ -103,7 +103,9 @@ export function validateProposeDirection(
         `${path} was not set by a chip tap: ask for it with ask_choice on ${chipField}.`,
       );
     } else if (!same(taps.get(chipField), valueAt(direction, path))) {
-      problems.push(`${path} doesn't match the chip the user tapped last for ${chipField}.`);
+      problems.push(
+        `${path} doesn't match the chip the user tapped last for ${chipField}. If the user changed this answer, ask for it again with ask_choice on ${chipField} before the card; otherwise use the tapped value.`,
+      );
     }
   }
   return problems.length ? { ok: false, problems: problems.join("\n") } : { ok: true, direction };
