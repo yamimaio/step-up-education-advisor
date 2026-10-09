@@ -63,3 +63,35 @@ $$
 
 [^1]: mit-tlp.md
 
+## Reviewed ratings (Yami, Oct 9)
+
+Perplexity's answer above, reviewed under the rating rules from issue #87. The record uses these values; the evidence is in Perplexity's notes above.
+
+```json
+{
+  "ratings": {
+    "leadership_skills": 5,
+    "deep_expertise": 3,
+    "graduate_degree": 2,
+    "senior_network": 5,
+    "new_industry_or_city": 2
+  },
+  "ratingNotes": {
+    "leadership_skills": "Leadership is the core: leading strategic change, the human side of technology, and innovation teams.",
+    "deep_expertise": "Several technology strategy modules and strategy projects throughout, without academic credit.",
+    "graduate_degree": "Certificate of completion with 42 CEUs; no stated path to a graduate degree.",
+    "senior_network": "Aimed at C-level and heads of engineering, admitted by application, with three residential weeks at MIT.",
+    "new_industry_or_city": "An MIT Professional Education alumni LinkedIn group; no career services published."
+  },
+  "lowEvidence": [
+    "deep_expertise",
+    "senior_network",
+    "new_industry_or_city"
+  ]
+}
+```
+
+Changes from Perplexity's answer:
+
+- senior_network stays 5 (Perplexity kept it only as the default). Yami: the target audience is C-level ("C-level positions including CEOs, CTOs, COOs, CIOs") and admission is by application ($200 application fee), so the standard is enforced. Yami's own cohort averages about 22 years. Still low evidence: no published median.
+- new_industry_or_city 3 → 2: the only fact is the alumni LinkedIn group, a network with no career services (new rubric level 2).
