@@ -209,6 +209,16 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 
 `Dockerfile` and `Dockerfile.dev` pull `public.ecr.aws/docker/library/node:24-alpine`, Amazon ECR Public's copy of the official Docker Hub `node` image, instead of `node:24-alpine` from Docker Hub. CI pulls without logging in, and Docker Hub's anonymous limit (100 pulls per 6 hours per IP) failed the `docker` job on shared GitHub runners with `429 Too Many Requests`. ECR Public's anonymous limit is 1 pull per second, so a burst of PRs can fail at worst for seconds, not hours. Logging in to Docker Hub from CI would also work but needs a token stored as a repository secret.
 
+## Rate limit on `/api/chat` (issue #122)
+
+Build-steps risk R5: once public, the client-held history makes `/api/chat` usable as a general Claude proxy. Defaults where the docs were silent:
+
+- **Limits**: 20 requests a minute and 100 an hour per client address (`server/limits.ts`). A conversation is at most 40 turns and a fast chip run is about one request every few seconds, so a real user never meets the minute limit, and the hour allows two and a half whole conversations with retries.
+- **How it counts**: a sliding log in memory (`server/rateLimit.ts`), for the one instance on the host, with no store. A restart forgets every count. Only accepted requests are counted, so waiting `retryAfter` is always enough. It is checked before the body is read, so malformed requests count too. At most 10,000 addresses are tracked; past that the one seen longest ago is dropped.
+- **The address** is the last entry of `X-Forwarded-For`, the one the host's proxy appends for the connection it received; earlier entries come from the client and can be forged. Next.js fills the header with the socket address only when no proxy sent one. Then `X-Real-IP`, then one shared `unknown` bucket. This assumes one proxy in front of the app, as on Render or Vercel; behind a second proxy (a CDN in front of the host) the last entry would be that proxy's address and every user would share it. Check this on the first deploy.
+- **The answer** is `429` with `{ error: "rate_limited", retryAfter }` (whole seconds) and the same value in `Retry-After`. The page shows the wait in its notice ("Wait 12 seconds, then retry.") with the usual Retry button. The Retry button is not held back until the wait ends; a retry that comes too early gets another 429 with the new wait.
+- **Logging**: one line `{ event: "chat_rate_limited", window }`, with `window` either `minute` or `hour`. No address and no content.
+
 ## Step 7 (Stage 1 page, issue #9)
 
 - Stage 1 only: chat, chips, the "Here's what I understood" card, the verdict block and Download transcript. `ProgramCard`, the shortlists and `DataLimitsFooter` come with stage 2.
@@ -217,7 +227,7 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 - Typing while chips are pending sends a `ChipAnswer` with `typed` and no `chosen`; typing while the card is pending sends `{ confirmed: false, corrections }`.
 - A multi-select (needs, pick 3) numbers the taps in order; a second tap removes one, and a Send button is enabled once exactly `pick` are chosen.
 - The verdict block shows the winner, the runner-up (or the tie), the deciding needs, the resolved tensions or the "not yet" message, the declined fields, and every type's score or "Ruled out" with the engine's reasons. The "not yet" wording per trigger is fixed page text, not model text. Review round 1: when "not yet" fires, the block and the transcript name no winner, runner-up, tie or deciding needs, even though the engine still ranks a winner; the score table stays.
-- A request that never gets a `ChatResponse` is handled on the page: a network error or 5xx shows a Retry (same as `retryable`); a 4xx disables input (posting the same history would be refused again). Download transcript keeps working in both.
+- A request that never gets a `ChatResponse` is handled on the page: a network error, a 5xx, a 408 or a 429 shows a Retry (same as `retryable`); only a 400 or a 413 disables input (posting the same history would be refused again). Download transcript keeps working in both. Changed from "every 4xx disables input" by #102, since the rate limit (#122) and a host's proxy answer 408 and 429 to a history that a later retry accepts.
 - The page shows a fixed greeting that is not part of the history, since the history must start with the user's message.
 - Contract additions from step 6 (PR #100, `docs/chat-api.md` "Message cap"): a `limit` notice is handled like `auth_or_credit` (history kept, verdict and template text taken from the response when it carries `direction`, input off, no Retry); the wrap-up note stays in the history but `toTurns` skips it, so neither the chat nor the transcript shows it. It is matched by its whole text, `WRAP_UP_NOTE` from `core/advisor/wrapUp.ts` (changed from a prefix match in PR #100's round 1 review), so a user's own text that starts the same way still shows.
 
