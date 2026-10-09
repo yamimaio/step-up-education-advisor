@@ -26,6 +26,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run format:check
       - run: npm test
+      # Report only: DQ15 sets no coverage threshold.
+      - run: npx vitest run --coverage --coverage.include='core/engine/**' --coverage.exclude='**/*.test.ts' core/engine
       - run: npm run validate-data
       - run: npm run build
         env:

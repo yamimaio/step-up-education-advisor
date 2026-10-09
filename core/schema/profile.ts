@@ -106,6 +106,24 @@ export type Profile = z.infer<typeof ProfileSchema>;
 
 export const PROFILE_FIELDS = Object.keys(ProfileObject.shape);
 
+// Stage 1, "what kind of step fits me?" (docs/ux-two-stage.md): only the answers that decide the
+// category. The engine's recommendCategory takes this shape, so category fit cannot read a
+// budget, travel or location answer. The rest of the interview (peers, experience) is asked in
+// stage 1 too, but only program scoring in stage 2 uses it.
+export const DirectionProfileSchema = ProfileObject.pick({
+  careerGoal: true,
+  goalClarity: true,
+  needs: true,
+  degreeRequired: true,
+  maxProgramMonths: true,
+  hoursPerWeek: true,
+  keepWorking: true,
+  tieBreaker: true,
+  declined: true,
+});
+export type DirectionProfile = z.infer<typeof DirectionProfileSchema>;
+export const DIRECTION_FIELDS = Object.keys(DirectionProfileSchema.shape);
+
 // What the interview has collected so far: every field optional, and needs may still be short.
 // Nested objects can be set piecemeal too (a degree level before its field).
 export const PartialProfileSchema = ProfileObject.partial()
