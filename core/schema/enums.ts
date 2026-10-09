@@ -52,6 +52,3 @@ export const Need = z.enum([
   "new_industry_or_city",
 ]);
 export type Need = z.infer<typeof Need>;
-
-export const RatingKey = z.enum(["network", "depth", "practicality", "costValue"]);
-export type RatingKey = z.infer<typeof RatingKey>;

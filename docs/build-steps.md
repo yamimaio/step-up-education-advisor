@@ -174,15 +174,15 @@ From here on, every command in this plan written as `npm …` means `./run npm �
 ### Step 3: Engine
 
 **Files (all pure, no I/O; `today` is passed in)**
-- `core/engine/types.ts`: `Check`, `CheckId` (8: `tuition`, `travelBudget`, `onsiteDays`, `longestStretch`, `length`, `hours`, `workCompatible`, `location`), `ProgramEvaluation`, `EngineResult` (implementation plan section 4 shape)
-- `core/engine/constants.ts`: the type ratings matrix, need weights 3/2/1, degree adjustments (−3/−2/−1), the `required` rule-outs, the `grow_in_role` +2, the no-program threshold 4, near miss 0.15, hours +25% pass and +50% near miss, the scenario weight rows, the category bonus 0.5, peer fit (−1 / +0.5 / −1 when the gap is over 5 years), location fit (D9), the D8 airfare midpoints, and the confidence window of 60 days
-- `categoryFit.ts`, `constraints.ts`, `noProgram.ts`, `scenarios.ts`, `peerFit.ts`, `locationFit.ts`, `travel.ts`, `confidence.ts`, `contradictions.ts`, `evaluate.ts`, each as in implementation plan section 4
-- `core/index.ts` exports `evaluate`, `checkContradictions`, schemas, types, `loadPrograms`
+- `core/engine/types.ts`: `Check`, `CheckId` (8: `tuition`, `travelBudget`, `onsiteDays`, `longestStretch`, `length`, `hours`, `workCompatible`, `location`), `ProgramEvaluation`, `DirectionResult`, `SearchResult`, `CategoryAccess`, `EngineResult` (implementation plan section 4 shape)
+- `core/engine/constants.ts`: the type ratings matrix, need weights 3/2/1, degree adjustments (−6/−4/−2), the `required` rule-outs, the `grow_in_role` +4, the no-program threshold 14, near miss 0.15, hours +25% pass and +50% near miss, the scenario weight rows, the category bonus 0.5, peer fit (−1 / +0.5 / −1 when the gap is over 5 years), location fit (D9), the D8 airfare midpoints, and the confidence window of 60 days
+- `categoryFit.ts`, `constraints.ts`, `noProgram.ts`, `scenarios.ts`, `peerFit.ts`, `locationFit.ts`, `travel.ts`, `confidence.ts`, `contradictions.ts`, `distance.ts`, `normalize.ts`, `direction.ts` (stage 1: `recommendCategory`), `search.ts` (stage 2: `evaluatePrograms`), `evaluate.ts` (both in order), each as in implementation plan section 4
+- `core/index.ts` exports `recommendCategory`, `evaluatePrograms`, `evaluate`, `checkContradictions`, schemas (including `DirectionProfileSchema`), types, `loadPrograms`
 
-**Order inside `evaluate`:** check constraints for every program → category fit (whose "type with records but none passing or near-missing → out" rule needs the constraint results) → no-program rule → scenarios → profile gaps. Declined fields get neutral defaults: no limit, `doesnt_matter`, `fine`.
+**Two stages (implementation plan section 4).** `recommendCategory` (stage 1): declined-field defaults for the stage-1 answers → the stage-1 checks for every program (length, hours, work-compatible) → category fit (whose "type with records but none passing or near-missing → out" rule uses only those checks) → the stage-1 no-program rule (`goal_unclear`, `no_type_fits`). `evaluatePrograms` (stage 2, given the confirmed category): all declined-field defaults → travel and all eight checks → peer fit, location fit, confidence, scenarios with the bonus for the confirmed winner → shortlists → `nothing_passes` → `access` → profile gaps. `evaluate` runs both in order. Declined fields get neutral defaults: no limit, `doesnt_matter`, `fine`.
 
 **Tests**
-- `core/engine/*.test.ts`: the nine tests in implementation plan section 8, one `describe` each. Test 1 is the worked example, run on the fixtures: executive 11, EMBA and MBA out because of length, specialized master's 1, certificate 3, short course 3.
+- `core/engine/*.test.ts`: the nine tests in implementation plan section 8, one `describe` each. Test 1 is the worked example, run on the fixtures: executive 28, EMBA and MBA out because of length, specialized master's 8, certificate 12, short course 12 (1–5 scale, `docs/need-based-ranking.md`).
 - Edge tests added here:
   - exactly 15% over is a near miss, 15.01% fails
   - a limit of 0 has no near miss (DQ10)
@@ -196,6 +196,7 @@ From here on, every command in this plan written as `npm …` means `./run npm �
   - a tie returns `tie`
   - every weight row sums to 1
   - `evaluate` is deterministic (same input, deep-equal output)
+  - stage 1 gives the same verdict whatever the budget, travel or location; stage 2 keeps the confirmed category and reports `access`
 - Coverage: `vitest run --coverage` for `core/engine` reported in CI, but **no threshold gate** (DQ15).
 
 **How you check it's done:** `npm test` passes and the worked-example test's name says "reproduces the plan's worked example". Your 15-minute skim: each `describe` has the plan's rule as its title, so you can read the test titles as a list of rules.
@@ -236,7 +237,7 @@ Program PRs are data plus your own verification, so they skip the fresh-session 
 ### Step 5: Advisor
 
 **Files**
-- `core/advisor/advisor.md`: SKILL.md frontmatter (`name: step-up-advisor`, `description`), then the sections from implementation plan section 5's outline. No dates, ids or anything that changes between runs (it's part of the cached prefix). It names every tool and when each one is required: `ask_choice` for every numeric or enum field, `check_contradictions` before `propose_profile`, and the verdict told only from the `results` tool result.
+- `core/advisor/advisor.md`: SKILL.md frontmatter (`name: step-up-advisor`, `description`), then the sections from implementation plan section 5's outline. No dates, ids or anything that changes between runs (it's part of the cached prefix). It names every tool and when each one is required: `ask_choice` for every numeric or enum field, `check_contradictions` before each confirm pause (`propose_direction`, `propose_search`), and the verdict told only from the confirmed pause's tool result.
 - `core/advisor/chips.ts`: the chip sets from section 3 as `Record<ChipField, { label, value }[]>`, with labels exactly as in the table
 - `core/advisor/fields.ts`: the 17-field checklist as data (field, step, question intent, chip field or free text). `advisor.md` and the server's "set by chip" check both use it.
 - `personas/A.md` … `F.md`: who they are, their true answers to all 17 fields (chip labels quoted exactly), the open-question answers in their voice, the expected verdict, and what a sharp advisor should notice (section 9)
@@ -256,19 +257,21 @@ Before writing code, the builder loads the `claude-api` skill so the details are
 - `server/model/adapter.ts`: the `ModelClient` interface (section 5). `ModelTurn` carries content blocks, `stop_reason` and usage numbers. `ModelError` has kinds `retryable | auth_or_credit | refusal | unknown`.
 - `server/model/anthropic.ts`: the only file that reads `process.env.MODEL_API_KEY`, enforced by an ESLint `no-restricted-properties`/syntax rule everywhere else. It uses `claude-sonnet-5-5`, adaptive thinking, effort `medium`, `max_tokens` 16000, SDK `maxRetries: 2`, a cache breakpoint after the system prompt and automatic caching on messages. It maps SDK errors to `ModelError` and starts with `import "server-only"`.
 - `server/model/fake.ts`: `FakeModelClient(script)` replays turns, either from an array or a function of the request. It records every request so tests can assert the system prompt, tools, cache markers and that history arrives unchanged.
-- `server/tools.ts`: the 4 tool definitions with `strict: true`. Input schemas are generated from the zod schemas with `z.toJSONSchema` and then adjusted to the strict subset (DQ14). These are frozen constants.
+- `server/tools.ts`: the 5 tool definitions (`ask_choice`, `check_contradictions`, `propose_direction`, `propose_search`, `search_programs`) with `strict: true`. Input schemas are generated from the zod schemas with `z.toJSONSchema` and then adjusted to the strict subset (DQ14). These are frozen constants.
 - `server/prompt.ts`: reads `core/advisor/advisor.md` once (via `fs` at module load), strips the frontmatter and builds the frozen system blocks.
-- `server/handlers.ts`: `check_contradictions` → `checkContradictions`; `search_programs` → filters over `loadPrograms()` and returns facts plus sources. For `propose_profile`, the server validates with `ProfileSchema` and returns `is_error` with the problems so the model asks again when:
+- `server/handlers.ts`: `check_contradictions` → `checkContradictions`; `search_programs` → filters over `loadPrograms()` and returns facts plus sources. For `propose_direction` the server validates with `DirectionProfileSchema`, and for `propose_search` with `ProfileSchema`. Either returns `is_error` with the problems so the model asks again when:
   - `check_contradictions` hasn't been called in the history
   - a chip field's value doesn't match a chip the user tapped (risk table, section 10)
 - `server/chatLoop.ts`: one request, as in implementation plan section 5. Up to 5 server-tool rounds. It stops at `end_turn` or a pausing tool and returns `{ messages: newMessages, ui, counter? }`, where `ui` is one of:
   - `{kind:"chips", field, question, options}`
-  - `{kind:"confirm_profile", profile}`
-  - `{kind:"results", result, explanation?}`
+  - `{kind:"confirm_direction", profile}` (stage 1's answers)
+  - `{kind:"direction", result, explanation?}` (`DirectionResult`: the verdict, or "not yet")
+  - `{kind:"confirm_search", profile}` (the full profile, after the user opts in)
+  - `{kind:"results", result, explanation?}` (`SearchResult`: the shortlists and `access`)
   - `{kind:"none"}`
 
-  **On confirm**, the browser sends `tool_result {confirmed:true}`. The server rewrites it to `{confirmed:true, result: EngineResult}` by running `evaluate` on the `propose_profile` input from the history (never a profile the client sends), and returns that rewritten user message, so the browser stores the same bytes and the cache stays warm. It also handles the message counter at 30, the wrap-up system note at 35, and a polite refusal at 41 that still allows results and transcript.
-- `server/fallback.ts`: a template explanation built only from the `EngineResult` for when the model fails after a confirmed profile, plus plain messages for the three error kinds
+  **On confirm**, the browser sends `tool_result {confirmed:true}`. The server rewrites it to `{confirmed:true, result}` by running the stage's engine function on that pause's input from the history (never a profile the client sends): `recommendCategory` for `propose_direction`, and for `propose_search`, `evaluatePrograms` with the `category` from the last confirmed `propose_direction` result in the history. If the stage-1 answers changed since then, the server asks for `propose_direction` again before running stage 2. and returns that rewritten user message, so the browser stores the same bytes and the cache stays warm. It also handles the message counter at 30, the wrap-up system note at 35, and a polite refusal at 41 that still allows results and transcript.
+- `server/fallback.ts`: a template explanation built only from the `DirectionResult` or `SearchResult` for when the model fails after a confirmed pause, plus plain messages for the three error kinds
 - `server/log.ts`: the only logger. `logRequest({ status, rounds, inputTokens, cacheReadTokens, outputTokens, errorKind? })` takes a typed object of numbers and enums only, so message content can't be logged by type. `no-console` is allowed only in this file.
 - `server/requestSchema.ts`: zod for the request body. `messages` holds the SDK's block types, at most 120 messages, at most 4,000 characters per user text block, and the body at most 1 MB. Empty or whitespace-only user text becomes a friendly nudge without calling the model (plan test 4).
 - `app/api/chat/route.ts`: `POST` only, `runtime = "nodejs"`, `dynamic = "force-dynamic"`. It parses the body → `chatLoop` → JSON. The model client is chosen by a factory: `MODEL_FAKE=1` gives the fake (for local UI work without spend), otherwise Anthropic. A missing key gives an `auth_or_credit` UI message, not a crash.
@@ -278,8 +281,8 @@ Before writing code, the builder loads the `claude-api` skill so the details are
 **npm scripts:** `check-bundle` goes live in CI.
 
 **Tests (fake model only, `server/**/*.test.ts`)**
-- `chatLoop.personaA.test.ts`: **the Done-when.** A scripted walk of persona A, with answers from `personas/A.md` and fixture programs, from the first message through `ask_choice` taps, `check_contradictions`, `propose_profile`, confirm, then `ui.kind === "results"`, and the verdict equals `evaluate(...)` called directly.
-- In the same suite: the history is sent to the model byte-for-byte as received; the system prompt and tools are identical across requests and carry the cache marker; the 5-round limit; `propose_profile` before `check_contradictions` comes back as `is_error`; a chip-field mismatch comes back as `is_error`.
+- `chatLoop.personaA.test.ts`: **the Done-when.** A scripted walk of persona A, with answers from `personas/A.md` and fixture programs, from the first message through `ask_choice` taps, `check_contradictions`, `propose_direction`, confirm, `ui.kind === "direction"` with the verdict equal to `recommendCategory(...)` called directly, then the opt-in, `propose_search`, confirm, and `ui.kind === "results"` equal to `evaluatePrograms(...)` with that category.
+- In the same suite: the history is sent to the model byte-for-byte as received; the system prompt and tools are identical across requests and carry the cache marker; the 5-round limit; a confirm pause before `check_contradictions` comes back as `is_error`; a chip-field mismatch comes back as `is_error`.
 - `fallback.test.ts`: the fake throws `auth_or_credit` on the turn after confirm, yet the results still render with the template explanation (plan test 6). A missing key on the first message gives the friendly message.
 - `limits.test.ts`: empty input gives the nudge with no model call; the counter appears at message 30; the wrap-up note goes in at 35 when there's no confirmed profile; message 41 gets a polite refusal while results still come back.
 - `privacy.test.ts`: a spy on `server/log.ts` and `console.*` during the persona A run. No persona text, profile value or tool input appears in any log line.
@@ -325,7 +328,7 @@ Each issue's body has the goal and the acceptance checklist. Each PR body starts
 
 3. **Step 3: Scoring engine with tests**
    Goal: the pure TS engine from implementation plan section 4 (category fit, constraints, no-program rule, scenarios, peer fit, location fit, travel, confidence, contradictions, `evaluate`).
-   - [ ] the plan's worked example reproduces exactly (executive 11, EMBA and full-time MBA out on length, specialized master's 1, certificate 3, short course 3)
+   - [ ] the plan's worked example reproduces exactly (executive 28, EMBA and full-time MBA out on length, specialized master's 8, certificate 12, short course 12)
    - [ ] all nine engine tests from implementation plan section 8 pass
 
 4. **Step 4: First 4 program records from the Perplexity research** (parent issue)
@@ -376,7 +379,7 @@ Work outside the steps gets its own issue, opened when it's needed. One I alread
 | DQ15 | Coverage gate in CI | Report only, no threshold. The named rule tests matter more than a percentage on Day 2 |
 | DQ16 | Prettier | Yes, `format:check` in CI, with `docs/` (including `docs/research/`) ignored so your prose is never reformatted |
 | DQ17 | A local fake mode | `MODEL_FAKE=1` runs the page against the scripted persona A with no spend. Useful while building step 7 |
-| DQ18 | City matching for travel (is the program in the home city?) | Case-insensitive and accent-insensitive equality on the city name. If a city matches, there's no airfare or lodging |
+| DQ18 | City matching for travel (is the program in the home city?) | **Superseded** by the distance check: a campus within 80 km of the home coordinates is local, so there's no airfare or lodging (`docs/decisions.md`, "Location by distance"). The original rule was case- and accent-insensitive equality on the city name |
 | DQ19 | A secret scanner in CI (for example gitleaks) | Not on Day 2. `.gitignore` and `.dockerignore` plus `check-bundle` cover the paths that matter. Add it Thursday, before the public deploy |
 | DQ20 | Fresh-session `/code-review` on the step-4 data PRs | Skip it. They contain only JSON plus research files; schema CI and your fact-by-fact verification are the real review. If a step-4 PR touches code (for example a converter fix), it goes in a separate PR under its own issue, and that one gets reviewed |
 | DQ21 | CI inside Docker too? | No. CI runs natively on GitHub's runner with Node 24 from `.nvmrc`, which is fast and isn't your host. The `docker` job builds the production image, so the container path is still tested |
