@@ -239,3 +239,14 @@ Stage 1 only. Yami split step 6 by stage (Oct 9, on the round 1 review of PR #10
 - **Persona A's fake** (`MODEL_FAKE=1`) builds its card from the taps in the history, so page work off persona A's exact path still reaches a verdict, and after a refused call it ends its turn instead of repeating the call.
 - **Typed answers to chip fields** (`advisor.md`): the advisor asks again with `ask_choice`, unless the typed answer declines the question. Then the field is declined as usual (`needs` keeps its one re-offer).
 - **Corrections to chip fields from the card** (round 2 review): the advisor asks again with `ask_choice` on that field before the next card, unless the correction declines the field (round 3 review). Then the field is set to `null` and named in `declined`.
+
+## Deploy to Render (issue #123)
+
+The docs set the host (Render, from the `Dockerfile`), the health check on `/`, auto-deploy from `main` and the key in Render's environment only. Defaults picked where they're silent; setup steps are in `docs/deploy.md`.
+
+- **Blueprint, not dashboard-only settings.** `render.yaml` keeps the service's settings in review. `MODEL_API_KEY` is `sync: false`, so Render asks for it once at creation and the file holds only its name.
+- **Deploy after CI passes** (`autoDeployTrigger: checksPass`), not on every commit: a `main` commit whose CI fails never reaches the public site.
+- **Starter instance** (`0.5c-512mb`), which never sleeps (the free plan spins down after idle time, so a first visitor would wait), paid from Yami's Render credits. **One instance**, because the per-IP rate limit (#122) is held in memory.
+- **Region `oregon`**, Render's default. Nothing in the docs places the users; it can only be changed before the service is created.
+- **`PORT=3000` and `HOSTNAME=0.0.0.0` set in `render.yaml`**, matching the `Dockerfile`, so the server listens where the image says whatever Render injects (its default `PORT` is 10000).
+- **gitleaks** (DQ19) runs as the `secrets` CI job on pull requests only, over every commit the PR adds (`base..head`), so a key committed and then deleted in a later commit still fails. The binary is downloaded from the GitHub release and pinned by version and SHA-256, rather than the gitleaks GitHub Action or a Docker Hub image (#107). No `.gitleaks.toml`: the default rules, with no allowlist.

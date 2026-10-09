@@ -1,0 +1,26 @@
+# Render Blueprint for the public site (issue #123). Setup steps are in docs/deploy.md.
+# Spec: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: step-up
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Starter: 0.5 CPU, 512 MB, never sleeps. Region can't be changed after creation.
+    plan: 0.5c-512mb
+    region: oregon
+    # One instance: the per-IP rate limit (#122) lives in memory.
+    numInstances: 1
+    branch: main
+    # Deploys each commit on main once its CI checks pass.
+    autoDeployTrigger: checksPass
+    healthCheckPath: /
+    envVars:
+      # Set in the Render dashboard when the Blueprint is created; never in this file.
+      - key: MODEL_API_KEY
+        sync: false
+      # Match the image (Dockerfile) instead of Render's defaults (PORT 10000, host-set HOSTNAME).
+      - key: PORT
+        value: "3000"
+      - key: HOSTNAME
+        value: 0.0.0.0
