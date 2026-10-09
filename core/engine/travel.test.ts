@@ -15,6 +15,7 @@ describe("Travel estimate (D8 and the section 11 follow-ups)", () => {
   it("multiplies trips by the program years, rounded up", () => {
     const t = travelEstimate(fixture("fake-executive", { durationMonths: 13 }), buenosAires);
     expect(t.trips).toBe(6);
+    expect(t.tripsPerYear).toBe(3);
   });
 
   it("covers lodging only, with the flag set, when airfare is unknown", () => {
@@ -143,6 +144,42 @@ describe("Travel estimate: published counts and relocation", () => {
     expect(travelEstimate(neither, buenosAires).notes).toEqual([
       "On-site days and trips not published.",
     ]);
+  });
+
+  it("keeps a published trip count when another figure makes the estimate unknown (review #86)", () => {
+    const noLodging = fixture("fake-executive", { lodgingPerNightUsd: null });
+    expect(travelEstimate(noLodging, buenosAires)).toMatchObject({
+      kind: "unknown",
+      totalUsd: null,
+      trips: 3,
+      tripsPerYear: 3,
+      nightsPerTrip: 5,
+    });
+    const noDays = fixture("fake-executive", { onsiteDaysPerYear: null, durationMonths: 13 });
+    expect(travelEstimate(noDays, buenosAires)).toMatchObject({
+      kind: "unknown",
+      trips: 6,
+      tripsPerYear: 3,
+      nightsPerTrip: null,
+    });
+    const noTrips = fixture("fake-executive", { residencyCount: null });
+    expect(travelEstimate(noTrips, buenosAires)).toMatchObject({ trips: null, tripsPerYear: null });
+  });
+
+  it("keeps the yearly trip count when the program length isn't published (review #86)", () => {
+    const noLength = fixture("fake-executive", { durationMonths: null, durationMaxMonths: null });
+    expect(travelEstimate(noLength, buenosAires)).toMatchObject({
+      kind: "unknown",
+      totalUsd: null,
+      trips: null,
+      tripsPerYear: 3,
+    });
+    const noLengthNoCount = fixture("fake-executive", {
+      durationMonths: null,
+      durationMaxMonths: null,
+      residencyCount: null,
+    });
+    expect(travelEstimate(noLengthNoCount, buenosAires).tripsPerYear).toBeNull();
   });
 
   it("needs no recurring travel for a user who would relocate to a full-time program", () => {

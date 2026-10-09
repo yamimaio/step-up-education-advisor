@@ -21,19 +21,20 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 
 ### Stage 2 (not wired yet)
 
-| Entry           | Answer                                                |
-| --------------- | ----------------------------------------------------- |
-| tuition         | `$40k to $80k`; `Savings`                             |
-| travelBudget    | `$2k to $5k`                                          |
-| travelComfort   | `Fine`                                                |
-| onsite          | `None`; `Can't travel`                                |
-| home            | Denver; CO; US; 39.7392, -104.9903; `No, I would not` |
-| airfare         | `Under $500`                                          |
-| locationValues  | `Network density`                                     |
-| yearsExperience | 12                                                    |
-| degree          | `Master's`; Engineering                               |
-| currentRole     | `Manager`                                             |
-| yearsLeading    | 6                                                     |
+| Entry            | Answer                                                |
+| ---------------- | ----------------------------------------------------- |
+| tuition          | `$40k to $80k`; `Savings`                             |
+| travelBudget     | `$2k to $5k`                                          |
+| travelComfort    | `Fine`                                                |
+| formatPreference | `Online`                                              |
+| onsite           | `None`; `Can't travel`                                |
+| home             | Denver; CO; US; 39.7392, -104.9903; `No, I would not` |
+| airfare          | `Under $500`                                          |
+| locationValues   | `Network density`                                     |
+| yearsExperience  | 12                                                    |
+| degree           | `Master's`; Engineering                               |
+| currentRole      | `Manager`                                             |
+| yearsLeading     | 6                                                     |
 
 ## In their voice
 

@@ -21,19 +21,20 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 
 ### Stage 2 (not wired yet)
 
-| Entry           | Answer                                                |
-| --------------- | ----------------------------------------------------- |
-| tuition         | `$5k to $15k`; `Employer support`                     |
-| travelBudget    | `Under $2k`                                           |
-| travelComfort   | `A burden`                                            |
-| onsite          | `Up to 10`; `A few days`                              |
-| home            | Chicago; IL; US; 41.8781, -87.6298; `No, I would not` |
-| airfare         | `Under $500`                                          |
-| locationValues  | `Ease of travel`                                      |
-| yearsExperience | 9                                                     |
-| degree          | `Bachelor's`; Computer Science                        |
-| currentRole     | `Director`                                            |
-| yearsLeading    | 1                                                     |
+| Entry            | Answer                                                |
+| ---------------- | ----------------------------------------------------- |
+| tuition          | `$5k to $15k`; `Employer support`                     |
+| travelBudget     | `Under $2k`                                           |
+| travelComfort    | `A burden`                                            |
+| formatPreference | `Online`                                              |
+| onsite           | `Up to 10`; `A few days`                              |
+| home             | Chicago; IL; US; 41.8781, -87.6298; `No, I would not` |
+| airfare          | `Under $500`                                          |
+| locationValues   | `Ease of travel`                                      |
+| yearsExperience  | 9                                                     |
+| degree           | `Bachelor's`; Computer Science                        |
+| currentRole      | `Director`                                            |
+| yearsLeading     | 1                                                     |
 
 ## In their voice
 
