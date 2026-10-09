@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CHIP_FIELDS, CHIP_TARGET, CHIPS, type ChipField } from "../core/advisor/chips";
-import { CHECKLIST } from "../core/advisor/fields";
+import { CHECKLIST, STAGE_1_CHECKLIST, STAGE_2_CHECKLIST } from "../core/advisor/fields";
+import { DirectionSchema } from "../core/advisor/tools";
 import { ProfileSchema, type Profile } from "../core/schema/profile";
 import { personaAProfile } from "../tests/fixtures/profiles";
 
@@ -16,11 +17,16 @@ const HEADINGS = [
 
 const read = (id: string) => readFileSync(new URL(`./${id}.md`, import.meta.url), "utf8");
 
-// The "True answers" table as entry id -> cell text.
-function answers(text: string): Record<string, string> {
-  const section = text.split(/^## /m).find((s) => s.startsWith("True answers")) ?? "";
+// The text from a heading to the next heading of the same level.
+const section = (text: string, level: string, heading: string) =>
+  text.split(new RegExp(`^${level} `, "m")).find((s) => s.startsWith(heading)) ?? "";
+
+// The "True answers" tables (or one stage's table) as entry id -> cell text.
+function answers(text: string, stage?: "Stage 1" | "Stage 2"): Record<string, string> {
+  const all = section(text, "##", "True answers");
+  const part = stage ? section(all, "###", stage) : all;
   const rows: Record<string, string> = {};
-  for (const line of section.split("\n")) {
+  for (const line of part.split("\n")) {
     const m = /^\|\s*([A-Za-z]+)\s*\|\s*(.+?)\s*\|\s*$/.exec(line);
     if (m && m[1] !== "Entry") rows[m[1]!] = m[2]!;
   }
@@ -48,6 +54,30 @@ describe.each(IDS)("Persona %s", (id) => {
   it("answers all 17 checklist entries", () => {
     expect(CHECKLIST).toHaveLength(17);
     expect(Object.keys(table).sort()).toEqual(CHECKLIST.map((e) => e.id).sort());
+  });
+
+  it("gives the stage 1 answers first, in the order the advisor asks them", () => {
+    const all = section(text, "##", "True answers");
+    expect(all.indexOf("### Stage 1")).toBeGreaterThan(-1);
+    expect(all.indexOf("### Stage 1")).toBeLessThan(all.indexOf("### Stage 2 (not wired yet)"));
+    expect(Object.keys(answers(text, "Stage 1"))).toEqual(STAGE_1_CHECKLIST.map((e) => e.id));
+    expect(Object.keys(answers(text, "Stage 2"))).toEqual(STAGE_2_CHECKLIST.map((e) => e.id));
+  });
+
+  it("states the stage 1 verdict before stage 2", () => {
+    const verdict = section(text, "##", "Expected verdict");
+    expect(verdict.indexOf("### Stage 1")).toBeGreaterThan(-1);
+    expect(verdict.indexOf("### Stage 1")).toBeLessThan(verdict.indexOf("### Stage 2"));
+  });
+
+  it("builds stage 1 answers that propose_direction accepts", () => {
+    const p = profileFrom(text, table);
+    const direction = Object.fromEntries(
+      Object.keys(DirectionSchema.shape).flatMap((k) =>
+        k in p ? [[k, p[k as keyof Profile]]] : [],
+      ),
+    );
+    expect(DirectionSchema.safeParse(direction).success).toBe(true);
   });
 
   it("quotes chip labels exactly, one per chip set (the right number for multi-selects)", () => {
@@ -104,7 +134,15 @@ function profileFrom(text: string, table: Record<string, string>): Profile {
   p.yearsLeading = Number(table.yearsLeading);
   put("degree.field", text1("degree")[0]);
   put("careerGoal.description", text1("careerGoal")[0]!.replace(/^"|"$/g, ""));
-  p.homeCity = text1("home")[0];
+  // City; region; country code; latitude, longitude (the region, code and coordinates are
+  // what the advisor fills in from the city).
+  const [city, region, country, coords] = text1("home");
+  const [lat, lon] = coords!.split(",").map(Number);
+  p.homeCity = city;
+  p.homeRegion = region;
+  p.homeCountry = country;
+  p.homeLat = lat;
+  p.homeLon = lon;
   p.goalClarity = /`goalClarity`: (clear|unclear)/.exec(text)?.[1];
   p.resolvedTensions = [];
   p.declined = [];

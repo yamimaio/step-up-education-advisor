@@ -60,3 +60,14 @@ Choices made while building, where the approved docs were silent. Each links to 
 - `goalClarity` is "unclear" only after two follow-up questions, as the plan says; it is a model-set field, not a chip.
 - Persona expectations name the category, not exact scores (R8). Those for B to F are hand-computed from the matrix and the draft records; the engine wasn't run on them, because PR 3 wasn't merged when this was written. Step 7's run is the check.
 - Tool names live in `core/advisor/tools.ts` so the server (step 6) and `advisor.md` share one list.
+
+### Stage 1 of the two-stage flow (docs/ux-two-stage.md)
+
+- The checklist keeps its 17 entries, each tagged `stage: 1 | 2`. Stage 1 is the six entries that decide the category or that the user asked for there: goal, the gap (needs), classmates, time (length and hours), keep working, degree requirement.
+- Background (years of experience, degree, role, years leading) is in neither stage list of the request. Default: it moves to stage 2, asked only if the user hasn't said it, and isn't asked in stage 1. The fewer-than-8-years note applies when the user says so.
+- `propose_direction` takes `DirectionSchema`: the engine's stage 1 fields plus `peerPreference` (shown on the card, used by stage 2 scoring) and `resolvedTensions`. The server drops those two before `recommendCategory`. Each field reuses its `ProfileSchema` rule; `declined` may name only stage 1 fields.
+- `ask_choice` accepts only the stage 1 chip sets. `search_programs` leaves the stage 1 tools: stage 1 names no programs. It can come back with stage 2.
+- `propose_search` is a stub (no input schema) and is never sent to the model until stage 2 is wired. If the user says yes to "Want to see programs that fit?", the advisor says programs come next.
+- Stage 1 doesn't state typical costs for the category: `DirectionResult` carries no price ranges, and facts come from tool results only. The verdict describes the step in words, without figures.
+- Persona verdicts are hand-computed on the 1 to 5 table from PR #22. Two expectations changed: C's stage 1 verdict is now an executive program (the budget no longer rules it out; stage 2 shows it out of reach and points to the certificate), and C raises R4 (deep expertise with under 5 hours), which the old file missed. E's R1 tension moves to stage 2, because on-site days are a stage 2 answer.
+- `docs/chat-api.md` returns separate `chips`, `confirm` and `direction` fields instead of build-steps' single `ui` union, so a turn can carry the assistant's text and the verdict together.

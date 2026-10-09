@@ -6,25 +6,34 @@ Nine years in, one as a director, in Chicago. They were promoted into leading a 
 
 ## True answers
 
-| Entry           | Answer                                                                             |
-| --------------- | ---------------------------------------------------------------------------------- |
-| yearsExperience | 9                                                                                  |
-| degree          | `Bachelor's`; Computer Science                                                     |
-| currentRole     | `Director`                                                                         |
-| yearsLeading    | 1                                                                                  |
-| careerGoal      | `Lead better in my current role`; "Lead my new team of managers better where I am" |
-| needs           | `Leadership skills`, `Deep expertise in a field`, `A graduate degree`              |
-| peerPreference  | `Peers at my level`                                                                |
-| degreeRequired  | `Not needed`                                                                       |
-| tuition         | `$5k to $15k`; `Employer support`                                                  |
-| travelBudget    | `Under $2k`                                                                        |
-| airfare         | `Under $500`                                                                       |
-| travelComfort   | `A burden`                                                                         |
-| time            | `Under 5`; `Up to a year`                                                          |
-| keepWorking     | `Yes, I keep working`                                                              |
-| onsite          | `Up to 10`; `A few days`                                                           |
-| home            | Chicago; `No, I would not`                                                         |
-| locationValues  | `Ease of travel`                                                                   |
+Chip answers are quoted exactly as the chip label. Free text is outside the backticks. Stage 1 comes first, in the order the advisor asks it. The `home` row gives the city in words, then the region, country code and approximate coordinates the advisor fills in.
+
+### Stage 1
+
+| Entry          | Answer                                                                             |
+| -------------- | ---------------------------------------------------------------------------------- |
+| careerGoal     | `Lead better in my current role`; "Lead my new team of managers better where I am" |
+| needs          | `Leadership skills`, `Deep expertise in a field`, `A graduate degree`              |
+| peerPreference | `Peers at my level`                                                                |
+| time           | `Up to a year`; `Under 5`                                                          |
+| keepWorking    | `Yes, I keep working`                                                              |
+| degreeRequired | `Not needed`                                                                       |
+
+### Stage 2 (not wired yet)
+
+| Entry           | Answer                                                |
+| --------------- | ----------------------------------------------------- |
+| tuition         | `$5k to $15k`; `Employer support`                     |
+| travelBudget    | `Under $2k`                                           |
+| travelComfort   | `A burden`                                            |
+| onsite          | `Up to 10`; `A few days`                              |
+| home            | Chicago; IL; US; 41.8781, -87.6298; `No, I would not` |
+| airfare         | `Under $500`                                          |
+| locationValues  | `Ease of travel`                                      |
+| yearsExperience | 9                                                     |
+| degree          | `Bachelor's`; Computer Science                        |
+| currentRole     | `Director`                                            |
+| yearsLeading    | 1                                                     |
 
 ## In their voice
 
@@ -34,13 +43,22 @@ Nine years in, one as a director, in Chicago. They were promoted into leading a 
 
 ## Expected verdict
 
+Hand-computed on the 1 to 5 category table (`docs/need-based-ranking.md`), not an engine run; step 7's run is the check. Treat these as category expectations, not exact scores.
+
+### Stage 1
+
 - `goalClarity`: clear
-- Category: graduate certificate, with short course as the runner-up. Hand-computed from the matrix: with `grow_in_role` the executive type would score highest (10 against 8), but with the current data its only record costs more than the budget, so it is ruled out. Treat this as a category expectation, not exact scores.
-- Tension to raise: none.
+- Category: executive program, 26 (15 + 6 + 1, plus 4 for growing in role), with graduate certificate the runner-up at 22. Short course scores 20; the EMBA scores 20 after −6 for the degree answer and is out on length.
+- Tension to raise: R4. Deep expertise is in the top 3 but they can give under 5 hours a week. The advisor names both sides and lets them choose.
+- The budget is not asked yet, so it can't change this verdict. Ends with "Want to see programs that fit?"
+
+### Stage 2 (not wired yet)
+
+- The only executive record (MIT TLP, $28,000) is far over a $5k to $15k budget. The verdict stays; the card says executive programs are out of reach within their limits and points to the graduate certificate.
 
 ## What a sharp advisor should notice
 
 - "Lead better where I am" is a different goal from "step up": say so, and use it.
-- The budget matters more than the brand. A $28,000 executive program is out; say why instead of hiding it.
+- The budget matters more than the brand, but only in stage 2: there the $28,000 executive program is out of reach; say why instead of hiding it.
 - A short course is a real option if the gap is one narrow skill (managing managers); the advisor should ask whether it is one skill or a broader shift.
 - The graduate certificate is online, so travel is not an issue for someone who finds it a burden.

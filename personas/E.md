@@ -6,25 +6,34 @@ Twelve years in, six leading, a manager in Denver who wants to be a VP of engine
 
 ## True answers
 
-| Entry           | Answer                                                              |
-| --------------- | ------------------------------------------------------------------- |
-| yearsExperience | 12                                                                  |
-| degree          | `Master's`; Engineering                                             |
-| currentRole     | `Manager`                                                           |
-| yearsLeading    | 6                                                                   |
-| careerGoal      | `Step up to a bigger leadership role`; "Become a VP of engineering" |
-| needs           | `A senior network`, `Leadership skills`, `A graduate degree`        |
-| peerPreference  | `More senior leaders`                                               |
-| degreeRequired  | `Preferred`                                                         |
-| tuition         | `$40k to $80k`; `Savings`                                           |
-| travelBudget    | `$2k to $5k`                                                        |
-| airfare         | `Under $500`                                                        |
-| travelComfort   | `Fine`                                                              |
-| time            | `5 to 10`; `Up to a year`                                           |
-| keepWorking     | `Yes, I keep working`                                               |
-| onsite          | `None`; `Can't travel`                                              |
-| home            | Denver; `No, I would not`                                           |
-| locationValues  | `Network density`                                                   |
+Chip answers are quoted exactly as the chip label. Free text is outside the backticks. Stage 1 comes first, in the order the advisor asks it. The `home` row gives the city in words, then the region, country code and approximate coordinates the advisor fills in.
+
+### Stage 1
+
+| Entry          | Answer                                                              |
+| -------------- | ------------------------------------------------------------------- |
+| careerGoal     | `Step up to a bigger leadership role`; "Become a VP of engineering" |
+| needs          | `A senior network`, `Leadership skills`, `A graduate degree`        |
+| peerPreference | `More senior leaders`                                               |
+| time           | `Up to a year`; `5 to 10`                                           |
+| keepWorking    | `Yes, I keep working`                                               |
+| degreeRequired | `Preferred`                                                         |
+
+### Stage 2 (not wired yet)
+
+| Entry           | Answer                                                |
+| --------------- | ----------------------------------------------------- |
+| tuition         | `$40k to $80k`; `Savings`                             |
+| travelBudget    | `$2k to $5k`                                          |
+| travelComfort   | `Fine`                                                |
+| onsite          | `None`; `Can't travel`                                |
+| home            | Denver; CO; US; 39.7392, -104.9903; `No, I would not` |
+| airfare         | `Under $500`                                          |
+| locationValues  | `Network density`                                     |
+| yearsExperience | 12                                                    |
+| degree          | `Master's`; Engineering                               |
+| currentRole     | `Manager`                                             |
+| yearsLeading    | 6                                                     |
 
 ## In their voice
 
@@ -33,12 +42,22 @@ Twelve years in, six leading, a manager in Denver who wants to be a VP of engine
 
 ## Expected verdict
 
+Hand-computed on the 1 to 5 category table (`docs/need-based-ranking.md`), not an engine run; step 7's run is the check.
+
+### Stage 1
+
 - `goalClarity`: clear
-- Before any results, the advisor raises R1: the senior network is ranked first but the person allows fewer than 10 on-site days a year, and networks are mostly built in person. It names both sides and lets the user choose.
-- What follows depends on the choice. If they raise their on-site limit, expect an executive program or an EMBA. If they keep it at zero, the verdict will favour an online option and must say the network will be thinner than they want.
+- Category: executive program, 26 (15 + 10 + 1). The EMBA scores 28 after −2 for a preferred degree, but it is out on length: two years against one.
+- Tension to raise: none yet. R1 reads on-site days, which stage 1 doesn't ask.
+- Ends with "Want to see programs that fit?"
+
+### Stage 2 (not wired yet)
+
+- Once the on-site answers are in, and before `propose_search`, the advisor raises R1: the senior network is ranked first but the person allows fewer than 10 on-site days a year, and networks are mostly built in person. It names both sides and lets the user choose.
+- What follows depends on the choice. If they raise their on-site limit, expect executive programs. If they keep it at zero, the verdict stays an executive program, the card says none is within their limits and points to an online alternative, and the advisor says the network will be thinner than they want.
 
 ## What a sharp advisor should notice
 
-- The tension is the whole point: do not bury it in the verdict, raise it before `propose_profile`.
+- The tension is the whole point: do not bury it in the verdict, raise it as soon as the on-site answers are in, before `propose_search`.
 - The user decides which side wins. The choice is recorded in `resolvedTensions` and mentioned in the final explanation.
 - Do not lecture; one clear sentence naming both sides and the cost of each.
