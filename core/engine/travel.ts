@@ -15,13 +15,14 @@ const base: TravelEstimate = {
   notes: [],
 };
 
-const unknown = (note: string): TravelEstimate => ({
+// `earlier` carries notes already made (an unknown location), so they survive the return.
+const unknown = (note: string, earlier: string[] = []): TravelEstimate => ({
   ...base,
   kind: "unknown",
   totalUsd: null,
   trips: null,
   nightsPerTrip: null,
-  notes: [note],
+  notes: [...earlier, note],
 });
 
 const cents = (n: number) => Math.round(n * 100) / 100;
@@ -45,18 +46,26 @@ export function travelEstimate(
       notes: ["The campus is within commuting distance, so no airfare or lodging."],
     };
   }
-  // A user who would move (or hasn't said they wouldn't) to attend a program that needs them
-  // local is not commuting from home.
-  if (needsLocalPresence(program) && profile.relocate !== false) {
+  // A program that needs the student local has no recurring trips, whatever the distance. A user
+  // who would move (or hasn't said they wouldn't) isn't commuting from home; one who won't move
+  // is judged by the location check, so no trips are costed and no data gap is blamed on the
+  // program.
+  if (needsLocalPresence(program)) {
     const note =
       profile.relocate === true
         ? "You'd relocate for this program, so no recurring travel."
-        : "You didn't say whether you'd relocate, so no recurring travel is counted.";
+        : profile.relocate === null || profile.relocate === undefined
+          ? "You didn't say whether you'd relocate, so no recurring travel is counted."
+          : "This program needs you near campus, so the location check decides; no recurring travel is counted.";
     return { ...base, notes: [note] };
   }
 
+  const notes: string[] = [];
+  if (local === null) {
+    notes.push("Your home or the campus location is unknown, so this assumes you travel.");
+  }
   const months = program.durationMonths ?? program.durationMaxMonths;
-  if (months === null) return unknown("Program length not published.");
+  if (months === null) return unknown("Program length not published.", notes);
   const years = Math.max(1, Math.ceil(months / 12));
 
   const count = program.residencyCount !== null && program.residencyCount > 0;
@@ -66,10 +75,6 @@ export function travelEstimate(
   let trips: number;
   let nights: number;
   let tripsEstimated = false;
-  const notes: string[] = [];
-  if (local === null) {
-    notes.push("Your home or the campus location is unknown, so this assumes you travel.");
-  }
   if (count && days !== null) {
     trips = (program.residencyCount as number) * years;
     nights = days / (program.residencyCount as number);
@@ -93,11 +98,11 @@ export function travelEstimate(
       `Trip count estimated: about ${WEEKEND_TRIPS_PER_YEAR} weekends a year, ${WEEKEND_NIGHTS_PER_TRIP} nights each.`,
     );
   } else if (count) {
-    return unknown("On-site days a year not published.");
+    return unknown("On-site days a year not published.", notes);
   } else if (days !== null) {
-    return unknown("Number of trips not published.");
+    return unknown("Number of trips not published.", notes);
   } else {
-    return unknown("On-site days and trips not published.");
+    return unknown("On-site days and trips not published.", notes);
   }
 
   let lodging = 0;
@@ -108,7 +113,7 @@ export function travelEstimate(
     lodgingRate = program.lodgingPerNightUsd.max;
     lodging = trips * nights * lodgingRate;
   } else {
-    return unknown("Lodging rate not published.");
+    return unknown("Lodging rate not published.", notes);
   }
 
   const airfare = AIRFARE_MIDPOINTS[profile.airfareRange];

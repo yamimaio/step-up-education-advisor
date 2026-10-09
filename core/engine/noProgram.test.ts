@@ -52,6 +52,17 @@ describe("Each no-program trigger fires on its own example (S8-6)", () => {
   });
 });
 
+describe("A declined goal clarity is not 'goal unclear'", () => {
+  it("does not fire goal_unclear for an answer the user never gave", () => {
+    const result = evaluate(
+      makeProfile({ goalClarity: "unclear", declined: ["goalClarity"] }),
+      fixtureDataset(),
+      today,
+    );
+    expect(result.noProgram.trigger).not.toBe("goal_unclear");
+  });
+});
+
 describe("Programs of a ruled-out type do not count as a way forward", () => {
   it("fires no_type_fits when every passing program belongs to a type the degree rule removed", () => {
     // Degree required, only the executive record: it passes the limits but its type is out.

@@ -249,6 +249,38 @@ describe("An unknown location is a near miss when it decides the check, never a 
   });
 });
 
+describe("A declined home does not turn a commuting program's travel into a data gap", () => {
+  const limits = { travelBudgetUsd: 20000, maxStretchDays: 365, maxProgramMonths: 24 };
+  const run = (id: string, o: Partial<Profile>) => {
+    const result = evaluate(
+      makeProfile({ relocate: false, ...limits, ...o }),
+      [fixture(id, { longestStretchDays: 90 })],
+      new Date("2026-10-08T00:00:00Z"),
+    );
+    return result.programs[0];
+  };
+
+  it("keeps confidence and the travel check as they are for a known home", () => {
+    for (const id of ["fake-mba", "fake-specialized-masters"]) {
+      const known = run(id, CAMBRIDGE_MA);
+      const declined = run(id, { ...NO_HOME, declined: NO_HOME_DECLINED });
+      const travel = declined?.checks.find((c) => c.id === "travelBudget");
+      expect(travel).toMatchObject({ status: "pass", unknown: false });
+      expect(declined?.confidence).toEqual(known?.confidence);
+      expect(declined?.checks.find((c) => c.id === "location")?.status).toBe("near_miss");
+    }
+  });
+
+  it("does not say the school left out its trip count for a home beyond commuting distance", () => {
+    const far = run("fake-mba", CHICAGO);
+    expect(far?.checks.find((c) => c.id === "travelBudget")).toMatchObject({
+      status: "pass",
+      unknown: false,
+    });
+    expect(far?.confidence.reasons.join(" ")).not.toMatch(/travel cost/);
+  });
+});
+
 describe("A program's status is its worst check", () => {
   it("is fail when any check fails, near miss when the worst is a near miss", () => {
     const p = eff();

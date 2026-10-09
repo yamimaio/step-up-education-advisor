@@ -78,6 +78,26 @@ describe("A declined home location", () => {
   });
 });
 
+describe("A declined goal clarity or location values", () => {
+  it("is neutral: a clear goal, and no location values", () => {
+    const { profile } = applyDeclinedDefaults(
+      makeProfile({
+        goalClarity: "unclear",
+        locationValues: ["immersion", "network_density"],
+        declined: ["goalClarity", "locationValues"],
+      }),
+    );
+    expect(profile).toMatchObject({ goalClarity: "clear", locationValues: [] });
+  });
+
+  it("keeps the answers when they were given", () => {
+    const { profile } = applyDeclinedDefaults(
+      makeProfile({ goalClarity: "unclear", locationValues: ["immersion"] }),
+    );
+    expect(profile).toMatchObject({ goalClarity: "unclear", locationValues: ["immersion"] });
+  });
+});
+
 describe("Declined fields outside the limits", () => {
   it("neutralises keepWorking, relocate and yearsExperience", () => {
     const { profile } = applyDeclinedDefaults(

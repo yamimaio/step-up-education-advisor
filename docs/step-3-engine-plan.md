@@ -106,7 +106,9 @@ Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). â
     - `travelComfort`: `fine`
     - `airfareRange`: `unknown`
     - `degreeRequired`: no adjustment (not specified anywhere)
-    - `homeCity`, `homeRegion`, `homeCountry`, `homeLat`, `homeLon`: no distance, so programs that need you local fail unless you'd relocate
+    - `homeCity`, `homeRegion`, `homeCountry`, `homeLat`, `homeLon`: no distance (unknown location). A program that needs you local is a **near miss** unless you'd relocate, never a pass or a fail (`docs/decisions.md`, "Location by distance")
+    - `goalClarity`: `clear` (the AI marks it unclear only after follow-ups, so a declined value is never "unclear")
+    - `locationValues`: none, so no location-fit points
 
     `profileGaps` = the `declined` fields plus `airfareRange: unknown`.
 12. **No-program precedence when several triggers fire.** `goal_unclear`, then `nothing_passes`, then `no_type_fits`. An empty dataset counts as `nothing_passes`. Shortlists are still built ("if you decide to go anyway"), and with no winner there's no +0.5 bonus.

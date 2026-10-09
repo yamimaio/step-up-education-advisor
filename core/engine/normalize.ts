@@ -34,6 +34,10 @@ export function applyDeclinedDefaults(profile: Profile): {
     keepWorking: out("keepWorking") ? false : profile.keepWorking,
     relocate: out("relocate") ? null : profile.relocate,
     yearsExperience: out("yearsExperience") ? null : profile.yearsExperience,
+    // The AI marks the goal unclear only after follow-ups, so a goal the user never rated is clear;
+    // an unrated list of location values adds no fit points.
+    goalClarity: out("goalClarity") ? "clear" : profile.goalClarity,
+    locationValues: out("locationValues") ? [] : profile.locationValues,
     // The neutral goal is "step up": grow-in-role adds a bonus the user never asked for.
     careerGoal: out("careerGoal") ? { ...profile.careerGoal, kind: "step_up" } : profile.careerGoal,
   };

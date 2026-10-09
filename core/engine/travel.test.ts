@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { travelEstimate } from "./travel";
 import { fixture } from "../../tests/fixtures/dataset";
-import { BUENOS_AIRES, CAMBRIDGE_MA, NO_HOME } from "../../tests/fixtures/profiles";
+import { BUENOS_AIRES, CAMBRIDGE_MA, CHICAGO, NO_HOME } from "../../tests/fixtures/profiles";
 
 const buenosAires = { ...BUENOS_AIRES, airfareRange: "1000_1500" as const };
 
@@ -71,9 +71,46 @@ describe("Travel estimate: an unknown location is never treated as local", () =>
     expect(t.notes.join(" ")).toMatch(/location is unknown/);
   });
 
+  it("keeps the unknown-location note when a missing figure makes the estimate unknown", () => {
+    const noLodging = fixture("fake-executive", { lodgingPerNightUsd: null });
+    const t = travelEstimate(noLodging, unknownHome);
+    expect(t.kind).toBe("unknown");
+    expect(t.notes).toEqual([
+      "Your home or the campus location is unknown, so this assumes you travel.",
+      "Lodging rate not published.",
+    ]);
+    const noLength = fixture("fake-executive", { durationMonths: null });
+    expect(travelEstimate(noLength, unknownHome).notes).toHaveLength(2);
+  });
+
   it("still lets a user who would relocate skip recurring travel", () => {
     const t = travelEstimate(fixture("fake-mba"), { ...unknownHome, relocate: true });
     expect(t).toMatchObject({ kind: "none", totalUsd: 0 });
+  });
+});
+
+describe("A program that needs you local has no recurring trips for a user who won't relocate", () => {
+  const stays = { airfareRange: "1000_1500" as const, relocate: false };
+
+  it("costs none for a declined home, so no data gap is blamed on the program", () => {
+    for (const id of ["fake-mba", "fake-specialized-masters"]) {
+      const t = travelEstimate(fixture(id), { ...NO_HOME, ...stays });
+      expect(t).toMatchObject({ kind: "none", totalUsd: 0 });
+      expect(t.notes.join(" ")).toMatch(/location check decides/);
+    }
+  });
+
+  it("costs none for a home beyond commuting distance too; the location check fails it", () => {
+    expect(travelEstimate(fixture("fake-mba"), { ...CHICAGO, ...stays })).toMatchObject({
+      kind: "none",
+      totalUsd: 0,
+    });
+  });
+
+  it("still costs trips for a blended program", () => {
+    expect(travelEstimate(fixture("fake-executive"), { ...BUENOS_AIRES, ...stays }).kind).toBe(
+      "estimate",
+    );
   });
 });
 
@@ -112,7 +149,11 @@ describe("Travel estimate: published counts and relocation", () => {
     const mba = fixture("fake-mba");
     const t = travelEstimate(mba, { ...buenosAires, relocate: true });
     expect(t).toMatchObject({ kind: "none", totalUsd: 0 });
-    expect(travelEstimate(mba, { ...buenosAires, relocate: false }).kind).not.toBe("none");
+    // A user who won't relocate has no trips either: the location check fails the program.
+    expect(travelEstimate(mba, { ...buenosAires, relocate: false })).toMatchObject({
+      kind: "none",
+      totalUsd: 0,
+    });
   });
 
   it("mentions the GSA rate only when lodging is charged", () => {
