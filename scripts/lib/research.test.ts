@@ -227,6 +227,31 @@ describe("failures", () => {
     expect(recordProblems(record)).toEqual([]);
   });
 
+  it("drops the research sources of a field the overrides replace", () => {
+    const s = sample();
+    const base = s.overrides as { extraSources?: unknown[] };
+    const newer = {
+      field: "durationMonths",
+      url: "https://example.edu/fake-sample/schedule.pdf",
+      quote: "Newer schedule",
+      checkedOn: "2026-10-02",
+      kind: "official_page",
+    };
+    s.overrides = { ...base, replaceSources: ["durationMonths"] };
+    expect(() => convertResearch(s)).toThrow(
+      /replaces the sources of durationMonths without a matching extraSources entry/,
+    );
+    s.overrides = {
+      ...base,
+      replaceSources: ["durationMonths"],
+      extraSources: [...(base.extraSources ?? []), newer],
+    };
+    const durationSources = convertResearch(s).record.sources.filter(
+      (x) => x.field === "durationMonths",
+    );
+    expect(durationSources).toEqual([newer]);
+  });
+
   it("marks a source with no url as school_correspondence and says so", () => {
     const s = sample();
     s.research = s.research.replace(/("field": "durationMonths",\s*)"url": "[^"]*",\s*/, "$1");
