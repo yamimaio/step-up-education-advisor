@@ -32,7 +32,14 @@ export function confidence(program: Program, checks: Check[], today: Date): Conf
   }
   const fresh = verified && ageDays !== null && ageDays <= CONFIDENCE_WINDOW_DAYS;
 
-  const costOk = program.tuitionUsd !== null && officialFor(program, ["tuitionUsd"]);
+  // A price published per course counts, with an official source on the field that holds it.
+  const costOk =
+    (program.tuitionUsd !== null && officialFor(program, ["tuitionUsd"])) ||
+    (program.tuitionUsd === null &&
+      program.tuitionPerCourseUsd !== null &&
+      program.courseCount !== null &&
+      program.courseCount > 0 &&
+      officialFor(program, ["tuitionPerCourseUsd"]));
   if (!costOk) reasons.push("Tuition is not published on an official page.");
 
   const onsiteOk = program.onsiteDaysPerYear !== null && officialFor(program, ONSITE_FIELDS);

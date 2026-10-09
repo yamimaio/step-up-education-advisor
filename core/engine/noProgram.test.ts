@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evaluate } from "./evaluate";
 import { fixtureDataset } from "../../tests/fixtures/dataset";
-import { makeProfile } from "../../tests/fixtures/profiles";
+import { BUENOS_AIRES, makeProfile } from "../../tests/fixtures/profiles";
 
 const today = new Date("2026-10-08T00:00:00Z");
 const run = (o: Parameters<typeof makeProfile>[0], programs = fixtureDataset()) =>
@@ -15,8 +15,10 @@ describe("Each no-program trigger fires on its own example (S8-6)", () => {
     });
   });
 
-  it("nothing passes: $3,000 and no on-site days (stage 2)", () => {
-    expect(run({ tuitionBudgetUsd: 3000, maxOnsiteDays: 0 })).toEqual({
+  it("nothing passes: $3,000, no on-site days and a home far from every campus (stage 2)", () => {
+    // Far away, because a local evening master's has no time away and its per-course price
+    // never fails the tuition check (default 4).
+    expect(run({ tuitionBudgetUsd: 3000, maxOnsiteDays: 0, ...BUENOS_AIRES })).toEqual({
       triggered: true,
       trigger: "nothing_passes",
     });

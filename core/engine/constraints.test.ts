@@ -4,6 +4,7 @@ import {
   checkConstraints,
   checkHours,
   checkLength,
+  checkLongestStretch,
   checkLocation,
   checkOnsiteDays,
   checkTravelBudget,
@@ -278,6 +279,62 @@ describe("A declined home does not turn a commuting program's travel into a data
       unknown: false,
     });
     expect(far?.confidence.reasons.join(" ")).not.toMatch(/travel cost/);
+  });
+});
+
+describe("Time-away limits don't apply to a program that needs the student near campus", () => {
+  const local = { ...CAMBRIDGE_MA, maxOnsiteDays: 20, maxStretchDays: 7 };
+
+  it("passes on-site days and longest stretch for a full-time program the user commutes to", () => {
+    const mba = fixture("fake-mba");
+    for (const check of [checkOnsiteDays(mba, eff(local)), checkLongestStretch(mba, eff(local))]) {
+      expect(check).toMatchObject({ status: "pass", unknown: false });
+      expect(check.note).toMatch(/no time away/);
+    }
+  });
+
+  it("lets a local full-time MBA pass when every other limit fits", () => {
+    const profile = eff({
+      ...local,
+      keepWorking: false,
+      maxProgramMonths: 24,
+      hoursPerWeek: { min: 40, max: 60 },
+      tuitionBudgetUsd: 250000,
+    });
+    const mba = fixture("fake-mba");
+    expect(checkConstraints(mba, profile, travelEstimate(mba, profile)).status).toBe("pass");
+  });
+
+  it("does not count an unpublished on-site figure as a gap for an evening program", () => {
+    const masters = fixture("fake-specialized-masters", {
+      onsiteDaysPerYear: null,
+      longestStretchDays: null,
+    });
+    expect(checkOnsiteDays(masters, eff(local))).toMatchObject({ status: "pass", unknown: false });
+    expect(checkLongestStretch(masters, eff(local))).toMatchObject({
+      status: "pass",
+      unknown: false,
+    });
+  });
+
+  it("still applies them to a blended program the user travels to", () => {
+    const exec = fixture("fake-executive");
+    expect(checkOnsiteDays(exec, eff({ ...local, maxOnsiteDays: 5 })).status).toBe("fail");
+  });
+});
+
+describe("The airfare-unknown note is kept whatever the travel-budget status", () => {
+  it("is on a near miss and a fail, not only on a pass turned near miss", () => {
+    const status = (travelBudgetUsd: number) => {
+      const p = eff({ ...BUENOS_AIRES, airfareRange: "unknown", travelBudgetUsd });
+      return checkTravelBudget(travelEstimate(fixture("fake-executive"), p), p);
+    };
+    // Lodging alone is $5,475.
+    for (const budget of [6000, 5000, 1000]) {
+      expect(status(budget).note).toMatch(/Airfare unknown/);
+    }
+    expect(status(5000).status).toBe("near_miss");
+    expect(status(1000).status).toBe("fail");
   });
 });
 

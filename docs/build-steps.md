@@ -379,7 +379,7 @@ Work outside the steps gets its own issue, opened when it's needed. One I alread
 | DQ15 | Coverage gate in CI | Report only, no threshold. The named rule tests matter more than a percentage on Day 2 |
 | DQ16 | Prettier | Yes, `format:check` in CI, with `docs/` (including `docs/research/`) ignored so your prose is never reformatted |
 | DQ17 | A local fake mode | `MODEL_FAKE=1` runs the page against the scripted persona A with no spend. Useful while building step 7 |
-| DQ18 | City matching for travel (is the program in the home city?) | Case-insensitive and accent-insensitive equality on the city name. If a city matches, there's no airfare or lodging |
+| DQ18 | City matching for travel (is the program in the home city?) | **Superseded** by the distance check: a campus within 80 km of the home coordinates is local, so there's no airfare or lodging (`docs/decisions.md`, "Location by distance"). The original rule was case- and accent-insensitive equality on the city name |
 | DQ19 | A secret scanner in CI (for example gitleaks) | Not on Day 2. `.gitignore` and `.dockerignore` plus `check-bundle` cover the paths that matter. Add it Thursday, before the public deploy |
 | DQ20 | Fresh-session `/code-review` on the step-4 data PRs | Skip it. They contain only JSON plus research files; schema CI and your fact-by-fact verification are the real review. If a step-4 PR touches code (for example a converter fix), it goes in a separate PR under its own issue, and that one gets reviewed |
 | DQ21 | CI inside Docker too? | No. CI runs natively on GitHub's runner with Node 24 from `.nvmrc`, which is fast and isn't your host. The `docker` job builds the production image, so the container path is still tested |

@@ -39,7 +39,10 @@ export function failedChecks(checkLists: Check[][]): CheckId[] {
       if (c.status === "fail") failed.set(c.id, (failed.get(c.id) ?? 0) + 1);
     }
   }
-  return [...failed.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
+  const order = Object.keys(CHECK_LABELS);
+  return [...failed.entries()]
+    .sort((a, b) => b[1] - a[1] || order.indexOf(a[0]) - order.indexOf(b[0]))
+    .map(([id]) => id);
 }
 
 // Stage 1: pick the type of program before any specific program. `evaluations` hold each

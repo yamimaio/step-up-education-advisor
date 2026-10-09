@@ -1,5 +1,6 @@
 import type { Program } from "../schema/program";
 import type { PartialProfile } from "../schema/profile";
+import { tuitionTotal } from "./constraints";
 import type { Contradiction } from "./types";
 
 const DEGREE_TYPES = ["mba", "emba", "specialized_masters"];
@@ -8,7 +9,7 @@ const DEGREE_TYPES = ["mba", "emba", "specialized_masters"];
 // Rules already in resolvedTensions are still returned, marked resolved.
 export function checkContradictions(
   input: PartialProfile,
-  programs: Pick<Program, "category" | "tuitionUsd">[],
+  programs: Pick<Program, "category" | "tuitionUsd" | "tuitionPerCourseUsd" | "courseCount">[],
 ): Contradiction[] {
   // A declined field counts as missing: its placeholder value never fires a rule.
   const partial: PartialProfile = { ...input };
@@ -31,12 +32,15 @@ export function checkContradictions(
     partial.degreeRequired === "required" &&
     partial.tuitionBudgetUsd !== undefined &&
     partial.tuitionBudgetUsd !== null &&
-    !programs.some(
-      (p) =>
+    // A per-course price counts through its estimate (price × courses), as on the card.
+    !programs.some((p) => {
+      const total = tuitionTotal(p);
+      return (
         DEGREE_TYPES.includes(p.category) &&
-        p.tuitionUsd !== null &&
-        p.tuitionUsd <= (partial.tuitionBudgetUsd as number),
-    )
+        total !== null &&
+        total.usd <= (partial.tuitionBudgetUsd as number)
+      );
+    })
   ) {
     found.push({
       id: "R2",

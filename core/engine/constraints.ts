@@ -53,17 +53,28 @@ function limitCheck(
   return { id, status, value, limit, unit, unknown: false, ...(note ? { note } : {}) };
 }
 
-export function checkTuition(program: Program, profile: EffectiveProfile): Check {
-  let note: string | undefined;
+// The published total, or per-course price × course count when only that is published (an
+// estimate). Null when neither is known.
+export function tuitionTotal(
+  program: Pick<Program, "tuitionUsd" | "tuitionPerCourseUsd" | "courseCount">,
+): { usd: number; estimated: boolean } | null {
+  if (program.tuitionUsd !== null) return { usd: program.tuitionUsd, estimated: false };
   if (
-    program.tuitionUsd === null &&
     program.tuitionPerCourseUsd !== null &&
     program.courseCount !== null &&
     program.courseCount > 0
   ) {
-    const total = program.tuitionPerCourseUsd * program.courseCount;
+    return { usd: program.tuitionPerCourseUsd * program.courseCount, estimated: true };
+  }
+  return null;
+}
+
+export function checkTuition(program: Program, profile: EffectiveProfile): Check {
+  let note: string | undefined;
+  const total = tuitionTotal(program);
+  if (total?.estimated && program.courseCount !== null) {
     const courses = program.courseCount === 1 ? "course" : "courses";
-    note = `about $${total.toLocaleString("en-US")} at ${program.courseCount} ${courses} (estimate)`;
+    note = `about $${total.usd.toLocaleString("en-US")} at ${program.courseCount} ${courses} (estimate)`;
   }
   return limitCheck("tuition", program.tuitionUsd, profile.tuitionBudgetUsd, "USD", note);
 }
@@ -76,23 +87,47 @@ export function checkTravelBudget(travel: TravelEstimate, profile: EffectiveProf
   // it can never be shown to pass, so a pass becomes a near miss (a fail at a limit of 0). The gap
   // is the user's (airfare is in profileGaps), not the program's, so `unknown` stays false and
   // confidence is untouched.
-  if (travel.lodgingOnly && limit !== null && check.status === "pass") {
-    return {
-      ...check,
-      status: limit === 0 ? "fail" : "near_miss",
-      unknown: false,
-      note: travel.notes.join(" "),
-    };
+  if (travel.lodgingOnly && limit !== null) {
+    // The note goes on whatever the status: the total is an underestimate either way.
+    const status = check.status === "pass" ? (limit === 0 ? "fail" : "near_miss") : check.status;
+    return { ...check, status, unknown: false, note: travel.notes.join(" ") };
   }
   return check;
 }
 
+// A program that needs the student near campus has no time away: the student commutes or
+// relocates (travel.ts counts no trips for it), and the location check decides. The time-away
+// limits don't apply to it, so they pass with a note and never count as unpublished.
+function fromHome(id: CheckId, value: number | null, limit: number | null, unit: string): Check {
+  return {
+    id,
+    status: "pass",
+    value,
+    limit,
+    unit,
+    unknown: false,
+    note: "no time away: you'd attend from near campus",
+  };
+}
+
 export function checkOnsiteDays(program: Program, profile: EffectiveProfile): Check {
-  return limitCheck("onsiteDays", program.onsiteDaysPerYear, profile.maxOnsiteDays, "days a year");
+  const args = [
+    "onsiteDays",
+    program.onsiteDaysPerYear,
+    profile.maxOnsiteDays,
+    "days a year",
+  ] as const;
+  return needsLocalPresence(program) ? fromHome(...args) : limitCheck(...args);
 }
 
 export function checkLongestStretch(program: Program, profile: EffectiveProfile): Check {
-  return limitCheck("longestStretch", program.longestStretchDays, profile.maxStretchDays, "days");
+  const args = [
+    "longestStretch",
+    program.longestStretchDays,
+    profile.maxStretchDays,
+    "days",
+  ] as const;
+  return needsLocalPresence(program) ? fromHome(...args) : limitCheck(...args);
 }
 
 // The fastest published pace; null falls back to the slowest, and both null is unknown.

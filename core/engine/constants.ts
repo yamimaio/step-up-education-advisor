@@ -1,4 +1,4 @@
-import type { Category, LocationValue, Need } from "../schema/enums";
+import { Category, type Need } from "../schema/enums";
 import type { Profile } from "../schema/profile";
 
 // Everything Thursday's tuning might touch lives here.
@@ -53,15 +53,9 @@ export const TYPE_RATINGS: Record<Category, Record<Need, 0 | 1 | 2>> = {
   },
 };
 
-// Matrix order, used to break ties deterministically.
-export const CATEGORY_ORDER: readonly Category[] = [
-  "mba",
-  "emba",
-  "specialized_masters",
-  "executive",
-  "certificate",
-  "short_course",
-];
+// Matrix order, used to break ties deterministically. Taken from the schema enum, so a new
+// category can't be left unscored.
+export const CATEGORY_ORDER: readonly Category[] = Category.options;
 
 // Weights for the user's #1, #2 and #3 need.
 export const NEED_WEIGHTS = [3, 2, 1] as const;
@@ -107,16 +101,6 @@ export const LOCATION_FIT = {
   min: 1,
   max: 5,
 } as const;
-
-export const LOCATION_VALUES_ORDER: readonly LocationValue[] = [
-  "network_density",
-  "industry_hub",
-  "relocation_path",
-  "immersion",
-  "affordability",
-  "travel_ease",
-  "international",
-];
 
 // Midpoints of the airfare chips (D8). "unknown" has no midpoint.
 export const AIRFARE_MIDPOINTS: Record<Profile["airfareRange"], number | null> = {

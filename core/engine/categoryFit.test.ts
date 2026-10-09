@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { categoryFit } from "./categoryFit";
+import { categoryFit, failedChecks } from "./categoryFit";
 import { applyDeclinedDefaults } from "./normalize";
 import { makeProfile } from "../../tests/fixtures/profiles";
 import type { Need } from "../schema/enums";
@@ -193,5 +193,24 @@ describe("A ruled-out type says which checks ruled it out", () => {
     ];
     const r = categoryFit(profile, programs, [{ id: "a", status: "fail", checks }]);
     expect(r.reasons.mba.join(" ")).toMatch(/within your limits \(program length\)/);
+  });
+});
+
+describe("Failed checks are ordered by count, then by check order", () => {
+  const check = (id: "tuition" | "location", status: "pass" | "fail") => ({
+    id,
+    status,
+    value: null,
+    limit: null,
+    unit: "",
+    unknown: false,
+  });
+
+  it("does not depend on the order of the programs", () => {
+    const a = [check("tuition", "pass"), check("location", "fail")];
+    const b = [check("tuition", "fail"), check("location", "pass")];
+    expect(failedChecks([a, b])).toEqual(["tuition", "location"]);
+    expect(failedChecks([b, a])).toEqual(["tuition", "location"]);
+    expect(failedChecks([a, b, a])).toEqual(["location", "tuition"]);
   });
 });

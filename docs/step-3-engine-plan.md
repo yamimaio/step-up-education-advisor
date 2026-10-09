@@ -2,7 +2,7 @@
 
 ## Context
 
-Step 3 builds the pure TypeScript engine from implementation plan section 4. It follows the two-stage flow with one function per stage: `recommendCategory` turns the stage-1 answers (`DirectionProfile`) and the dataset into the category verdict and the stage-1 no-program trigger; `evaluatePrograms` turns the full `Profile`, the confirmed category and the dataset into the constraint checks per program, three scenario shortlists, the stage-2 trigger and `access`. `evaluate` runs both in order and returns one `EngineResult`. Every number on a card comes from this engine (rule 7), so each rule needs a named test. Section 12 and the section 11 follow-ups (travel, metro, unknown duration/tuition) take precedence over `docs/build-plan.md`. DQ10, DQ11 and DQ18 in `docs/build-steps.md` fix near-miss-at-0, the six contradiction predicates and city matching.
+Step 3 builds the pure TypeScript engine from implementation plan section 4. It follows the two-stage flow with one function per stage: `recommendCategory` turns the stage-1 answers (`DirectionProfile`) and the dataset into the category verdict and the stage-1 no-program trigger; `evaluatePrograms` turns the full `Profile`, the confirmed category and the dataset into the constraint checks per program, three scenario shortlists, the stage-2 trigger and `access`. `evaluate` runs both in order and returns one `EngineResult`. Every number on a card comes from this engine (rule 7), so each rule needs a named test. Section 12 and the section 11 follow-ups (travel, metro, unknown duration/tuition) take precedence over `docs/build-plan.md`. DQ10 and DQ11 in `docs/build-steps.md` fix near-miss-at-0 and the six contradiction predicates. DQ18 (city matching) is superseded by the 80 km distance check (`distance.ts`).
 
 Branch `step-3-engine` from `main` (PR 2 is merged). The PR body starts with `Closes #5`. After the build, a fresh **Opus 5.5** session reviews it with `/code-review --comment`.
 
@@ -77,7 +77,7 @@ Also:
 | A limit of 0 has no near miss (DQ10) | `overshoot` | E |
 | Tuition ≤ budget; null tuition with a budget set → near miss, "not published"; with no limit → pass | `checkTuition` | **S8-5**, including that both cases lower confidence |
 | Travel cost ≤ travel budget (when one is set) | `checkTravelBudget` | pass, near miss and fail; null budget passes |
-| On-site days and longest stretch | `checkOnsiteDays`, `checkLongestStretch` | pass, near miss and fail; null → unknown rule |
+| On-site days and longest stretch, for programs reached by travel; a program that needs the student near campus has no time away and passes both with a note | `checkOnsiteDays`, `checkLongestStretch` | pass, near miss and fail; null → unknown rule; a local full-time or evening program passes both, even with nulls |
 | Length ≤ `maxProgramMonths` | `checkLength` | EMBA 24 against 12 fails (S8-1); null → unknown rule |
 | Hours: overlap or ≤ +25% passes with a note; ≤ +50% near miss; beyond fails | `checkHours` | E: overlap passes; 12 against 5–10 passes with "about 2 hours a week more"; 15 against 10 near miss; 16 against 10 fails |
 | Work-compatible when `keepWorking` (boolean, no near miss) | `checkWorkCompatible` | pass and fail |
@@ -105,7 +105,7 @@ Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). �
 1. ★ **The no-program "no type fits" example doesn't reproduce.** The plan's example is "the only real need is a new city". With a new city ranked first, the full-time MBA scores 3 × 2 = 6, or 3 even after the −3 degree adjustment plus its other needs, so the rule stays above 4. In practice the trigger fires only when the strong types are out. **Default:** keep the threshold at 4. Test 6a uses "a degree is required, but 3 months at most", which fires through rule-outs. I'll note that the plan's prose example doesn't fire the trigger.
 2. ★ **Programs of a type that is "out" in step 1.** If the degree is required, executive programs are ruled out, but an executive program can still pass every constraint. **Default:** programs of an out type are left out of the shortlists. They keep their evaluations, so the card or the advisor can still show them.
 3. ★ **Which length the length check uses.** **Default:** `durationMonths`, the fastest published pace. Null falls back to `durationMaxMonths`, and when both are null the unknown-value rule applies.
-4. ★ **Per-course tuition.** **Default:** the tuition check uses only `tuitionUsd`, so null follows the unknown-value rule. The "about $X at N courses" estimate goes in the check's `note` for the card and never decides pass or fail.
+4. ★ **Per-course tuition.** **Default:** the tuition check uses only `tuitionUsd`, so null follows the unknown-value rule. The "about $X at N courses" estimate goes in the check's `note` for the card and never decides pass or fail. It does count elsewhere: R2 uses it as the program's price, and an official source on `tuitionPerCourseUsd` meets confidence's published-price condition (`docs/decisions.md`).
 5. ★ **Nights per trip (D8: on-site days ÷ residencies).** Five on-site days is 4 nights. **Default:** follow D8 as written (days = nights). It overestimates a little, it is labelled as an estimate, and it matches persona A's fixture numbers. I'll note it for Thursday's tuning.
 6. **Trips across years.** `residencyCount` is per year (schema comment). Trips = `residencyCount × ceil(durationMonths / 12)`.
 7. **Weekend programs with no counts.** Use 26 trips a year at 2 nights each, labelled as an estimate.
@@ -141,7 +141,7 @@ Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). �
     - R2 counts only degree-granting types (MBA, EMBA, specialized master's) with a known `tuitionUsd` at or under the budget. A null budget never fires.
     - Missing partial fields never fire a rule.
     - Rules already in `resolvedTensions` are still returned, marked `resolved: true`, so the advisor can skip them.
-18. **Metro table contents.** A small seed: Boston/Cambridge, the SF Bay Area, New York, Chicago/Evanston, Washington DC, Philadelphia, New Haven, Los Angeles, plus an exact city-name match (DQ18). Unknown cities match only on exact name. You can extend it in `constants.ts`.
+18. ~~**Metro table contents.**~~ Superseded: there is no metro table. Location is a distance check between the home and campus coordinates against `COMMUTE_KM` (80 km), in `distance.ts` (`docs/decisions.md`, "Location by distance").
 
 ## Verification
 

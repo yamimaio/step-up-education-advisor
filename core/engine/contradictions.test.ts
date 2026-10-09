@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkContradictions } from "./contradictions";
-import { fixtureDataset } from "../../tests/fixtures/dataset";
+import { fixture, fixtureDataset } from "../../tests/fixtures/dataset";
 import { workedExampleProfile } from "../../tests/fixtures/profiles";
 import type { PartialProfile } from "../schema/profile";
 
@@ -80,5 +80,24 @@ describe("R4 fires at the lowest hours chip", () => {
     const needs = ["deep_expertise" as const];
     expect(ids({ needs, hoursPerWeek: { min: 0, max: 5 } })).toEqual(["R4"]);
     expect(ids({ needs, hoursPerWeek: { min: 5, max: 10 } })).toEqual([]);
+  });
+});
+
+describe("R2 counts a degree program priced per course", () => {
+  // fake-specialized-masters: no total, 10 courses at $5,000, so about $50,000.
+  const masters = [fixture("fake-specialized-masters")];
+
+  it("does not fire when the per-course estimate is within the budget", () => {
+    expect(
+      checkContradictions({ degreeRequired: "required", tuitionBudgetUsd: 60000 }, masters),
+    ).toEqual([]);
+  });
+
+  it("fires when the estimate is over the budget", () => {
+    const found = checkContradictions(
+      { degreeRequired: "required", tuitionBudgetUsd: 40000 },
+      masters,
+    );
+    expect(found.map((c) => c.id)).toEqual(["R2"]);
   });
 });

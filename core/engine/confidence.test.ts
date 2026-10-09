@@ -73,3 +73,25 @@ describe("Confidence describes the data, not the fit", () => {
     expect(confidence(fixture("fake-executive", { sources }), [pass], day(0)).level).toBe("medium");
   });
 });
+
+describe("A price published per course counts as a published price", () => {
+  const masters = fixture("fake-specialized-masters", {
+    verification: { status: "verified", verifiedBy: "Fixture Author" },
+    onsiteDaysPerYear: 40,
+  });
+
+  it("does not say tuition is unpublished when the per-course price has an official source", () => {
+    const { reasons } = confidence(masters, [pass], day(0));
+    expect(reasons.join(" ")).not.toMatch(/Tuition is not published/);
+  });
+
+  it("still says so when the per-course price has no official source", () => {
+    const unsourced = {
+      ...masters,
+      sources: masters.sources.filter((s) => s.field !== "tuitionPerCourseUsd"),
+    };
+    expect(confidence(unsourced, [pass], day(0)).reasons.join(" ")).toMatch(
+      /Tuition is not published/,
+    );
+  });
+});

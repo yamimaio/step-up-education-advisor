@@ -3,7 +3,7 @@ import { recommendCategory } from "./direction";
 import { evaluate } from "./evaluate";
 import { categoryAccess, evaluatePrograms } from "./search";
 import { fixtureDataset } from "../../tests/fixtures/dataset";
-import { makeProfile, workedExampleProfile } from "../../tests/fixtures/profiles";
+import { BUENOS_AIRES, makeProfile, workedExampleProfile } from "../../tests/fixtures/profiles";
 import type { CategoryResult } from "./types";
 
 const today = new Date("2026-10-08T00:00:00Z");
@@ -49,7 +49,7 @@ describe("Stage 2 never changes the confirmed category", () => {
 
   it("returns nothing_passes only, and only when no program is within the limits", () => {
     const none = evaluatePrograms(
-      makeProfile({ tuitionBudgetUsd: 3000, maxOnsiteDays: 0 }),
+      makeProfile({ tuitionBudgetUsd: 3000, maxOnsiteDays: 0, ...BUENOS_AIRES }),
       confirmed,
       programs,
       today,
