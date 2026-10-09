@@ -36,18 +36,20 @@
     "cohortSeniority": "Select certificate-earner titles published by the school: Business Analyst, Customer Success Manager, Director of Operations, Program Manager, Principal, and Vice President; the school does not say these titles represent a majority.",
     "lodgingPerNightUsd": null,
     "ratings": {
-      "network": 3,
-      "depth": 3,
-      "practicality": 4,
-      "costValue": 4
+      "leadership_skills": 4,
+      "deep_expertise": 3,
+      "graduate_degree": 3,
+      "senior_network": 1,
+      "new_industry_or_city": 3
     },
     "ratingNotes": {
-      "network": "Online synchronous instruction is available, and certificate earners receive affiliate Harvard Extension Alumni Association membership; no in-person time is required, while a fixed cohort, seniority mix and alumni activity are not established (low evidence).",
-      "depth": "Four required graduate-credit courses meet the credit-bearing certificate tier; featured faculty are identified, but total credit hours and a research/thesis requirement are not published.",
-      "practicality": "Part-time study compatible with full-time work, an 8-month–3-year completion window, online delivery and applied leadership practice support 4 rather than 5; participant-organization projects and program-specific weekly workload are not documented (low evidence).",
-      "costValue": "Tuition is $14,320 for four graduate-credit courses over 8 months–3 years; the research includes a school-published comparison of $3,580 per course versus $5,476 at peer institutions, supporting favorable value, but peer duration and credential comparability are not documented (low evidence)."
+      "leadership_skills": "Required organizational behavior and conflict management courses, with electives such as Leading Through Change.",
+      "deep_expertise": "Four graduate-credit courses in organizational behavior, without a capstone.",
+      "graduate_degree": "Courses can count toward a Harvard Extension master's in management or industrial-organizational psychology.",
+      "senior_network": "Online, with no required time together; earner titles range from business analyst to vice president.",
+      "new_industry_or_city": "Career webinars, advising and career fairs are open to certificate students."
     },
-    "ratingLowEvidence": ["network", "practicality", "costValue"],
+    "ratingLowEvidence": ["senior_network"],
     "figureNotes": {},
     "sources": [
       {
