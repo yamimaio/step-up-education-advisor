@@ -1,5 +1,24 @@
 {
-  "locationOffers": ["network_density", "industry_hub"],
+  "locationOffers": [
+    "network_density",
+    "industry_hub"
+  ],
   "onsiteNote": "3 residential weeks and 14+ live online sessions",
-  "credits": "42 CEUs"
+  "credits": "42 CEUs",
+  "campusAddress": "700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
+  "campusLat": 42.3625,
+  "campusLon": -71.0955,
+  "figureNotes": {
+    "campusLat": "Derived from campusAddress (approximate, from the street address).",
+    "campusLon": "Derived from campusAddress (approximate, from the street address)."
+  },
+  "extraSources": [
+    {
+      "field": "campusAddress",
+      "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+      "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
+      "checkedOn": "2026-10-07",
+      "kind": "official_page"
+    }
+  ]
 }

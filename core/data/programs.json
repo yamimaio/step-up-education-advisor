@@ -18,6 +18,9 @@
     "workCompatible": true,
     "city": "Cambridge",
     "state": "Massachusetts",
+    "campusAddress": "700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
+    "campusLat": 42.3625,
+    "campusLon": -71.0955,
     "metro": null,
     "country": "US",
     "tuitionUsd": 28000,
@@ -48,7 +51,10 @@
       "costValue": "Low evidence: $28,000 covers an eight-month completion-certificate program with eligibility for 42 CEUs; 3 is a provisional midpoint because no comparable tuition benchmarks establish relative value."
     },
     "ratingLowEvidence": ["practicality", "costValue"],
-    "figureNotes": {},
+    "figureNotes": {
+      "campusLat": "Derived from campusAddress (approximate, from the street address).",
+      "campusLon": "Derived from campusAddress (approximate, from the street address)."
+    },
     "sources": [
       {
         "field": "name",
@@ -159,6 +165,13 @@
         "field": "lodgingPerNightUsd",
         "url": "https://www.gsa.gov/travel/plan-book/per-diem-rates/per-diem-rates-results?action=perdiems_report&city=Boston&state=MA&fiscal_year=2027",
         "quote": "Boston / Cambridge ... $365 [October], $213 [November–February], $305 [March–August], $365 [September].",
+        "checkedOn": "2026-10-07",
+        "kind": "official_page"
+      },
+      {
+        "field": "campusAddress",
+        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
+        "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
         "checkedOn": "2026-10-07",
         "kind": "official_page"
       }
