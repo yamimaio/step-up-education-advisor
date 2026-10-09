@@ -5,7 +5,7 @@ description: Rate a Step Up program on the five needs (1 to 5) from its saved re
 
 # Rate a program
 
-**Version 1 (Oct 9, 2026).** Bump the version whenever `rating-prompt.md` or `rulings.md` changes, and add a line to the changelog at the end.
+**Version 2 (Oct 9, 2026).** Bump the version whenever `rating-prompt.md` or `rulings.md` changes, and add a line to the changelog at the end.
 
 Files in this skill:
 
@@ -66,3 +66,4 @@ Prompt and skill changes go in their own issue and PR, separate from the step 4 
 ## Changelog
 
 - v1 (Oct 9, 2026): first version. The rating prompt moved here from `docs/perplexity-program-prompts.md`, with the rules from issue #87. Rulings R1 to R8 come from Yami's review of MIT TLP, Wharton EMBA SF, Northwestern MEM and Harvard Extension.
+- v2 (Oct 9, 2026): R9 and the senior_network rubric line: a published experience breakdown gives the median, which beats a stated average (Yami, MIT TLP review).
