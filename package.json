@@ -18,13 +18,16 @@
     "format:check": "prettier --check .",
     "ci": "npm run lint && npm run typecheck && npm run format:check && npm test && npm run validate-data",
     "validate-data": "tsx scripts/validate-data.ts",
-    "draft-records": "tsx scripts/draft-records.ts"
+    "draft-records": "tsx scripts/draft-records.ts",
+    "check-bundle": "tsx scripts/check-bundle.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.132.0",
     "json5": "2.2.3",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "0.0.1",
     "zod": "4.6.5"
   },
   "devDependencies": {

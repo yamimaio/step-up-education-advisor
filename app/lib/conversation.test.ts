@@ -1,14 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { chatReducer, initialChatState, type ChatState } from "./chatState";
 import { toolResultMessage, type ChatResponse, type MessageParam } from "./chatTypes";
-import { WRAP_UP_PREFIX, toTurns } from "./conversation";
+import { WRAP_UP_NOTE } from "@core/advisor/wrapUp";
+import { toTurns } from "./conversation";
 import { buildTranscript } from "./transcript";
 
 // The server's wrap-up note at turn 35 (docs/chat-api.md, "Message cap").
-const note = {
-  type: "text",
-  text: `${WRAP_UP_PREFIX} The conversation is close to its message limit. Wrap up.`,
-};
+const note = { type: "text", text: WRAP_UP_NOTE };
 
 const ask: MessageParam = {
   role: "assistant",
@@ -79,6 +77,61 @@ describe("toTurns and the wrap-up note", () => {
       date: new Date(),
     });
     expect(md).toContain("Up to a year");
-    expect(md).not.toContain(WRAP_UP_PREFIX);
+    expect(md).not.toContain(WRAP_UP_NOTE);
+  });
+
+  it("still shows a user's own text that starts like the note", () => {
+    const typed = "[Step Up note] I prefer evenings";
+    const history: MessageParam[] = [{ role: "user", content: [{ type: "text", text: typed }] }];
+    expect(toTurns(history)).toEqual([{ kind: "user", text: typed }]);
+    const md = buildTranscript({ history, verdict: null, fallbackText: null, date: new Date() });
+    expect(md).toContain(typed);
+  });
+});
+
+describe("toTurns and turns the server rejected", () => {
+  const rejected: MessageParam = {
+    role: "assistant",
+    content: [
+      { type: "text", text: "Here's what I understood." },
+      { type: "tool_use", id: "p1", name: "propose_direction", input: {} },
+    ],
+  };
+  const refusal: MessageParam = {
+    role: "user",
+    content: [{ type: "tool_result", tool_use_id: "p1", content: "not tapped", is_error: true }],
+  };
+  const retry: MessageParam = {
+    role: "assistant",
+    content: [
+      { type: "text", text: "Quick one first: how many hours a week?" },
+      {
+        type: "tool_use",
+        id: "a2",
+        name: "ask_choice",
+        input: { field: "hoursPerWeek", question: "Hours a week" },
+      },
+    ],
+  };
+
+  it("hides the text of a turn whose tool call got is_error, and shows the next one", () => {
+    const history = [{ role: "user" as const, content: "hi" }, rejected, refusal, retry];
+    expect(toTurns(history)).toEqual([
+      { kind: "user", text: "hi" },
+      { kind: "assistant", text: "Quick one first: how many hours a week?" },
+    ]);
+    const md = buildTranscript({ history, verdict: null, fallbackText: null, date: new Date() });
+    expect(md).not.toContain("Here's what I understood.");
+  });
+
+  it("still shows a turn whose tool call succeeded", () => {
+    const ok: MessageParam = {
+      role: "user",
+      content: [{ type: "tool_result", tool_use_id: "p1", content: '{"confirmed":true}' }],
+    };
+    expect(toTurns([{ role: "user", content: "hi" }, rejected, ok])[1]).toEqual({
+      kind: "assistant",
+      text: "Here's what I understood.",
+    });
   });
 });

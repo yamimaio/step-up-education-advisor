@@ -43,6 +43,8 @@ jobs:
           grep -rlF -- ci-canary-not-a-key .next/static .next/server .next/standalone || rc=$?
           if [ "$rc" -eq 0 ]; then echo "MODEL_API_KEY leaked into the build output"; exit 1; fi
           if [ "$rc" -ne 1 ]; then echo "grep failed (exit $rc)"; exit 1; fi
+      # The key name and the Anthropic SDK must stay out of the browser bundle too.
+      - run: npm run check-bundle
 
   docker:
     runs-on: ubuntu-latest

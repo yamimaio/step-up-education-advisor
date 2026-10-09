@@ -19,11 +19,25 @@ const zones = (target, froms, message) => [
   { zones: froms.map((from) => ({ target, from, message })) },
 ];
 
+// Reading the API key anywhere but server/model/anthropic.ts (CLAUDE.md rule 3): dotted,
+// computed with a string, or destructured.
+const keyMessage = "Only server/model/anthropic.ts reads MODEL_API_KEY (see CLAUDE.md rule 3).";
+const keyReads = [
+  "MemberExpression[property.name='MODEL_API_KEY']",
+  "MemberExpression[property.value='MODEL_API_KEY']",
+  "ObjectPattern > Property[key.name='MODEL_API_KEY']",
+  "ObjectPattern > Property[key.value='MODEL_API_KEY']",
+].map((selector) => ({ selector, message: keyMessage }));
+
 const config = [
   { ignores: [".next/**", "node_modules/**", "coverage/**", "next-env.d.ts"] },
   ...nextCoreWebVitals,
   ...nextTypescript,
   { rules: { "no-console": "error" } },
+  {
+    ignores: ["server/model/anthropic.ts"],
+    rules: { "no-restricted-syntax": ["error", ...keyReads] },
+  },
   {
     // core/ has no web or model code and never imports app/ or server/.
     files: ["core/**/*.{ts,tsx}"],
@@ -62,6 +76,7 @@ const config = [
       ],
       "no-restricted-syntax": [
         "error",
+        ...keyReads,
         {
           selector: "CallExpression[callee.name='require']",
           message: "core/ uses ES imports only; require() would bypass the boundary rules.",

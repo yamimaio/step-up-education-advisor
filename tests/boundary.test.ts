@@ -126,3 +126,33 @@ describe("browser and server boundaries", () => {
     expect(messages).toEqual([]);
   });
 });
+
+describe("only server/model/anthropic.ts reads MODEL_API_KEY", () => {
+  it.each([
+    ["export const k = process.env.MODEL_API_KEY;", "dotted"],
+    ['export const k = process.env["MODEL_API_KEY"];', "computed"],
+    ["const { MODEL_API_KEY } = process.env;\nexport const k = MODEL_API_KEY;", "destructured"],
+    ['const { "MODEL_API_KEY": k } = process.env;\nexport const j = k;', "destructured by string"],
+  ])("rejects %s (%s) outside it", async (code) => {
+    for (const file of ["server/__probe__.ts", "app/api/chat/__probe__.ts", "app/__probe__.tsx"]) {
+      const messages = await lint(file, `${code}\n`);
+      expect(messages.length, file).toBeGreaterThan(0);
+    }
+  });
+
+  it("lets server/model/anthropic.ts read it", async () => {
+    const messages = await lint(
+      "server/model/anthropic.ts",
+      "export const k = process.env.MODEL_API_KEY;\n",
+    );
+    expect(messages).toEqual([]);
+  });
+
+  it("still applies core/'s own syntax bans next to the key rule", async () => {
+    const messages = await lint(
+      "core/__probe__.ts",
+      'export const x = import("../server/index");\n',
+    );
+    expect(messages.length).toBeGreaterThan(0);
+  });
+});
