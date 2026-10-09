@@ -69,6 +69,12 @@ describe("advisor.md runs stage 1 and stops", () => {
     }
   });
 
+  it("records tensions outside the rules in general terms", () => {
+    const tension = section("Name the tension");
+    expect(tension).toContain("`otherTensions`");
+    expect(tension).toContain("no names, places, employers or figures");
+  });
+
   it("warns before a decline of needs, which makes the engine say not yet", () => {
     expect(section("How stage 1 runs")).toContain("`needs` is the exception");
     expect(section('The "not yet" rule')).toContain("declined `needs`");

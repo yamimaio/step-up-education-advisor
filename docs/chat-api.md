@@ -115,7 +115,9 @@ type PendingConfirm = {
   toolUseId: string;
   // The propose_direction input, validated against DirectionSchema. The page renders each line
   // with the chip labels from CHIPS (value → label), and the goal in the user's words. A declined
-  // field is null and shows as "Not answered".
+  // field is null and shows as "Not answered". `otherTensions` shows under "Other trade-offs you
+  // weighed", one line each (tension, then what the user chose), so the user can correct it too.
+  // It reaches the transcript through the history; `toEngineDirection` drops it.
   direction: Direction;
 };
 ```
