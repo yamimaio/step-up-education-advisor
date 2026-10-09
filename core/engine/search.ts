@@ -7,14 +7,14 @@ import { locationFit } from "./locationFit";
 import { applyDeclinedDefaults } from "./normalize";
 import { noProgramForSearch } from "./noProgram";
 import { peerFit } from "./peerFit";
-import { scenarioScores, shortlists } from "./scenarios";
+import { programScore, rankPrograms, totalCost } from "./ranking";
 import { travelEstimate } from "./travel";
 import type { CategoryAccess, CategoryResult, ProgramEvaluation, SearchResult } from "./types";
 
-// Stage 2, "show me programs": every program against all of the user's limits, scored and
-// shortlisted. `category` is the verdict the user confirmed in stage 1 (recommendCategory); it
-// is an input, never recomputed here, so a budget or a location can't change it. The server
-// runs this at propose_search. Pure and deterministic; `today` is passed in.
+// Stage 2, "show me programs": every program against all of the user's limits, scored by the
+// user's needs and ranked. `category` is the verdict the user confirmed in stage 1
+// (recommendCategory); it is an input, never recomputed here, so a budget or a location can't
+// change it. The server runs this at propose_search. Pure and deterministic; `today` is passed in.
 export function evaluatePrograms(
   profile: Profile,
   category: CategoryResult,
@@ -25,26 +25,25 @@ export function evaluatePrograms(
   const evaluations: ProgramEvaluation[] = programs.map((program) => {
     const travel = travelEstimate(program, p);
     const { checks, status } = checkConstraints(program, p, travel);
-    const peer = peerFit(p, program);
-    const loc = locationFit(p, program);
     return {
       id: program.id,
       category: program.category,
       checks,
       status,
-      peerFit: peer,
-      locationFit: loc,
+      peerFit: peerFit(p, program),
+      locationFit: locationFit(p, program),
       travelEstimate: travel,
-      confidence: confidence(program, checks, today),
-      // An unresolved tie has no winner, so no program gets the category bonus.
-      scenarioScores: scenarioScores(program, loc, peer, category.winner),
+      totalCostUsd: totalCost(program, travel),
+      confidence: confidence(program, checks, today, p.needs),
+      score: programScore(program, p, travel),
     };
   });
+  const access = categoryAccess(category, evaluations);
   return {
     programs: evaluations,
-    scenarios: shortlists(evaluations, category.scores),
+    ranking: rankPrograms(evaluations, category, access),
     noProgram: noProgramForSearch(category, evaluations),
-    access: categoryAccess(category, evaluations),
+    access,
     profileGaps,
   };
 }

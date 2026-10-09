@@ -21,19 +21,20 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 
 ### Stage 2 (not wired yet)
 
-| Entry           | Answer                                                     |
-| --------------- | ---------------------------------------------------------- |
-| tuition         | `$40k to $80k`; `Installments`                             |
-| travelBudget    | `$5k to $10k`                                              |
-| travelComfort   | `Part of the appeal`                                       |
-| onsite          | `Up to 20`; `About a week`                                 |
-| home            | Buenos Aires; C; AR; -34.6037, -58.3816; `No, I would not` |
-| airfare         | `$1,000 to $1,500`                                         |
-| locationValues  | `Immersion`, `Network density`                             |
-| yearsExperience | 16                                                         |
-| degree          | `Bachelor's`; Engineering                                  |
-| currentRole     | `Manager`                                                  |
-| yearsLeading    | 12                                                         |
+| Entry            | Answer                                                     |
+| ---------------- | ---------------------------------------------------------- |
+| tuition          | `$40k to $80k`; `Installments`                             |
+| travelBudget     | `$5k to $10k`                                              |
+| travelComfort    | `Part of the appeal`                                       |
+| formatPreference | `Blended`                                                  |
+| onsite           | `Up to 20`; `About a week`                                 |
+| home             | Buenos Aires; C; AR; -34.6037, -58.3816; `No, I would not` |
+| airfare          | `$1,000 to $1,500`                                         |
+| locationValues   | `Immersion`, `Network density`                             |
+| yearsExperience  | 16                                                         |
+| degree           | `Bachelor's`; Engineering                                  |
+| currentRole      | `Manager`                                                  |
+| yearsLeading     | 12                                                         |
 
 ## In their voice
 

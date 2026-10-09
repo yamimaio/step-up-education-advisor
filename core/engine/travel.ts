@@ -7,6 +7,7 @@ const base: TravelEstimate = {
   kind: "none",
   totalUsd: 0,
   trips: 0,
+  tripsPerYear: 0,
   nightsPerTrip: 0,
   airfarePerTripUsd: null,
   lodgingPerNightUsd: null,
@@ -15,13 +16,22 @@ const base: TravelEstimate = {
   notes: [],
 };
 
-// `earlier` carries notes already made (an unknown location), so they survive the return.
-const unknown = (note: string, earlier: string[] = []): TravelEstimate => ({
+// `earlier` carries notes already made (an unknown location), so they survive the return. `known`
+// keeps the trip figures already worked out when something else is missing, for the card.
+const unknown = (
+  note: string,
+  earlier: string[] = [],
+  known: Partial<
+    Pick<TravelEstimate, "trips" | "tripsPerYear" | "nightsPerTrip" | "tripsEstimated">
+  > = {},
+): TravelEstimate => ({
   ...base,
   kind: "unknown",
   totalUsd: null,
   trips: null,
+  tripsPerYear: null,
   nightsPerTrip: null,
+  ...known,
   notes: [...earlier, note],
 });
 
@@ -65,7 +75,15 @@ export function travelEstimate(
     notes.push("Your home or the campus location is unknown, so this assumes you travel.");
   }
   const months = program.durationMonths ?? program.durationMaxMonths;
-  if (months === null) return unknown("Program length not published.", notes);
+  if (months === null) {
+    // The yearly trip count can still be published; only the number of years is missing.
+    const published = program.residencyCount !== null && program.residencyCount > 0;
+    return unknown(
+      "Program length not published.",
+      notes,
+      published ? { tripsPerYear: program.residencyCount } : {},
+    );
+  }
   const years = Math.max(1, Math.ceil(months / 12));
 
   const count = program.residencyCount !== null && program.residencyCount > 0;
@@ -73,32 +91,41 @@ export function travelEstimate(
   const weekends = program.attendance === "recurring_weekends";
 
   let trips: number;
+  let perYear: number;
   let nights: number;
   let tripsEstimated = false;
   if (count && days !== null) {
-    trips = (program.residencyCount as number) * years;
+    perYear = program.residencyCount as number;
+    trips = perYear * years;
     nights = days / (program.residencyCount as number);
   } else if (count && weekends) {
     // The trip count is published; only the nights per trip are a guess.
-    trips = (program.residencyCount as number) * years;
+    perYear = program.residencyCount as number;
+    trips = perYear * years;
     nights = WEEKEND_NIGHTS_PER_TRIP;
     notes.push(`Nights per trip estimated at ${WEEKEND_NIGHTS_PER_TRIP}.`);
   } else if (weekends && days !== null) {
     // No trip count, but the school publishes its on-site days: count weekends from those.
-    const perYear = Math.max(1, Math.ceil(days / WEEKEND_NIGHTS_PER_TRIP));
+    perYear = Math.max(1, Math.ceil(days / WEEKEND_NIGHTS_PER_TRIP));
     trips = perYear * years;
     nights = days / perYear;
     tripsEstimated = true;
     notes.push(`Trip count estimated from the ${days} published on-site days a year.`);
   } else if (weekends) {
-    trips = WEEKEND_TRIPS_PER_YEAR * years;
+    perYear = WEEKEND_TRIPS_PER_YEAR;
+    trips = perYear * years;
     nights = WEEKEND_NIGHTS_PER_TRIP;
     tripsEstimated = true;
     notes.push(
       `Trip count estimated: about ${WEEKEND_TRIPS_PER_YEAR} weekends a year, ${WEEKEND_NIGHTS_PER_TRIP} nights each.`,
     );
   } else if (count) {
-    return unknown("On-site days a year not published.", notes);
+    // The trips are published; only their length, and so the lodging, is missing.
+    const perYearCount = program.residencyCount as number;
+    return unknown("On-site days a year not published.", notes, {
+      trips: perYearCount * years,
+      tripsPerYear: perYearCount,
+    });
   } else if (days !== null) {
     return unknown("Number of trips not published.", notes);
   } else {
@@ -113,7 +140,12 @@ export function travelEstimate(
     lodgingRate = program.lodgingPerNightUsd.max;
     lodging = trips * nights * lodgingRate;
   } else {
-    return unknown("Lodging rate not published.", notes);
+    return unknown("Lodging rate not published.", notes, {
+      trips,
+      tripsPerYear: perYear,
+      nightsPerTrip: nights,
+      tripsEstimated,
+    });
   }
 
   const airfare = AIRFARE_MIDPOINTS[profile.airfareRange];
@@ -126,6 +158,7 @@ export function travelEstimate(
     kind: "estimate",
     totalUsd: cents(trips * (airfare ?? 0) + lodging),
     trips,
+    tripsPerYear: perYear,
     nightsPerTrip: nights,
     airfarePerTripUsd: airfare,
     lodgingPerNightUsd: lodgingRate,

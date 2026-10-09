@@ -51,8 +51,8 @@ describe.each(IDS)("Persona %s", (id) => {
     for (const h of HEADINGS) expect(text, h).toMatch(new RegExp(`^## ${h}$`, "m"));
   });
 
-  it("answers all 17 checklist entries", () => {
-    expect(CHECKLIST).toHaveLength(17);
+  it("answers all 18 checklist entries", () => {
+    expect(CHECKLIST).toHaveLength(18);
     expect(Object.keys(table).sort()).toEqual(CHECKLIST.map((e) => e.id).sort());
   });
 

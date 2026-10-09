@@ -53,7 +53,7 @@ describe("evaluate runs stage 1, then stage 2 with the stage-1 category", () => 
       category: direction.category,
       noProgram: search.noProgram,
       programs: search.programs,
-      scenarios: search.scenarios,
+      ranking: search.ranking,
       access: search.access,
       profileGaps: search.profileGaps,
     });
@@ -97,15 +97,15 @@ describe("evaluate", () => {
     expect(programs).toEqual(before);
   });
 
-  it("gives the winning category its 0.5 bonus, but not while the result is a tie", () => {
+  it("scores a program the same whichever category wins: there is no category bonus", () => {
     const programs = fixtureDataset();
     const exec = (r: ReturnType<typeof evaluate>) =>
-      r.programs.find((p) => p.id === "fake-executive")?.scenarioScores.network ?? 0;
+      r.programs.find((p) => p.id === "fake-executive")?.score.total;
     const win = evaluate(workedExampleProfile, programs, today);
-    // Same score with a different winner: ruling the executive type out removes the bonus.
     const other = evaluate(makeProfile({ degreeRequired: "required" }), programs, today);
     expect(win.category.winner).toBe("executive");
-    expect(exec(win) - exec(other)).toBeCloseTo(0.5, 10);
+    expect(other.category.winner).not.toBe("executive");
+    expect(exec(win)).toBe(exec(other));
   });
 
   it("lists profile gaps", () => {
@@ -125,7 +125,7 @@ describe("evaluate", () => {
   });
 });
 
-describe("A tie gets no category bonus", () => {
+describe("An unresolved tie lists no programs yet", () => {
   const tie = {
     needs: ["graduate_degree", "new_industry_or_city", "senior_network"] as const,
     degreeRequired: "required" as const,
@@ -137,16 +137,16 @@ describe("A tie gets no category bonus", () => {
     hoursPerWeek: { min: 40, max: 60 },
     travelBudgetUsd: null,
   };
-  const mba = (r: ReturnType<typeof evaluate>) =>
-    r.programs.find((p) => p.id === "fake-mba")?.scenarioScores.network ?? 0;
 
-  it("adds 0.5 only once the user picks the winner", () => {
+  it("ranks the picked winner's programs, with the other under 'Also worth a look'", () => {
     const profile = makeProfile({ ...tie, needs: [...tie.needs] });
     const open = evaluate(profile, fixtureDataset(), today);
     expect(open.category.tie).toEqual(["mba", "emba"]);
+    expect(open.ranking).toEqual({ ranked: [], alsoWorthALook: [] });
     const picked = evaluate({ ...profile, tieBreaker: "mba" }, fixtureDataset(), today);
     expect(picked.category.winner).toBe("mba");
-    expect(mba(picked) - mba(open)).toBeCloseTo(0.5, 10);
+    expect(picked.ranking.ranked.map((r) => r.id)).toEqual(["fake-mba"]);
+    expect(picked.ranking.alsoWorthALook.map((r) => r.id)).toEqual(["fake-emba"]);
   });
 });
 

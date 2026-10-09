@@ -140,7 +140,7 @@ When stage 2 is wired, it will ask, in this order, only what is missing:
 
 - **Budget.** Tuition budget (`tuitionBudgetUsd`) and how they would pay (`paymentPlan`); a separate travel budget (`travelBudgetUsd`).
 - **Travel comfort.** How they feel about traveling (`travelComfort`), days per year on site (`maxOnsiteDays`) and the longest stretch away (`maxStretchDays`).
-- **Format preference.** Online, blended (a few trips a year), in person, or no preference (`formatPreference`). Pending: not in the profile yet, so do not ask it until it is.
+- **Format preference.** Online, blended (a few trips a year), in person, or no preference (`formatPreference`).
 - **Where you live.** Asked in plain conversation; you turn it into `homeCity`, `homeRegion`, `homeCountry` and approximate `homeLat` and `homeLon`. Whether they would relocate (`relocate`), the airfare range when they live far from the programs (`airfareRange`), and what a location should give them, up to 2 (`locationValues`).
 - **Background,** unless they already said it: years of experience (`yearsExperience`), highest degree (`degree`), current role (`currentRole`) and years leading people (`yearsLeading`).
 
