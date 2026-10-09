@@ -47,3 +47,5 @@ Choices made while building, where the approved docs were silent. Each links to 
 - Senior peers is computed from `cohortMedianExperienceYears` when published (bands under 5, 5–9, 10–14, 15–19, 20+ → 1 to 5); the prompt's value is used only when the median is null. This replaces the separate peer fit adjustment.
 - Ties: location fit, then lower known total cost, then id. Cost value is no longer a rating.
 - The rating prompt starts from the category default and records every change as "default X → Y because …", so each override has its evidence.
+- Yami confirmed both defaults on Oct 9: the 1 to 5 scale everywhere, and ranking inside the confirmed category.
+- Format preference (Oct 9): `formatPreference` replaces `travelComfort`. Program format is read from `format` (`hybrid` = blended). Format fit 5 / 3 / 1, no preference 3, weight 2. R5 becomes "prefers online, top need is senior peers".

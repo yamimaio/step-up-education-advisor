@@ -41,17 +41,27 @@ Each program record carries `ratings` keyed by the five needs, integers 1 to 5, 
 
 ## 3. Program score and order
 
-- **Score** = 3 × rating on the user's top need + 2 × second + 1 × third, using the program's own ratings. Range 6 to 30. Same formula as Stage 1, so the explanation reads the same.
+- **Score** = 3 × rating on the user's top need + 2 × second + 1 × third, using the program's own ratings, **+ 2 × format fit** (section 3a). Range 8 to 40. The needs part is the same formula as Stage 1, so the explanation reads the same.
 - **Who is listed:** programs that pass or are near misses, in a category that isn't ruled out. Budget, hours, travel and distance stay filters with near misses, unchanged.
 - **Order:** the confirmed category's programs first (passing before near misses, then by score). Then up to 2 passing programs of the runner-up category under "Also worth a look". No category bonus to tune.
 - **Ties:** higher location fit, then lower known total cost (tuition + travel estimate; unknown last), then id.
 - **Why line on each card:** the two needs that contributed most, with their notes, for example "Ranked first for senior peers (cohort median 18 years) and leadership skills."
 
+## 3a. Format preference (added Oct 9, Yami)
+
+Yami's own case: among executive programs there were options in Buenos Aires, but they preferred blended with travel over fully on site or fully remote. That preference belongs in program scoring, never in the category verdict.
+
+- **Stage 2 question:** "How would you like to study? Online, blended (a few trips a year), in person, or no preference." New profile field `formatPreference`: `online | blended | in_person | no_preference`.
+- **Program format** comes from the existing `format` field, so no new research: `online` → online, `hybrid` → blended, `in_person` → in person.
+- **Format fit, 1 to 5:** exact match 5; a neighbouring format 3 (blended neighbours both online and in person); the opposite format 1 (online vs in person); `no_preference` 3 for every program. Weight 2, so it can lift a blended program above an otherwise equal one without beating a much better fit on needs.
+- **Card line:** "Blended, as you prefer." (or "In person; you prefer online" when it doesn't match).
+- **Replaces `travelComfort`** (appeal / fine / burden): the field, its chip, and the +0.5 / −1 location fit terms are removed. Contradiction R5 is reworded: `formatPreference = online` and `needs[0] = senior_network` ("you want senior peers but prefer fully online; online cohorts rarely build that network"). The hard limits (on-site days, longest stretch, relocate, distance) stay as they are.
+
 ## 4. What goes away
 
 - The three lenses: `SCENARIO_WEIGHTS`, the `network` / `depth` / `practicality` lists and `CATEGORY_BONUS`.
 - Peer fit as a separate score adjustment (`PEER_FIT`): seniority is now the senior peers rating, so it doesn't count twice. The card still shows the cohort median.
-- Location fit and cost only break ties.
+- Location fit and cost only break ties. `travelComfort` is replaced by `formatPreference` (section 3a).
 
 ## 5. Order of work
 
