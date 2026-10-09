@@ -93,15 +93,15 @@ The engine decides the category first, then filters programs on hard constraints
 
 Step 1 picks the type of program before any specific program. It uses one intake answer, "What is missing today?", where the user ranks their top 3 of five needs: leadership skills, deep expertise in a field, a graduate degree, a senior network, and access to a new industry or city.
 
-Each type is rated on how well it delivers each need: **Strong = 2, Some = 1, Little = 0**. The ratings describe the type in general; the example is one real program that shows what the type looks like.
+Each type is rated on how well it delivers each need: **Strong = 5, Some = 3, Little = 1** (every rating in the product is 1 to 5; `docs/need-based-ranking.md`). The ratings describe the type in general; the example is one real program that shows what the type looks like.
 
 | Type | What it is | Real example | Leadership skills | Deep expertise | Graduate degree | Senior network | New industry or city |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Full-time MBA | General-management degree, about 2 years full-time, often used to switch industry or city | [Wharton MBA](https://mba.wharton.upenn.edu/class-profile): students average 5 years of work experience | Strong | Some | Strong | Little | Strong |
+| Full-time MBA | General-management degree, about 2 years full-time, often used to switch industry or city | [Wharton MBA](https://mba.wharton.upenn.edu/class-profile): students average 5 years of work experience | Some | Some | Strong | Little | Strong |
 | Executive MBA (EMBA) | Same degree, about 2 years part-time, built for working leaders who keep their jobs | [Wharton MBA for Executives](https://executivemba.wharton.upenn.edu/class-profile/): students average 13 to 14 years of experience and keep working | Strong | Some | Strong | Strong | Some |
 | Specialized master's | Degree in one field, such as engineering management; 1 to 2 years | [Northwestern MEM](https://mccormick.northwestern.edu/engineering-management/overview/student-body-profile.html): part-time students average 7.6 years of experience, full-time 5.3 | Some | Strong | Strong | Little | Some |
 | Executive program | Non-degree university program for senior leaders, ends in a certificate; from about 8 weeks to a year | [MIT Technology Leadership Program](https://professional.mit.edu/course-catalog/technology-leadership-program): 8 months, campus immersions plus live online, professional certificate, aimed at C-level and senior tech leaders. Short end: [Yale SOM Women's Leadership Program, online](https://som.yale.edu/executive-education/for-individuals/leadership/womens-leadership-program-online), about 8 weeks | Strong | Some | Little (some give continuing-education credits, such as MIT TLP's 42 CEUs, which rarely count toward a degree) | Strong | Some |
-| Graduate certificate | About 4 graduate-credit courses, usually online and part-time over about a year, that can count toward a master's later | [Harvard Extension graduate certificates](https://extension.harvard.edu/academics/graduate-certificates/), for example Strategic Management: 4 online courses | Some | Some | Some (credits can count toward one) | Little | Little |
+| Graduate certificate | About 4 graduate-credit courses, usually online and part-time over about a year, that can count toward a master's later | [Harvard Extension graduate certificates](https://extension.harvard.edu/academics/graduate-certificates/), for example Strategic Management: 4 online courses | Some | Some | Little (a certificate is not a degree; credits that count toward one are a program fact) | Little | Little |
 | Short course | Hours to a few weeks on one concrete skill, from online platforms or workshops; no senior cohort and no academic credit. A real step, not the "no program" answer | [Coursera's AI For Everyone, an online course on AI for non-technical leaders](https://www.coursera.org/learn/ai-for-everyone) | Some | Some | Little | Little | Little |
 
 Length is not a rating, because it doesn't measure fit: it is a limit the user sets, and it changes with the moment. Yami took two 8-week Yale programs in 2022 and 2024 because that was the most they'd commit to then, and in 2026 was open to MIT's 8-month program. All three were executive programs, so length can't define the type. The advisor asks for the longest program the user will take on now (`maxProgramMonths`), and Step 3 checks it against each program's own length, not the type's typical length. A type left with no program that short is ruled out. What separates a short course from a short executive program is who is in the room and what you leave with: a short course teaches one skill with no senior cohort; an 8-week executive program gives senior peers and a university certificate.
@@ -110,9 +110,9 @@ Length is not a rating, because it doesn't measure fit: it is a limit the user s
 
 **Then four plain adjustments:**
 
-- No degree needed (from "Does your employer or target employer expect a degree?"): both MBAs and specialized master's lose 3. "Preferred" counts as not needed: for senior roles, experience plus an executive program like MIT TLP usually competes with an MBA, and the explanation says so. "Unsure" also counts as not needed, after the advisor lists the cases below so the user can check.
+- No degree needed (from "Does your employer or target employer expect a degree?"): both MBAs and specialized master's lose 6 ("unsure" 4, "preferred" 2; implementation plan section 12). "Preferred" counts as not needed: for senior roles, experience plus an executive program like MIT TLP usually competes with an MBA, and the explanation says so. "Unsure" also counts as not needed, after the advisor lists the cases below so the user can check.
 - Degree required: executive programs, graduate certificates and short courses are ruled out. A degree is truly required in only a few cases: consulting, investment banking and private equity recruiting; corporate MBA leadership-rotation programs; jobs with a formal education rule (some government, university and regulated roles); and postings that say "MBA required" rather than "preferred".
-- Goal is growing in the current role: executive programs, graduate certificates and short courses gain 2. When a certificate and a short course tie, the advisor separates them by time and money: a short course when the skill is narrow and needed now.
+- Goal is growing in the current role: executive programs, graduate certificates and short courses gain 4. When a certificate and a short course tie, the advisor separates them by time and money: a short course when the skill is narrow and needed now.
 - A type with no program inside the user's budget and time limits is ruled out.
 
 A tie is not broken by formula: the advisor asks one question that separates the two types. "No program yet" is not on this table; Step 2 decides it.
@@ -121,12 +121,12 @@ A tie is not broken by formula: the advisor asks one question that separates the
 
 | Type | Senior network ×3 | Leadership ×2 | Expertise ×1 | Subtotal | Adjustment | Total |
 | --- | --- | --- | --- | --- | --- | --- |
-| Executive program | 6 | 4 | 1 | 11 | none | **11** |
-| Executive MBA | 6 | 4 | 1 | 11 | 2 years, over the 1-year limit: ruled out | out |
-| Full-time MBA | 0 | 4 | 1 | 5 | 2 years, over the 1-year limit: ruled out | out |
-| Graduate certificate | 0 | 2 | 1 | 3 | none | 3 |
-| Specialized master's | 0 | 2 | 2 | 4 | no degree needed, −3 | 1 |
-| Short course | 0 | 2 | 1 | 3 | none | 3 |
+| Executive program | 15 | 10 | 3 | 28 | none | **28** |
+| Executive MBA | 15 | 10 | 3 | 28 | 2 years, over the 1-year limit: ruled out | out |
+| Full-time MBA | 3 | 6 | 3 | 12 | 2 years, over the 1-year limit: ruled out | out |
+| Graduate certificate | 3 | 6 | 3 | 12 | none | 12 |
+| Specialized master's | 3 | 6 | 5 | 14 | no degree needed, −6 | 8 |
+| Short course | 3 | 6 | 3 | 12 | none | 12 |
 
 Executive program wins, which is where MIT TLP sits. Two things decided it, as they did for Yami in March, and neither was the degree. Classmates' seniority: senior network is the top need, and full-time MBAs and specialized master's score low on it because their students average about 5 to 8 years of experience. Length: both MBAs take about 2 years, past Yami's limit. The EMBA has senior classmates too (13 to 14 years on average), so length is what ruled it out. Specific programs are then scored one by one in Step 4, so MIT TLP gets its own score there.
 
@@ -134,7 +134,7 @@ Executive program wins, which is where MIT TLP sits. Two things decided it, as t
 
 The top result becomes "No program yet" when any of these hold, and the screen says which one:
 
-- **No type fits well:** no type scores 4 or more in Step 1. Example: the only real need is a new city, and a job search there gets it faster than any program.
+- **No type fits well:** no type scores 14 or more in Step 1. Example: the only real need is a new city, and a job search there gets it faster than any program.
 - **Nothing passes the constraints:** every program fails a hard constraint, near misses included. Example: a $3,000 budget, 2 hours a week and no travel.
 - **The goal is unclear:** after two follow-ups the user still cannot name a career goal, so any spend is premature. Example: "Maybe management, maybe staying technical, I'm not sure yet."
 

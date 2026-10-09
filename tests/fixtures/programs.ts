@@ -71,12 +71,20 @@ function base(id: string, overrides: Partial<ProgramInput>): ProgramInput {
     cohortExperienceBasis: "median",
     cohortSeniority: "Mostly directors and VPs",
     lodgingPerNightUsd: { min: 213, max: 365 },
-    ratings: { network: 4, depth: 3, practicality: 4, costValue: 3 },
+    // The executive category defaults (docs/need-based-ranking.md, section 1).
+    ratings: {
+      leadership_skills: 5,
+      deep_expertise: 3,
+      graduate_degree: 1,
+      senior_network: 5,
+      new_industry_or_city: 3,
+    },
     ratingNotes: {
-      network: "Fixture note.",
-      depth: "Fixture note.",
-      practicality: "Fixture note.",
-      costValue: "Fixture note.",
+      leadership_skills: "Fixture note.",
+      deep_expertise: "Fixture note.",
+      graduate_degree: "Fixture note.",
+      senior_network: "Fixture note.",
+      new_industry_or_city: "Fixture note.",
     },
     ratingLowEvidence: [],
     figureNotes: { campusLat: DERIVED, campusLon: DERIVED },
@@ -117,7 +125,13 @@ export const fakeEmba = base("fake-emba", {
     campusLat: DERIVED,
     campusLon: DERIVED,
   },
-  ratings: { network: 5, depth: 4, practicality: 3, costValue: 2 },
+  ratings: {
+    leadership_skills: 5,
+    deep_expertise: 3,
+    graduate_degree: 5,
+    senior_network: 5,
+    new_industry_or_city: 3,
+  },
 });
 
 export const fakeMba = base("fake-mba", {
@@ -141,7 +155,13 @@ export const fakeMba = base("fake-mba", {
   cohortExperienceBasis: "median",
   cohortSeniority: "Mostly individual contributors, some early managers",
   lodgingPerNightUsd: null,
-  ratings: { network: 4, depth: 5, practicality: 1, costValue: 2 },
+  ratings: {
+    leadership_skills: 3,
+    deep_expertise: 3,
+    graduate_degree: 5,
+    senior_network: 1,
+    new_industry_or_city: 5,
+  },
   sources: [
     campusSource("fake-mba"),
     source("fake-mba", "format"),
@@ -172,8 +192,14 @@ export const fakeSpecializedMasters = base("fake-specialized-masters", {
   cohortMedianExperienceYears: null,
   cohortExperienceBasis: null,
   lodgingPerNightUsd: null,
-  ratings: { network: 3, depth: 4, practicality: 4, costValue: 3 },
-  ratingLowEvidence: ["network"],
+  ratings: {
+    leadership_skills: 3,
+    deep_expertise: 5,
+    graduate_degree: 5,
+    senior_network: 1,
+    new_industry_or_city: 3,
+  },
+  ratingLowEvidence: ["senior_network"],
   sources: [
     campusSource("fake-specialized-masters"),
     source("fake-specialized-masters", "format"),
@@ -214,7 +240,13 @@ export const fakeCertificate = base("fake-certificate", {
   cohortExperienceBasis: null,
   cohortSeniority: "Titles include analyst, program manager and director",
   lodgingPerNightUsd: null,
-  ratings: { network: 2, depth: 3, practicality: 5, costValue: 4 },
+  ratings: {
+    leadership_skills: 3,
+    deep_expertise: 3,
+    graduate_degree: 3,
+    senior_network: 1,
+    new_industry_or_city: 1,
+  },
   sources: [
     source("fake-certificate", "format"),
     source("fake-certificate", "tuitionUsd"),
@@ -239,7 +271,13 @@ export const fakeShortCourse = base("fake-short-course", {
   cohortMedianExperienceYears: null,
   cohortExperienceBasis: null,
   cohortSeniority: null,
-  ratings: { network: 3, depth: 2, practicality: 4, costValue: 3 },
+  ratings: {
+    leadership_skills: 3,
+    deep_expertise: 3,
+    graduate_degree: 1,
+    senior_network: 1,
+    new_industry_or_city: 1,
+  },
   sources: [
     campusSource("fake-short-course"),
     source("fake-short-course", "format"),

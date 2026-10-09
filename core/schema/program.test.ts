@@ -109,8 +109,22 @@ describe("required sources", () => {
 describe("ratings", () => {
   it.each([0, 6, 3.5])("rejects a rating of %s", (value) => {
     const p = clone(fakeExecutive);
-    p.ratings = { ...p.ratings, network: value };
-    expect(problems(p).join("\n")).toMatch(/ratings\.network/);
+    p.ratings = { ...p.ratings, senior_network: value };
+    expect(problems(p).join("\n")).toMatch(/ratings\.senior_network/);
+  });
+
+  it("are keyed by the five needs: an old lens name is rejected", () => {
+    const p = clone(fakeExecutive) as unknown as { ratings: Record<string, number> };
+    p.ratings = { ...p.ratings, network: 4 };
+    expect(problems(p as never).join("\n")).toMatch(/ratings.*network/);
+  });
+
+  it("list low-evidence ratings by need", () => {
+    const p = clone(fakeExecutive);
+    p.ratingLowEvidence = ["costValue" as never];
+    expect(problems(p).join("\n")).toMatch(/ratingLowEvidence/);
+    p.ratingLowEvidence = ["senior_network"];
+    expect(problems(p)).toEqual([]);
   });
 });
 

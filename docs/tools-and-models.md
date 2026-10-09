@@ -25,6 +25,7 @@ Which tool and model did what, at every step of the build. Part of the project j
 | Oct 7 | Program research (4 records) | Perplexity Deep Research | (Deep Research) | Facts from official pages only, with a URL and quote per fact. Prompt 1 in `docs/perplexity-program-prompts.md` |
 | Oct 7 | Program ratings | Perplexity, thinking model, separate thread | Yami's pick (GPT or Grok); the same one for all 12 programs | Applies the 1 to 5 rubric to the research facts. Prompt 2 in the same file |
 | Oct 7 | Record review and PR | Claude Code, local | Sonnet 5.5 | Reviews the research and rating files with Yami; Yami opens the PR |
+| Oct 9 onward | Rating review | Claude Code, `rate-program` skill | Sonnet 5.5 | Reviews each Perplexity rating against the rubric and Yami's rulings, and writes the Reviewed ratings block; Yami approves or corrects, and each correction becomes a ruling |
 | Oct 7 | Fact verification | Yami | none | Checks each fact against its quote and link; the commit names the verifier |
 | Oct 7 | Build (steps 1 to 7) | Claude Code, local | Sonnet 5.5 | Writes the code, one PR per step |
 | Oct 7 | Code review per PR | Claude Code, fresh session, `/code-review` | Sonnet 5.5; Opus 5.5 for the engine and server PRs if quota allows | Posts findings on each PR before Yami reviews |
@@ -36,3 +37,4 @@ Which tool and model did what, at every step of the build. Part of the project j
 
 - Oct 7: Claude Max expired; the build moved to Sonnet 5.5, with Opus 5.5 kept for planning and the two highest-risk reviews.
 - Oct 7: program research and ratings moved from Claude to Perplexity (Yami's call, to save Claude usage).
+- Oct 9: the rating prompt moved into the `rate-program` skill (`.claude/skills/rate-program/`) as its only copy. Perplexity still rates; the skill reviews with Yami's rulings (issue #89).

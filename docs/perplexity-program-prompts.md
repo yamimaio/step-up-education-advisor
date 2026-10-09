@@ -19,7 +19,7 @@ You are researching one US university program for a curated dataset. Accuracy ma
 Rules:
 1. Use ONLY the program's or university's official web pages (its own domain). Never use rankings, aggregators, news, forums, Wikipedia or third-party course sites. The one exception is the GSA per diem site (gsa.gov) for the lodging rate.
 2. For every fact, give: the value, the exact URL it came from, and a short verbatim quote from that page that shows it.
-3. If an official page does not state a fact, write null and say "not published". Do not estimate, infer, average or round. A fact from a page about a different year or intake counts as not published unless the page says it still applies.
+3. If an official page does not state a fact, write null and say "not published". Do not estimate, infer, average or round. A fact from a page about a different year or intake counts as not published unless the page says it still applies. Exception: for cohort facts (experience, titles, class size), use the most recent published class profile even when it describes an earlier class, and say which class.
 4. Use the most recent intake or cohort the official pages describe, and say which one.
 5. Money in US dollars as published. Say whether tuition includes fees, materials, lodging or meals.
 
@@ -55,11 +55,12 @@ PART 1: a JSON object with exactly these fields (null where not published):
 }
 
 PART 2: evidence for ratings (facts with sources, no scores):
-- Network: cohort size, alumni network size or access, in-person time, typical titles of participants.
-- Academic depth: credit hours, research or thesis content, faculty involvement.
-- Practicality: schedule flexibility, applied or capstone projects, online share.
-- Cost value: tuition against duration and credential.
-- Leadership focus: how central leadership is to the curriculum (list the leadership modules or courses).
+- Leadership focus: how central leading people and organizations is to the curriculum (list the leadership modules or courses).
+- Depth: the main field of study, credit hours, capstone, research or thesis content, faculty involvement.
+- Degree path: the credential awarded, academic credit or CEUs, and whether credits officially count toward a graduate degree (quote it).
+- Classmates: cohort size, median or average years of experience, typical titles, in-person time together, alumni access.
+- Career change: career services, recruiting, internships or support for changing industry, role or city.
+- Cost: tuition against duration and credential.
 
 End with a list of anything uncertain or conflicting between official pages.
 ```
@@ -111,35 +112,10 @@ Pay special attention to: the number of courses and how many can be taken online
 
 ## Prompt 2, rating (new thread, thinking model)
 
-Paste everything in the block, then replace the last line with the whole research answer for one program.
+Updated Oct 9 for need-based ranking (`docs/need-based-ranking.md`): the program is rated on the same five needs the user ranks, 1 to 5. Paste everything in the block, then replace the last line with the whole research answer for one program.
 
-```
-You are rating one US leadership program for a curated dataset that helps senior tech, product and engineering leaders (8+ years of experience, already holding a degree) choose their next educational step.
+Updated again Oct 9 after Yami's review of the first 4 ratings (issue #87): evidence rules for senior peers and career change, the latest class profile counts, every rubric level defined, and one valid JSON answer with short card-ready notes. The reviewed values sit at the end of each `docs/research/<id>-rating.md`, under "Reviewed ratings".
 
-Below is research on the program, taken only from its official pages, with a URL and a verbatim quote for each fact. Use ONLY these facts. Do not search the web and do not add facts from memory. If a fact you need is missing, say so and rate from what is there, marking that rating "low evidence".
+**The prompt now lives in the rating skill** (issue #89): `.claude/skills/rate-program/rating-prompt.md` is the only copy. Paste its block into Perplexity. Then review the answer in Claude Code with the `rate-program` skill, which applies Yami's rulings and writes the Reviewed ratings block.
 
-Rate the program 1 to 5 on four ratings, integers only, against this rubric:
-
-Network (cohort and alumni access, in-person time):
-  1 = self-paced or no cohort; 2 = online cohort, little interaction; 3 = live cohort, mostly online, or a short in-person stint;
-  4 = several in-person residencies with a senior cohort; 5 = sustained in-person time with a senior cohort plus a large, active alumni network.
-Academic depth (credit hours, research or thesis content, faculty):
-  1 = a few hours on one skill; 2 = a short course or non-credit program of a few weeks; 3 = a substantial non-degree program or a credit-bearing certificate;
-  4 = a master's-level degree with applied focus; 5 = a full degree with research or a thesis and core faculty.
-Practicality (schedule fit for someone working full time, applied projects):
-  1 = needs a full-time break and offers no applied work; 3 = workable with effort, some applied work;
-  5 = designed for working leaders, flexible schedule, projects on the participant's own organization.
-Cost value (tuition against duration and credential; ignore travel):
-  1 = high price for a short program or weak credential; 3 = in line with similar programs of its type;
-  5 = low price for its length and credential.
-
-For each rating, give one line saying why, citing the facts it rests on.
-
-Return exactly:
-"ratings": { "network": n, "depth": n, "practicality": n, "costValue": n },
-"ratingNotes": { "network": "...", "depth": "...", "practicality": "...", "costValue": "..." },
-"lowEvidence": [ list of ratings marked low evidence, or empty ]
-
-Research:
-<paste the whole research answer here>
-```
+**Re-rating a program already researched** (MIT TLP, Wharton EMBA SF, Northwestern MEM, Harvard Extension): no new research. Open a new thread with the same thinking model, paste the prompt, paste the saved `docs/research/<id>.md` at the end, and save the answer over `docs/research/<id>-rating.md`. Then review it with the skill.
