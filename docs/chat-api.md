@@ -94,7 +94,7 @@ type ChatResponse = {
   // rounds from the failed request are dropped, and a retry runs them again) and `text` is empty
   // or the post-confirm template.
   notice: {
-    kind: "retryable" | "auth_or_credit" | "refusal" | "unknown" | "empty_input";
+    kind: "retryable" | "auth_or_credit" | "refusal" | "unknown" | "empty_input" | "limit";
     message: string;
   } | null;
 };
@@ -159,10 +159,19 @@ Model failures and empty input are not HTTP errors: they return 200 with `notice
 | `refusal` | Retrying the same history would be refused again. The page drops its last message and goes back to the state before it: typed text returns to the input box, or the pending chips or confirm card show again (from the previous response). Input is enabled, so the user can rephrase or choose again. |
 | `auth_or_credit` | No retry can help. The page shows the message and disables input. A verdict card already shown, and the transcript download, keep working. |
 | `empty_input` | The text was empty or whitespace only, so no model call was made. The page drops that message from its history, clears the input and shows `notice.message` as a nudge next to it. It is never stored as a turn. |
+| `limit` | The conversation passed its message cap (see "Message cap"), so no model call was made. As for `auth_or_credit`: the page shows the message and disables input. A verdict card already shown, one that comes with this response (`direction`), and the transcript download keep working. |
 
 The page should not send an empty or whitespace-only message in the first place. `empty_input` is the server's guard, not the normal path.
 
 **Retrying** (`retryable` and `unknown` only). After a failure the history the page holds is exactly what it posted: the server returned no messages and no replacement, so the last message is still the page's own (a typed message, a label-only `ChipAnswer` or a `{ confirmed }` answer). The page's only next request is that same history, unchanged, behind a Retry button; input stays disabled until a retry succeeds. The server treats it as a first attempt: it resolves the labels or reruns `recommendCategory` (deterministic, so the verdict is the same) and, on success, returns the rewrite in `replaceLastUserMessage`. A rewritten result (`chosen` holding objects, or `confirmed` with a `result`) is valid only earlier in the history, never as the last message; as the last message it gets a 400.
+
+## Message cap
+
+The cap counts **user turns**: typed messages, chip answers and confirm answers, the new one included (DQ4). The server's own rounds (`check_contradictions` results, `is_error` answers) are not turns.
+
+- **From turn 30**, `counter` is `{ remaining: 40 - turns }`; before that it is null. The page shows it quietly ("10 messages left").
+- **At turn 35 or later**, while no `propose_direction` card has been confirmed, the server adds one text block to the posted message, after any tool result: `[Step Up note] The conversation is close to its message limit. …` It tells the advisor to wrap up and call `propose_direction`. The rewritten message comes back in `replaceLastUserMessage` like any other rewrite, so the history stays append-only. The note is added once. The page keeps the block in its history and does not show it: it is the only user text block that starts with `[Step Up note]`.
+- **From turn 41**, the server makes no model call and answers with `notice.kind: "limit"`, `messages` empty and `replaceLastUserMessage` null. If the message confirms the card, the response still carries `direction` and the template explanation in `text`.
 
 ## Example: a chip turn
 
