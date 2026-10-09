@@ -1,24 +1,28 @@
 import { z } from "zod";
 import { IsoDate, HoursRange, Text as text, CountryCode, Latitude, Longitude } from "./common";
-import { Attendance, Category, Format, LocationValue, PaymentOption, RatingKey } from "./enums";
+import { Attendance, Category, Format, LocationValue, Need, PaymentOption } from "./enums";
 
 const nonNegative = z.number().nonnegative();
 const nonNegativeInt = z.number().int().nonnegative();
 
 const Rating = z.number().int().min(1).max(5);
 
+// How well the program serves each of the five needs the user ranks (docs/need-based-ranking.md,
+// section 2), 1 to 5, with a note citing the facts behind each.
 const Ratings = z.strictObject({
-  network: Rating,
-  depth: Rating,
-  practicality: Rating,
-  costValue: Rating,
+  leadership_skills: Rating,
+  deep_expertise: Rating,
+  graduate_degree: Rating,
+  senior_network: Rating,
+  new_industry_or_city: Rating,
 });
 
 const RatingNotes = z.strictObject({
-  network: text,
-  depth: text,
-  practicality: text,
-  costValue: text,
+  leadership_skills: text,
+  deep_expertise: text,
+  graduate_degree: text,
+  senior_network: text,
+  new_industry_or_city: text,
 });
 
 // GSA publishes lodging by month, so a program carries the range across the fiscal year.
@@ -86,7 +90,7 @@ const ProgramObject = z.strictObject({
   lodgingPerNightUsd: LodgingRange.nullable(),
   ratings: Ratings,
   ratingNotes: RatingNotes,
-  ratingLowEvidence: z.array(RatingKey),
+  ratingLowEvidence: z.array(Need),
   // A short caveat shown next to a value, keyed by the field it is about.
   figureNotes: z.record(z.string(), text),
   sources: z.array(
