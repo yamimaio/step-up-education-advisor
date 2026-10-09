@@ -11,7 +11,8 @@
   "figureNotes": {
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
     "campusLon": "Derived from campusAddress (approximate, from the street address).",
-    "cohortMedianExperienceYears": "An average, not a median, across past participants (MIT TLP brochure, July 2026)."
+    "cohortMedianExperienceYears": "An average, not a median, across past participants (MIT TLP brochure, July 2026).",
+    "onsiteDaysPerYear": "Three Monday-to-Friday weeks on campus in the 2026-27 schedule, which MIT says is subject to change; travel days not counted."
   },
   "extraSources": [
     {
@@ -32,9 +33,25 @@
       "quote": "Through advanced education programs led and taught by MIT professors and lecturers, it offers continuing education and lifelong learning opportunities for working professionals at all levels.",
       "checkedOn": "2026-10-09",
       "kind": "school_correspondence"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://d1vwxdpzbgdqj.cloudfront.net/s3-public-files/mit-tlp/mittlpprogram_schedule.pdf",
+      "quote": "Module 2 On Campus Sept 21 - 25, 2026 ... Module 4 On Campus Jan 25 - 29, 2027 ... Module 6 On Campus 26 April - 30 April, 2027 ... *Program schedule is subject to change",
+      "checkedOn": "2026-10-09",
+      "kind": "official_page"
+    },
+    {
+      "field": "longestStretchDays",
+      "url": "https://d1vwxdpzbgdqj.cloudfront.net/s3-public-files/mit-tlp/mittlpprogram_schedule.pdf",
+      "quote": "Module 2 On Campus Sept 21 - 25, 2026 ... Module 4 On Campus Jan 25 - 29, 2027 ... Module 6 On Campus 26 April - 30 April, 2027 ... *Program schedule is subject to change",
+      "checkedOn": "2026-10-09",
+      "kind": "official_page"
     }
   ],
   "workCompatible": true,
   "cohortMedianExperienceYears": 19,
-  "cohortExperienceBasis": "average"
+  "cohortExperienceBasis": "average",
+  "onsiteDaysPerYear": 15,
+  "longestStretchDays": 5
 }
