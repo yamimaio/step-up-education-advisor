@@ -21,6 +21,99 @@ Choices made while building, where the approved docs were silent. Each links to 
 - `validate-data` also fails on a `checkedOn` later than today. `fake-` ids pass only through `FixtureDatasetSchema`.
 - The overrides file may set only an allow-list of keys (never `id`, `sources`, `ratings` or `verification`), plus `extraSources` to append sources the research kept in its Part 2 tables. A lodging quote that mentions meals or totals is refused unless the overrides give `lodgingPerNightUsd`. A source with no URL converts as `school_correspondence`.
 
+## Step 3
+
+Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were silent, or where a build detail needed a call. ★ marks the ones that change results.
+
+- ★ The plan's "no type fits" example (the only real need is a new city) doesn't fire the trigger: a full-time MBA scores 6 on that need alone. The threshold stays 4. Test 6a fires it through rule-outs (a required degree with 3 months at most).
+- ★ Programs of a type that is "out" are left out of the shortlists, but keep their evaluations.
+- ★ The length check uses `durationMonths`, falling back to `durationMaxMonths`, then to the unknown-value rule.
+- ★ Per-course tuition never decides the tuition check; "about $X at N courses" goes in the check's note.
+- ★ Nights per trip are on-site days ÷ residencies (D8), which slightly overestimates (5 days = 5 nights).
+- Trips = `residencyCount` × `ceil(durationMonths / 12)`. Recurring weekends with no counts: 26 trips a year, 2 nights each, labelled as an estimate. Missing counts or lodging make the estimate `unknown`.
+- Hours: the program's `min` is compared with the user's `max`; a program needing fewer hours passes.
+- Unknown-value rule: `maxOnsiteDays`, `maxStretchDays`, `maxProgramMonths` and `hoursPerWeek` are always set, so an unpublished figure is always a near miss. Many real programs will near-miss only for that reason.
+- Declined `careerGoal` becomes `step_up`, so the grow-in-role bonus never applies to an answer the user didn't give. The step 5 advisor can send any placeholder for it.
+- Declined fields (see round 1 for the rest): limits become "no limit"; `peerPreference` → `doesnt_matter`; `travelComfort` → `fine`; `airfareRange` → `unknown`; `degreeRequired` → no adjustment; `homeCity` → no name shown; `homeLat` and `homeLon` → unknown location (see "Location by distance"). `profileGaps` lists the declined fields plus `airfareRange: unknown`.
+- No-program precedence: stage 1 first (`goal_unclear`, then `no_type_fits`), then stage 2 (`nothing_passes`). An empty dataset is `nothing_passes`. Shortlists are still built. (Was `goal_unclear`, `nothing_passes`, `no_type_fits` before the engine split; see "Engine split by stage".)
+- When every type is out, `winner` and `runnerUp` are `null`. A tie exists only between the top two non-out scores (a three-way tie takes the first two in matrix order); `tieBreaker` wins only if it is one of the pair. While a tie is unresolved no program gets the +0.5 category bonus.
+- `decidingNeeds`: the two needs with the largest `weight × (winner rating − runner-up rating)`, ties by need rank.
+- Confidence (data gaps only, your decision): four conditions (verified within 60 days, tuition from an official page, on-site time from an official page, no unknown-value check). All four → high, one missing → medium, two or more → low; a draft is capped at low. Any official source whose field is one of `onsiteDaysPerYear`, `residencyCount`, `longestStretchDays`, `onsiteNote`, `attendance` or `format` counts as on-site evidence.
+- Contradictions: `checkContradictions(partial, programs)` takes the programs for R2. R2 counts only degree-granting types with a known tuition at or under the budget; a null budget never fires. A rule with a missing field never fires. Ids are `R1` to `R6`; a rule already in `resolvedTensions` is returned with `resolved: true`.
+- Location: evening or daily attendance beyond commuting distance fails unless the user would relocate (the same exception as full-time in-person). See "Location by distance" for the distance check.
+- Location fit starts at 3, so with the D9 adjustments the lowest reachable score is 2; the clamp at 1 is kept but can't trigger.
+- Shortlists hold program ids; the card labels near misses from the program's `status`.
+
+### Round 1 review fixes (PR #22)
+- Unknown value against a limit of 0 (DQ10): fails (still marked "not published"). Against a limit above 0 it stays a near miss.
+- Declined fields, all of them neutral: `keepWorking` → no work constraint; `relocate` → null, which rules nothing out and adds "may require relocating"; `yearsExperience` → no peer-fit points and no "you have N". Unknown names in `declined` are ignored and repeats collapse. `checkContradictions` drops declined fields before running R1 to R6.
+- Travel budget with airfare unknown: the total is lodging only, so a pass becomes a near miss with the note "Airfare unknown"; a fail stays a fail; a budget of 0 fails. The check is not marked `unknown`: the gap is the user's (it is in `profileGaps`), so confidence is unchanged.
+- Travel notes name the missing figure (on-site days, trips, or both). A weekend program with on-site days but no trip count counts weekends from the days (days ÷ 2 nights, rounded up, per year), labelled as an estimate. A published `residencyCount` on a weekend program is used even when on-site days are null (nights per trip estimated at 2, labelled). The 26-a-year guess is for weekends with no count.
+- A user who would relocate to a program that needs them local has no recurring travel (`kind: none`, "You'd relocate"). A declined `relocate` is treated the same, with the note "You didn't say whether you'd relocate".
+- Money is rounded to cents and comparisons to six decimals, so exactly 15% over is a near miss and float noise never decides a status.
+- R4 fires at `max <= 5`, because the lowest hours chip stores `{0, 5}`.
+- An unresolved tie has `winner`, `runnerUp` and `decidingNeeds` empty.
+- A type ruled out by its programs says which checks did it ("program length"). The runner-up is still chosen among types that aren't out, so section 9's "EMBA ruled out on length" is the reason shown for EMBA, not its `runnerUp`.
+- Confidence reasons use plain check names. A missing price still counts twice (unpublished and unknown), as in default 16.
+- `nothing_passes` (stage 2) means no program of a type that isn't out passes or near-misses all eight checks, so passing programs that all belong to ruled-out types give `nothing_passes`. (Before the engine split they gave `no_type_fits`; see "Engine split by stage".)
+- The category bonus still goes to the winner while a "not yet" result shows (only an unresolved tie or no winner removes it).
+- Scenario scores are rounded to 9 places and ties break by id code unit.
+
+### Location by distance (PR #22, after round 4; `docs/ux-two-stage.md`)
+- Replaces the city parser and metro table (`places.ts`, `metro.ts`, `METRO_STATES`, `METROS` and the other city tables, and their tests). The engine no longer reads a program's `metro` or parses `homeCity`; the city is for display only. `normalize.ts` stays, because it holds `applyDeclinedDefaults` (`docs/ux-two-stage.md` and `docs/step-3-engine-plan.md` both keep it); only its city handling changed.
+- `COMMUTE_KM = 80` in `core/engine/constants.ts`. `core/engine/distance.ts` has `haversineKm` and `withinCommute(home, program)`, which compares `{ homeLat, homeLon }` with `{ campusLat, campusLon }` and returns `true` (80 km or less, inclusive), `false`, or `null` when any of the four is `null`. A coordinate of 0 counts as a coordinate. `needsLocalPresence` moved there unchanged.
+- ★ Unknown location (`null`) is never a pass. The check only depends on distance for a program that needs the student local (full-time in-person, evenings or daily) when the user won't relocate. There, `false` fails as before and `null` is a **near miss** ("can't tell if the campus is within commuting distance"). A user who would relocate, or who declined the relocation question, still passes whatever the distance, with the "requires relocating" or "may require relocating" note. A program that doesn't need the student local passes, as before. This is an exception to DQ10's "boolean checks never near-miss", made for the location check on Yami's instruction.
+- A missing home is the user's gap, so the check is not `unknown` and confidence is unchanged (as with airfare). A missing campus coordinate is the program's gap and sets `unknown`. Schema rules keep it from happening for real records (only online programs have null coordinates, and they never need the student local).
+- `applyDeclinedDefaults` nulls `homeLat` and `homeLon` together when either is declined, so a half pair never reaches the check. A declined `homeCity` alone keeps the coordinates (the model sets them separately, see #35); an empty city becomes `null`.
+- Travel: within 80 km is no airfare or lodging, with the note "The campus is within commuting distance". A program that needs the student local (full-time in-person, evenings or daily) never has recurring trips, so it costs `none` whatever the distance or whether the home is known: the user who would relocate (or didn't say) gets the relocation note, and one who won't relocate gets "the location check decides". This keeps a declined home, or a home beyond 80 km, from blaming the school for a trip count it doesn't need to publish (round 1 review of the distance change). For any other program, a missing coordinate treats the user as away, never as local: the trips are costed, and the note "Your home or the campus location is unknown" is kept even when a missing figure makes the estimate `unknown`.
+- Declined `goalClarity` → `clear`, because the AI marks a goal unclear only after follow-ups, so a declined value must never read as "unclear" and fire `goal_unclear`. Declined `locationValues` → `[]`, so no location-fit points. Same class as the declined `careerGoal` default.
+- Test fixtures: `BOSTON`, `CAMBRIDGE_MA`, `CHICAGO`, `BUENOS_AIRES` and `NO_HOME` (with `NO_HOME_DECLINED`) in `tests/fixtures/profiles.ts`. The worked example is now set in Boston with Boston coordinates; before the merge from main it had Boston's name and Buenos Aires coordinates. The worked-example scores are unchanged.
+
+### Rating matrix changes (Yami's review of PR #22)
+- A rating answers "how strongly does this type address this need for our target user (a senior leader)?", not "could this type teach it at all?" (comment in `constants.ts`).
+- ★ Full-time MBA, leadership skills: Strong (2) → Some (1). ★ Graduate certificate, graduate degree: Some (1) → Little (0), because a certificate is not a degree. Both are changed in `TYPE_RATINGS` and in the table in `docs/build-plan.md`. The worked example is unchanged (executive 11, EMBA and MBA out, master's 1, certificate 3, short course 3). The hand-computed scores in `categoryFit.test.ts` moved with the matrix, and the tie tests use a degree x3, new city x2, network x1 profile, since MBA and EMBA no longer tie on the old needs.
+- Other cells were not re-read against the principle above. That is a separate pass if wanted.
+- **After the challenge, not built:** a small program-level bonus for a non-degree program whose `credits` count toward a degree (Harvard's graduate credit, MIT TLP's credit), added to its scenario scores for a user who needs a degree. Open points for then: the `credits` field is free text ("none", "42 CEUs", "16 graduate credits") and Harvard's is `null` in the research, so it may need a structured field rather than reading the words.
+
+### Engine split by stage (Yami's review of PR #22, Oct 9)
+- One function per stage of `docs/ux-two-stage.md`, instead of one `evaluate` that did both. `recommendCategory(directionProfile, programs)` (`core/engine/direction.ts`) is stage 1. `evaluatePrograms(profile, category, programs, today)` (`core/engine/search.ts`) is stage 2, and the category the user confirmed is an input to it, never recomputed. `evaluate` stays as a thin composition of the two for tests, the worked example and one-call use. Reasons: single responsibility, no function that behaves differently depending on which fields are filled in, and the stage-1 rule enforced by types rather than by convention.
+- ★ `DirectionProfile` (`DirectionProfileSchema` in `core/schema/profile.ts`) holds only what decides the category: `careerGoal`, `goalClarity`, `needs`, `degreeRequired`, `maxProgramMonths`, `hoursPerWeek`, `keepWorking`, `tieBreaker`, `declined`. Peers and experience are asked in stage 1 too, but only stage 2's scoring reads them. A test checks that reading a budget or a home from a `DirectionProfile` doesn't compile.
+- ★ A type is ruled out only by the stage-1 checks (length, hours, work-compatible) and the degree rule, never by budget, travel or location. Before, a budget that failed every EMBA program made EMBA "out" and silently moved the verdict.
+- ★ New `access` in stage 2's result: `available`, `none_within_limits` (with `blockedBy`, the failing checks, most common first), `no_programs` (D6: a type with no records), or `no_winner` (unresolved tie, or every type out). For the last three, `alternative` is the best-scoring category that isn't out and has a program within the limits, or `null`. The card uses it to say "best fit X; none within your limits because of tuition; the closest is Y" instead of changing the verdict.
+- ★ No-program triggers split: stage 1 fires `goal_unclear` and `no_type_fits` (best score under 4, or every type out); stage 2 fires `nothing_passes` (no program of a type that isn't out is within the limits). `evaluate` reports stage 1's trigger first. Test S8-6b moved: "$3k, 2 h a week, 0 on-site days" now gives `no_type_fits` (2 hours a week rules the strong types out in stage 1), so the `nothing_passes` example is "$3k and 0 on-site days". "Programs of a ruled-out type" now gives `nothing_passes`, with `access` at `no_programs`.
+- Declined defaults are split the same way: `applyDirectionDefaults` handles the stage-1 fields, and `applyDeclinedDefaults` reuses it, so both stages read a declined answer the same way. Stage 1's `profileGaps` lists declined stage-1 fields only.
+- Stage 2 uses the confirmed winner for the +0.5 bonus. A caller that passes a different category gets that category's bonus and `access`: the engine trusts its input.
+- Server (step 6, recorded here so the docs agree): `propose_direction` runs `recommendCategory`; `propose_search` runs `evaluatePrograms` with the category from the last confirmed `propose_direction` result in the history. If the stage-1 answers changed after that, the server asks for `propose_direction` again first. `check_contradictions` runs before each pause; a rule whose fields aren't answered yet doesn't fire (default 17). Implementation plan sections 4, 5 and 12 and `docs/build-steps.md` (steps 3 and 6) are updated to match.
+
+### Round 1 review of the engine split (PR #22)
+- ★ ~~On-site days and longest stretch apply only to programs reached by travel.~~ Superseded in round 2 (next section): only the longest stretch is skipped for programs that need the student near campus.
+- ★ A per-course price (`tuitionPerCourseUsd × courseCount`, `tuitionTotal` in `constraints.ts`) now counts in two places: R2 uses it as the program's price, and an official source on `tuitionPerCourseUsd` meets confidence's published-price condition. The tuition check itself still decides only on `tuitionUsd` (default 4), so such a program stays a "not published" near miss with the estimate in its note. That means a per-course program can near-miss a budget far below its estimate (the fixture master's at about $50,000 against $3,000); the S8-6b `nothing_passes` example now uses a Buenos Aires home so that program fails on location instead.
+- With airfare unknown, the "Airfare unknown, so this covers lodging only" note is on the travel-budget check whatever its status, not only when a pass became a near miss.
+- `failedChecks` (and so `access.blockedBy` and the "ruled out" reasons) breaks equal counts by check order, so the result doesn't depend on dataset order.
+- `CATEGORY_ORDER` is `Category.options` from the schema; the unused `LOCATION_VALUES_ORDER` is removed.
+- Recorded, not changed: `access.alternative` is the best-scoring category with a program within the limits, even when its score is under the no-type-fits threshold (the $20k example names the certificate, at 3). The card should present it as "the closest option within your limits", not as a fit. `evaluatePrograms` reads only `winner` and `scores` from the confirmed `CategoryResult`, so step 6 only needs to keep those two from the `propose_direction` result.
+
+### Round 2 review of the engine split (PR #22; Yami asked for the Low findings to be fixed here too)
+- ★ On-site days apply to every program again. Commuting doesn't remove days on campus, and "None" (0) means the user can't be on site at all (R3 reads it that way). Only the longest stretch, which is time away from home, passes with "no time away" for a program that needs the student near campus. A local full-time MBA passes when the user's on-site limit covers its 240 days.
+- ★ A per-course price counts as published in the tuition check too: it is not `unknown`, and its note reads "priced per course; about $X at N courses (estimate)". The status still decides only on `tuitionUsd` (default 4), so with a budget set it stays a near miss. Confidence and the check now agree, so a fresh, sourced per-course record no longer drops to low (tested through `evaluatePrograms`, not with a hand-made check).
+- ★ On-site evidence for confidence: a program that needs the student near campus usually publishes a schedule, not a day count, so an official source on any schedule field (the same `ONSITE_FIELDS` as other programs, `format` included; round 3 widened it from `attendance` and `onsiteNote`) meets the "on-site time published" condition for it. The on-site days check still compares a published count with the limit, and is `unknown` without one, so a missing count lowers confidence once, not twice. Programs reached by travel still need a day count.
+- ★ `needsLocalPresence` leaves out residential programs: an in-person program that isn't work-compatible but runs as residencies (a multi-week executive program) is reached by travel, so its stretch and travel cost apply, and a user who won't relocate isn't failed on location.
+- R2 uses only degree programs with a known price (total, or the per-course estimate) as evidence, and fires only when every known price is over the budget. With no known price, including an empty dataset, it stays quiet.
+- The hours check shows the user's limit as their range in both paths ("5-10"), whether or not the program publishes hours.
+
+### One 1–5 scale for the category table (PR #22, Oct 9; `docs/need-based-ranking.md` section 1)
+- `TYPE_RATINGS` moves from 0–2 to 1–5 with 0→1, 1→3, 2→5 (new = 2 × old + 1). With weights 3, 2 and 1, every category score becomes 2 × old + 6, so the order and every verdict stay the same. The table is the current one, with Yami's two changes above (full-time MBA leadership 3, certificate degree 1), not the pre-change table printed in the spec. `Rating` (`1 | 2 | 3 | 4 | 5`) and `RATING_MIN` are in `constants.ts`.
+- The constants tied to the scale double: `NO_PROGRAM_THRESHOLD` 4 → 14, `DEGREE_ADJUST` −3/−2/−1 → −6/−4/−2, `GROW_IN_ROLE_BONUS` 2 → 4.
+- The worked example asserts executive 28, certificate 12, short course 12, specialized master's 8 (14 − 6), EMBA and full-time MBA out on length. The hand-computed scores in `categoryFit.test.ts` and the "new city as the only need" example (MBA 16, over 14) moved with the scale. New tests: the no-type-fits boundary (13 fires, 14 doesn't).
+- Default: with no runner-up (only one type left), the deciding needs measure each need from the lowest rating, 1, instead of 0. From 0 the order could change on the new scale (a weight-3 need rated 1 would tie a weight-1 need rated 3); from 1 every gap is exactly twice the old one, so the order matches the 0–2 scale. Tested.
+- Scale-only, so the old sections above keep their numbers as history (for example "the certificate, at 3" is 12 now). `docs/build-plan.md`, `docs/implementation-plan.md` (sections 4, 8, 12), `docs/build-steps.md` and `docs/step-3-engine-plan.md` show the new numbers.
+- Not in this PR: stage 2 scoring (`scenarios.ts`, the lenses, the category bonus and peer fit) stays as it is; #65 replaces it with the need-based ranking.
+- Unchanged from the distance work: `normalize.ts` stays. It no longer has any city handling and only holds the declined-field defaults (`applyDirectionDefaults`, `applyDeclinedDefaults`) that both stages use.
+
+### Round 4 review (PR #22, after the rescale)
+- ★ The longest stretch also passes, with "no time away: the campus is within commuting distance", for any program whose campus is within 80 km of home, not only for programs that need the student near campus. A residency or weekend program on the user's doorstep is attended from home: `travelEstimate` already costs it as no travel, and the two now agree. An unknown distance (`withinCommute` null) still checks the stretch, and on-site days still apply either way. Example: a Boston user who allows 3 days (or "Can't travel", 0) passes a Boston executive program with 5-day residencies. The DQ10 test that fails an unpublished stretch against 0 now uses a far home.
+- ★ Declined `needs`: there is no neutral ranking, so `applyDirectionDefaults` gives an empty list. No type wins, there is no runner-up, tie or deciding need, each type's reasons say "No ranked needs", and stage 1 fires `goal_unclear` (the gap is half of the goal question; any spend is premature). The placeholder needs the schema still requires are never read, so the result doesn't depend on them. `needs` stays in `profileGaps`. `checkContradictions` already ignored declined fields.
+
 ## Structured home location (issue #35)
 
 - `homeCity` was one free-text string, and the engine had to parse spellings like "Cambridge, MA" and "Washington, D.C.". The profile now holds `homeCity` (non-empty), `homeRegion` (string or null) and `homeCountry` (two-letter ISO code, same rule as `country` in the program schema). The model fills them in from the conversation.
@@ -50,6 +143,26 @@ Choices made while building, where the approved docs were silent. Each links to 
 - Yami confirmed both defaults on Oct 9: the 1 to 5 scale everywhere, and ranking inside the confirmed category.
 - Format preference (Oct 9): new `formatPreference`; program format is read from `format` (`hybrid` = blended). Format fit 5 / 3 / 1, no preference 3, weight 2.
 - Travel comfort stays (Yami, Oct 9: format and travel are different traits) and scores 1 × travel fit: appeal 5 / burden 1 when the program needs trips for this user, 3 otherwise; fine 3. It leaves location fit. R5 is unchanged.
+
+## Rating rules from the review of the first 4 ratings (issue #87, Oct 9)
+
+Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM and Harvard Extension (PRs #27, #29, #31, #33). Rules added to Prompt 2 and `docs/need-based-ranking.md`:
+
+- Senior peers and career change: a 4 or 5 needs facts that meet that level. With no facts on the need, the rating is the category default or 3, whichever is lower. Leadership and depth keep the category default unless facts move them.
+- Yami: a published target audience counts as the cohort when admission is by application. MIT TLP targets C-level leaders and admits by application, so it keeps senior peers 5 (Yami's own cohort averages about 22 years).
+- The most recent published class profile counts for cohort facts in both prompts, matching B1 (Wharton's Class of 2028, average 13-14 years → 3).
+- Career change: 3 needs career services open to these students, quoted; a network alone is 2.
+- Every rubric level 1 to 5 is defined. Degree gains a 4: all credits officially count toward a named graduate degree.
+- The rating answer is one valid JSON block. `ratingNotes` are card-ready (at most 20 words, no URLs); the evidence goes in a `reasoning` field that stays in the rating file.
+- The 4 rating files keep Perplexity's answer as provenance and add a "Reviewed ratings" block with the values the records use.
+
+## Rating skill, version 1 (issue #89, Oct 9)
+
+- The rating prompt lives only in `.claude/skills/rate-program/rating-prompt.md`; Prompt 2 in `docs/perplexity-program-prompts.md` points to it, so the rubric can't drift between two copies.
+- Perplexity still rates, as before (it saves Claude usage). The skill reviews each answer against the rubric and Yami's rulings (`rulings.md`, R1 to R8 from the Oct 9 review), and writes the Reviewed ratings block the converter reads.
+- Each correction Yami makes becomes a ruling and bumps the skill version. The block heading names the skill version and the reviewer ("reviewed by: pending" until Yami approves).
+- Default taken: until the schema has a rating provenance field, the provenance lives only in that heading. A `ratingVerification` field is a later decision.
+
 
 ## Step 5
 
