@@ -1,5 +1,7 @@
 # PR 3: Scoring engine (issue #5)
 
+> **Oct 9:** Stage 2 scoring (scenarios, lenses, category bonus, peer fit points) is replaced by `docs/need-based-ranking.md`, and the category table moves to 1–5. That file wins where this plan differs.
+
 ## Context
 
 Step 3 builds the pure TypeScript engine from implementation plan section 4. It turns a confirmed `Profile` and the `Program[]` dataset into one `EngineResult`: the category verdict, the no-program trigger, the constraint checks per program, and three scenario shortlists. Every number on a card comes from this engine (rule 7), so each rule needs a named test. Section 12 and the section 11 follow-ups (travel, metro, unknown duration/tuition) take precedence over `docs/build-plan.md`. DQ10, DQ11 and DQ18 in `docs/build-steps.md` fix near-miss-at-0, the six contradiction predicates and city matching.
