@@ -73,13 +73,9 @@ export function parseRatings(markdown: string): RatingResult {
   const start = [...text.matchAll(/"ratings"\s*:\s*\{/g)].at(-1)?.index;
   if (start === undefined) throw new Error('No "ratings" block found in the rating answer.');
   const tail = text.slice(start);
-  // Perplexity's markdown sometimes shows the list's brackets as $$ … $$ (a math block).
-  const low = /"lowEvidence"\s*:\s*(?:\[[^\]]*\]|\$\$[^$]*\$\$)/.exec(tail);
+  const low = /"lowEvidence"\s*:\s*\[[^\]]*\]/.exec(tail);
   if (!low) throw new Error('No "lowEvidence" list found in the rating answer.');
-  const block = tail
-    .slice(0, low.index + low[0].length)
-    .replace(/\$\$([^$]*)\$\$$/, (_m, items: string) => `[${items}]`);
-  const obj = parseObject(`{${block}}`);
+  const obj = parseObject(`{${tail.slice(0, low.index + low[0].length)}}`);
   if (!obj) throw new Error("The ratings block could not be read as JSON5.");
   const { ratings, ratingNotes, lowEvidence } = obj;
   if (!isObject(ratings) || !isObject(ratingNotes) || !Array.isArray(lowEvidence)) {

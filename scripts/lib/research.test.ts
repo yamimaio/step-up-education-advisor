@@ -92,17 +92,13 @@ describe("ratings", () => {
     expect(parseRatings(answer).ratings.senior_network).toBe(4);
   });
 
-  it("read a lowEvidence list that Perplexity shows between $$ … $$", () => {
+  it("reject a lowEvidence list that isn't a JSON array, so the file gets fixed", () => {
     const answer = read("fake-sample-rating.md").replace(
       '"lowEvidence": ["senior_network", "new_industry_or_city"]',
       // A function, since "$$" in a replacement string means one "$".
-      () => '"lowEvidence": $$\n"senior_network",\n"new_industry_or_city"\n$$\n\n}',
+      () => '"lowEvidence": $$\n"senior_network",\n"new_industry_or_city"\n$$',
     );
-    expect(answer).toContain("$$\n");
-    expect(parseRatings(answer).ratingLowEvidence).toEqual([
-      "senior_network",
-      "new_industry_or_city",
-    ]);
+    expect(() => parseRatings(answer)).toThrow(/lowEvidence/);
   });
 
   it("reject a rating keyed by an old lens name", () => {

@@ -156,4 +156,4 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 - **Who is listed.** The confirmed category's list isn't capped (12 programs in all). "Also worth a look" takes the runner-up from stage 1 (`category.runnerUp`), passing programs only. With no confirmed category (an unresolved tie) both lists are empty until the user picks.
 - **Card lines.** Format fit and travel fit carry `text: null` when there is nothing to say (no preference, travel fine, or no trips).
 - **Declined `formatPreference`** becomes `no_preference`. `peerPreference` is still asked but no longer scores; the card's peer line only compares experience.
-- **Converter.** Reads `lowEvidence` lists that Perplexity's markdown shows between `$$ … $$` (all four re-rated answers do), and anchors on the last `"ratings": {` (fixes #16).
+- **Converter.** Anchors on the last `"ratings": {` (fixes #16). It reads clean JSON only: a `lowEvidence` list that Perplexity's markdown shows between `$$ … $$` is rejected, and the rating file is fixed to `[ … ]` instead.
