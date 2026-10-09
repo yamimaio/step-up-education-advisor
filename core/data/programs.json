@@ -33,18 +33,20 @@
     "cohortSeniority": null,
     "lodgingPerNightUsd": null,
     "ratings": {
-      "network": 3,
-      "depth": 4,
-      "practicality": 4,
-      "costValue": 3
+      "leadership_skills": 4,
+      "deep_expertise": 5,
+      "graduate_degree": 5,
+      "senior_network": 2,
+      "new_industry_or_city": 3
     },
     "ratingNotes": {
-      "network": "Low evidence: scheduled evening/Saturday classes and an experienced-STEM target audience support a provisional 3; cohort interaction, actual in-person time, seniority and alumni access are not established.",
-      "depth": "Master’s degree requiring at least 12 courses, including 7 core courses and at least 2 advanced-engineering courses, supports 4; research/thesis requirements and faculty involvement are not established for 5.",
-      "practicality": "The work-accommodating part-time option offers evening/Saturday classes, entry in any quarter, a capstone choice and applied leadership simulations; projects in participants’ own organizations are not established for 5.",
-      "costValue": "Low evidence: $8,100 per course is published for 2026–2027 for a master’s typically lasting 2–3 years, but total tuition, Fall 2027 pricing and comparable-program costs are missing; 3 is provisional, not a verified market-value assessment."
+      "leadership_skills": "Required Leadership and Organizational Behavior course and rotating leadership roles in a simulation.",
+      "deep_expertise": "Twelve-course master's in engineering management with a required strategy capstone course.",
+      "graduate_degree": "Awards the Master of Engineering Management.",
+      "senior_network": "Designed for experienced STEM professionals; the school cites seven years of STEM experience.",
+      "new_industry_or_city": "Internship-like client projects exist; access for part-time students and career services are not confirmed."
     },
-    "ratingLowEvidence": ["network", "costValue"],
+    "ratingLowEvidence": ["senior_network", "new_industry_or_city"],
     "figureNotes": {
       "tuitionPerCourseUsd": "2026-27 rate; the Fall 2027 rate is not published.",
       "courseCount": "A minimum; the school publishes no fixed total.",
