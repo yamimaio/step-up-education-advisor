@@ -72,11 +72,15 @@ describe.each(IDS)("Persona %s", (id) => {
 
   it("builds stage 1 answers that propose_direction accepts", () => {
     const p = profileFrom(text, table);
-    const direction = Object.fromEntries(
-      Object.keys(DirectionSchema.shape).flatMap((k) =>
-        k in p ? [[k, p[k as keyof Profile]]] : [],
+    const direction = {
+      ...Object.fromEntries(
+        Object.keys(DirectionSchema.shape).flatMap((k) =>
+          k in p ? [[k, p[k as keyof Profile]]] : [],
+        ),
       ),
-    );
+      // Not a profile field: off-rule tensions come from the conversation, not the fixed answers.
+      otherTensions: [],
+    };
     expect(DirectionSchema.safeParse(direction).success).toBe(true);
   });
 
