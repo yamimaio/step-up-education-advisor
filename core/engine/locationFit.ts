@@ -2,18 +2,15 @@ import type { Program } from "../schema/program";
 import { LOCATION_FIT } from "./constants";
 import type { EffectiveProfile } from "./types";
 
-// Location fit (D9): 1 to 5, computed per user.
+// Location fit (D9): 1 to 5, computed per user from the location values only. Travel comfort
+// scores separately, as travel fit (docs/need-based-ranking.md, section 3a).
 export function locationFit(
-  profile: Pick<EffectiveProfile, "locationValues" | "travelComfort">,
-  program: Pick<Program, "locationOffers" | "format">,
+  profile: Pick<EffectiveProfile, "locationValues">,
+  program: Pick<Program, "locationOffers">,
 ): number {
-  let score = LOCATION_FIT.base;
-  score +=
+  const score =
+    LOCATION_FIT.base +
     profile.locationValues.filter((v) => program.locationOffers.includes(v)).length *
-    LOCATION_FIT.perMatchedValue;
-  if (program.format !== "online") {
-    if (profile.travelComfort === "appeal") score += LOCATION_FIT.appealBonus;
-    if (profile.travelComfort === "burden") score += LOCATION_FIT.burdenPenalty;
-  }
+      LOCATION_FIT.perMatchedValue;
   return Math.min(LOCATION_FIT.max, Math.max(LOCATION_FIT.min, score));
 }

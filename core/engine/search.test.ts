@@ -23,7 +23,9 @@ describe("Stage 2 never changes the confirmed category", () => {
       alternative: "certificate",
     });
     expect(result.programs.find((p) => p.id === "fake-executive")?.status).toBe("fail");
-    expect(result.scenarios.network).not.toContain("fake-executive");
+    expect(result.ranking.ranked).toEqual([]);
+    // Only passing runner-up programs are listed; the certificate is a near miss on hours.
+    expect(result.ranking.alsoWorthALook).toEqual([]);
   });
 
   it("uses the category it is given, not one it works out itself", () => {
@@ -31,10 +33,11 @@ describe("Stage 2 never changes the confirmed category", () => {
     const chosen: CategoryResult = { ...confirmed, winner: "certificate", runnerUp: "executive" };
     const given = evaluatePrograms(workedExampleProfile, chosen, programs, today);
     const own = evaluatePrograms(workedExampleProfile, confirmed, programs, today);
-    const score = (r: typeof given, id: string) =>
-      r.programs.find((p) => p.id === id)?.scenarioScores.network ?? 0;
-    expect(score(given, "fake-certificate") - score(own, "fake-certificate")).toBeCloseTo(0.5, 9);
-    expect(score(own, "fake-executive") - score(given, "fake-executive")).toBeCloseTo(0.5, 9);
+    expect(given.ranking.ranked.map((r) => r.id)).toEqual(["fake-certificate"]);
+    expect(given.ranking.alsoWorthALook.map((r) => r.id)).toEqual(["fake-executive"]);
+    expect(own.ranking.ranked.map((r) => r.id)).toEqual(["fake-executive"]);
+    // Scores don't depend on the category: only the order of the list does.
+    expect(given.programs.map((p) => p.score)).toEqual(own.programs.map((p) => p.score));
     expect(given.access.category).toBe("certificate");
   });
 

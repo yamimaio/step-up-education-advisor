@@ -69,15 +69,46 @@ describe("fake sample", () => {
 });
 
 describe("ratings", () => {
-  it("are parsed past footnote markers and \\$ escapes", () => {
+  it("are keyed by the five needs, parsed past footnote markers and \\$ escapes", () => {
     const r = parseRatings(read("fake-sample-rating.md"));
-    expect(r.ratings).toEqual({ network: 4, depth: 3, practicality: 4, costValue: 3 });
-    expect(r.ratingNotes.costValue).toMatch(/^\$24,000/);
-    expect(r.ratingLowEvidence).toEqual(["costValue"]);
+    expect(r.ratings).toEqual({
+      leadership_skills: 5,
+      deep_expertise: 3,
+      graduate_degree: 2,
+      senior_network: 4,
+      new_industry_or_city: 3,
+    });
+    expect(r.ratingNotes.new_industry_or_city).toMatch(/the \$24,000 fee\.$/);
+    expect(r.ratingNotes.graduate_degree).toMatch(/^default 1 → 2 because "participants/);
+    expect(r.ratingLowEvidence).toEqual(["senior_network", "new_industry_or_city"]);
   });
 
   it("use the answer, not the prompt's template", () => {
-    expect(parseRatings(read("fake-sample-rating.md")).ratings.network).toBe(4);
+    expect(parseRatings(read("fake-sample-rating.md")).ratings.leadership_skills).toBe(5);
+  });
+
+  it("ignore a later sentence that quotes the word ratings (#16)", () => {
+    const answer = `${read("fake-sample-rating.md")}\nNote: the "ratings" above reflect low evidence.\n`;
+    expect(parseRatings(answer).ratings.senior_network).toBe(4);
+  });
+
+  it("read a lowEvidence list that Perplexity shows between $$ … $$", () => {
+    const answer = read("fake-sample-rating.md").replace(
+      '"lowEvidence": ["senior_network", "new_industry_or_city"]',
+      // A function, since "$$" in a replacement string means one "$".
+      () => '"lowEvidence": $$\n"senior_network",\n"new_industry_or_city"\n$$\n\n}',
+    );
+    expect(answer).toContain("$$\n");
+    expect(parseRatings(answer).ratingLowEvidence).toEqual([
+      "senior_network",
+      "new_industry_or_city",
+    ]);
+  });
+
+  it("reject a rating keyed by an old lens name", () => {
+    const old =
+      '"ratings": { "network": 4, "depth": 3, "practicality": 4, "costValue": 3 },\n"ratingNotes": {},\n"lowEvidence": []';
+    expect(() => parseRatings(old)).toThrow(/leadership_skills/);
   });
 
   it("fail clearly when the block is missing", () => {

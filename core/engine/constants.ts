@@ -1,4 +1,4 @@
-import { Category, type Need } from "../schema/enums";
+import { Category, type Format, type Need } from "../schema/enums";
 import type { Profile } from "../schema/profile";
 
 // Everything Thursday's tuning might touch lives here.
@@ -81,30 +81,53 @@ export const NEAR_MISS_PCT = 15;
 export const HOURS_PASS_PCT = 25;
 export const HOURS_NEAR_PCT = 50;
 
-// Each row sums to 1: network, depth, practicality, costValue, locationFit.
-export const SCENARIO_WEIGHTS = {
-  network: { network: 0.4, depth: 0.1, practicality: 0.15, costValue: 0.1, locationFit: 0.25 },
-  depth: { network: 0.1, depth: 0.45, practicality: 0.15, costValue: 0.15, locationFit: 0.15 },
-  practicality: { network: 0.1, depth: 0.1, practicality: 0.45, costValue: 0.25, locationFit: 0.1 },
-} as const;
+// Stage 2 program score (docs/need-based-ranking.md, section 3): NEED_WEIGHTS × the program's
+// ratings on the user's three needs, plus these weights × format fit and travel fit. 9 to 45.
+export const FORMAT_FIT_WEIGHT = 2;
+export const TRAVEL_FIT_WEIGHT = 1;
 
-export const CATEGORY_BONUS = 0.5;
+// Format fit (section 3a): exact match; a neighbouring format (blended neighbours both online and
+// in person); the opposite format (online vs in person). No preference scores every program 3.
+export const FORMAT_FIT = { match: 5, neighbour: 3, opposite: 1, noPreference: 3 } as const;
 
-export const PEER_FIT = {
-  moreSeniorBelow: -1,
-  moreSeniorAtOrAbove: 0.5,
-  sameLevelMaxGapYears: 5,
-  sameLevelPenalty: -1,
-} as const;
+// Travel fit (section 3a): a program that needs trips for this user scores `wanted` for someone
+// who enjoys travel and `burden` for someone who finds it a burden; everything else is neutral.
+export const TRAVEL_FIT = { wanted: 5, neutral: 3, burden: 1 } as const;
 
+// Senior peers from the published cohort figure (section 2): the fewest years for each rating.
+export const SENIOR_PEER_BANDS: readonly { minYears: number; rating: Rating }[] = [
+  { minYears: 20, rating: 5 },
+  { minYears: 15, rating: 4 },
+  { minYears: 10, rating: 3 },
+  { minYears: 5, rating: 2 },
+  { minYears: 0, rating: 1 },
+];
+
+// Passing programs of the runner-up category shown under "Also worth a look".
+export const RUNNER_UP_LIMIT = 2;
+
+// Location fit (D9) now carries only the user's location values, and only breaks ties.
 export const LOCATION_FIT = {
   base: 3,
   perMatchedValue: 1,
-  appealBonus: 0.5,
-  burdenPenalty: -1,
   min: 1,
   max: 5,
 } as const;
+
+// Plain words for the card's why line.
+export const NEED_LABELS: Record<Need, string> = {
+  leadership_skills: "leadership skills",
+  deep_expertise: "deep expertise",
+  graduate_degree: "a graduate degree",
+  senior_network: "senior peers",
+  new_industry_or_city: "a new industry or city",
+};
+
+export const FORMAT_LABELS: Record<Format, string> = {
+  online: "Online",
+  hybrid: "Blended",
+  in_person: "In person",
+};
 
 // Midpoints of the airfare chips (D8). "unknown" has no midpoint.
 export const AIRFARE_MIDPOINTS: Record<Profile["airfareRange"], number | null> = {

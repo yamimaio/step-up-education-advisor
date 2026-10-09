@@ -1,6 +1,6 @@
 import JSON5 from "json5";
 import { ProgramSchema, type ProgramInput } from "../../core/schema/program";
-import { PaymentOption, RatingKey } from "../../core/schema/enums";
+import { Need, PaymentOption } from "../../core/schema/enums";
 
 // Turns a Perplexity research answer (Prompt 1) and rating answer (Prompt 2) into a draft
 // Program record. Pure: strings in, a record and notes out. Facts that don't fit the schema
@@ -60,38 +60,43 @@ export function extractPart1(markdown: string): Raw {
 }
 
 export type RatingResult = {
-  ratings: Record<RatingKey, number>;
-  ratingNotes: Record<RatingKey, string>;
-  ratingLowEvidence: RatingKey[];
+  ratings: Record<Need, number>;
+  ratingNotes: Record<Need, string>;
+  ratingLowEvidence: Need[];
 };
 
 /** The answer's `"ratings": …, "ratingNotes": …, "lowEvidence": …` text, wrapped in {} and read as JSON5. */
 export function parseRatings(markdown: string): RatingResult {
   const text = stripFootnotes(markdown);
-  // The prompt echoes a template with "ratings": { "network": n …, so take the last one.
-  const start = text.lastIndexOf('"ratings"');
-  if (start === -1) throw new Error('No "ratings" block found in the rating answer.');
+  // The prompt echoes a template with "ratings": { "leadership_skills": n …, so take the last
+  // one. Anchor on the object, so prose that quotes the word "ratings" later isn't the start (#16).
+  const start = [...text.matchAll(/"ratings"\s*:\s*\{/g)].at(-1)?.index;
+  if (start === undefined) throw new Error('No "ratings" block found in the rating answer.');
   const tail = text.slice(start);
-  const low = /"lowEvidence"\s*:\s*\[[^\]]*\]/.exec(tail);
+  // Perplexity's markdown sometimes shows the list's brackets as $$ … $$ (a math block).
+  const low = /"lowEvidence"\s*:\s*(?:\[[^\]]*\]|\$\$[^$]*\$\$)/.exec(tail);
   if (!low) throw new Error('No "lowEvidence" list found in the rating answer.');
-  const obj = parseObject(`{${tail.slice(0, low.index + low[0].length)}}`);
+  const block = tail
+    .slice(0, low.index + low[0].length)
+    .replace(/\$\$([^$]*)\$\$$/, (_m, items: string) => `[${items}]`);
+  const obj = parseObject(`{${block}}`);
   if (!obj) throw new Error("The ratings block could not be read as JSON5.");
   const { ratings, ratingNotes, lowEvidence } = obj;
   if (!isObject(ratings) || !isObject(ratingNotes) || !Array.isArray(lowEvidence)) {
     throw new Error("The ratings block needs ratings, ratingNotes and lowEvidence.");
   }
-  const keys = RatingKey.options;
+  const keys = Need.options;
   for (const key of keys) {
     if (typeof ratings[key] !== "number")
       throw new Error(`Rating "${key}" is missing or not a number.`);
     if (typeof ratingNotes[key] !== "string") throw new Error(`Rating note "${key}" is missing.`);
   }
   return {
-    ratings: Object.fromEntries(keys.map((k) => [k, ratings[k]])) as Record<RatingKey, number>,
+    ratings: Object.fromEntries(keys.map((k) => [k, ratings[k]])) as Record<Need, number>,
     ratingNotes: Object.fromEntries(
       keys.map((k) => [k, (ratingNotes[k] as string).trim()]),
-    ) as Record<RatingKey, string>,
-    ratingLowEvidence: lowEvidence.map((k) => RatingKey.parse(k)),
+    ) as Record<Need, string>,
+    ratingLowEvidence: lowEvidence.map((k) => Need.parse(k)),
   };
 }
 

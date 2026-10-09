@@ -1,4 +1,5 @@
 import type { Category, Need } from "../schema/enums";
+import type { Rating } from "./constants";
 import type { HoursRange } from "../schema/common";
 import type { Profile } from "../schema/profile";
 
@@ -82,8 +83,9 @@ export interface TravelEstimate {
   notes: string[];
 }
 
+// The classmates' experience next to the user's, for the card. It doesn't score: seniority is the
+// senior peers rating (docs/need-based-ranking.md, section 4).
 export interface PeerFit {
-  points: number;
   text: string;
 }
 
@@ -94,7 +96,38 @@ export interface ConfidenceResult {
   reasons: string[];
 }
 
-export type Scenario = "network" | "depth" | "practicality";
+// One of the user's three needs in a program's score.
+export interface NeedScore {
+  need: Need;
+  weight: number;
+  rating: Rating;
+  // weight × rating.
+  points: number;
+  // True when senior peers is computed from the published cohort figure, not taken from the record.
+  derived: boolean;
+  // The record's rating note, or the cohort figure ("cohort median 18 years") when derived.
+  note: string;
+  // The record lists this need as rated on thin evidence (never when derived).
+  lowEvidence: boolean;
+}
+
+// Format fit or travel fit, 1 to 5, with the card line (null when there is nothing to say).
+export interface Fit {
+  fit: Rating;
+  text: string | null;
+}
+
+// Stage 2 score (docs/need-based-ranking.md, sections 3 and 3a): 3/2/1 × the program's ratings on
+// the user's needs, + 2 × format fit + 1 × travel fit.
+export interface ProgramScore {
+  total: number;
+  needs: NeedScore[];
+  format: Fit;
+  travel: Fit;
+  // The two needs that added most above the lowest rating (weight × (rating − 1)), the larger
+  // first; ties go to the higher-ranked need. A need rated 1 is never listed.
+  topNeeds: Need[];
+}
 
 export interface ProgramEvaluation {
   id: string;
@@ -102,10 +135,26 @@ export interface ProgramEvaluation {
   checks: Check[];
   status: CheckStatus;
   peerFit: PeerFit;
+  // Location values only; breaks ties.
   locationFit: number;
   travelEstimate: TravelEstimate;
+  // Tuition plus the travel estimate; null when either isn't fully known. Breaks ties.
+  totalCostUsd: number | null;
   confidence: ConfidenceResult;
-  scenarioScores: Record<Scenario, number>;
+  score: ProgramScore;
+}
+
+// A listed program and its why line.
+export interface RankedProgram {
+  id: string;
+  why: string;
+}
+
+// One list ranked by the user's needs: the confirmed category's programs (passing, then near
+// misses), and up to RUNNER_UP_LIMIT passing programs of the runner-up under "Also worth a look".
+export interface Ranking {
+  ranked: RankedProgram[];
+  alsoWorthALook: RankedProgram[];
 }
 
 export interface CategoryResult {
@@ -148,7 +197,7 @@ export interface CategoryAccess {
 // Stage 2 (evaluatePrograms): programs for the confirmed category and the user's limits.
 export interface SearchResult {
   programs: ProgramEvaluation[];
-  scenarios: Record<Scenario, string[]>;
+  ranking: Ranking;
   // nothing_passes only.
   noProgram: NoProgramResult;
   access: CategoryAccess;
@@ -160,7 +209,7 @@ export interface EngineResult {
   category: CategoryResult;
   noProgram: NoProgramResult;
   programs: ProgramEvaluation[];
-  scenarios: Record<Scenario, string[]>;
+  ranking: Ranking;
   access: CategoryAccess;
   profileGaps: string[];
 }

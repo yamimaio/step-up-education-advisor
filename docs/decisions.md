@@ -143,3 +143,17 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - Yami confirmed both defaults on Oct 9: the 1 to 5 scale everywhere, and ranking inside the confirmed category.
 - Format preference (Oct 9): new `formatPreference`; program format is read from `format` (`hybrid` = blended). Format fit 5 / 3 / 1, no preference 3, weight 2.
 - Travel comfort stays (Yami, Oct 9: format and travel are different traits) and scores 1 × travel fit: appeal 5 / burden 1 when the program needs trips for this user, 3 otherwise; fine 3. It leaves location fit. R5 is unchanged.
+
+## Need-based ranking build (issue #65)
+
+Defaults taken where `docs/need-based-ranking.md` is silent:
+
+- **Needs trips for this user** (travel fit) means the travel estimate isn't `none`: an online program, one with no on-site days, a campus within commuting distance, or a program that needs the student local (no recurring trips) all count as no trips. An unknown home counts as needing trips, as in the travel estimate.
+- **Why line.** The two needs are ranked by what each adds above the lowest rating, weight × (rating − 1), the same baseline as stage 1's deciding needs; ties go to the need the user ranked higher. A need rated 1 is never named. The line reads "Ranked first for …" by position in the list, and "Also worth a look for …" for runner-up programs. Only a derived senior peers rating carries its figure in brackets; every need's rating note is on `score.needs[].note` for the card.
+- **Cohort wording** follows `cohortExperienceBasis`: "cohort median 18 years", "cohort average 18 years", or "cohort about 18 years" when the school doesn't say. Senior peers is derived from the figure whatever the basis.
+- **Confidence.** When the user ranked senior peers and the cohort figure is null, a fifth condition is missing ("the senior peers rating is a judgment"). It doesn't apply when the user didn't rank senior peers.
+- **Total cost for ties** counts a per-course tuition estimate as known, and a lodging-only travel estimate (airfare range unknown) as unknown, so unknown totals sort last.
+- **Who is listed.** The confirmed category's list isn't capped (12 programs in all). "Also worth a look" takes the runner-up from stage 1 (`category.runnerUp`), passing programs only. With no confirmed category (an unresolved tie) both lists are empty until the user picks.
+- **Card lines.** Format fit and travel fit carry `text: null` when there is nothing to say (no preference, travel fine, or no trips).
+- **Declined `formatPreference`** becomes `no_preference`. `peerPreference` is still asked but no longer scores; the card's peer line only compares experience.
+- **Converter.** Reads `lowEvidence` lists that Perplexity's markdown shows between `$$ … $$` (all four re-rated answers do), and anchors on the last `"ratings": {` (fixes #16).

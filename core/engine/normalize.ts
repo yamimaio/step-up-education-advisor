@@ -66,6 +66,7 @@ export function applyDeclinedDefaults(profile: Profile): {
     homeLon: out("homeLat") || out("homeLon") ? null : profile.homeLon,
     peerPreference: out("peerPreference") ? "doesnt_matter" : profile.peerPreference,
     travelComfort: out("travelComfort") ? "fine" : profile.travelComfort,
+    formatPreference: out("formatPreference") ? "no_preference" : profile.formatPreference,
     airfareRange: out("airfareRange") ? "unknown" : profile.airfareRange,
     // No rule-out and no experience figure when the user chose not to say.
     relocate: out("relocate") ? null : profile.relocate,
