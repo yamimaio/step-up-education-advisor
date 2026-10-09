@@ -61,3 +61,22 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - `nothing_passes` needs no passing program at all; passing programs that all belong to ruled-out types give `no_type_fits`.
 - The category bonus still goes to the winner while a "not yet" result shows (only an unresolved tie or no winner removes it).
 - Scenario scores are rounded to 9 places and ties break by id code unit.
+
+## Structured home location (issue #35)
+
+- `homeCity` was one free-text string, and the engine had to parse spellings like "Cambridge, MA" and "Washington, D.C.". The profile now holds `homeCity` (non-empty), `homeRegion` (string or null) and `homeCountry` (two-letter ISO code, same rule as `country` in the program schema). The model fills them in from the conversation.
+- `homeRegion` is null only when the country has no state or province and the user said so. A missing part is asked again, not guessed.
+- The partial profile has the same fields, all optional. `declined` may name any of them; a declined country or region is a gap, not an error.
+- A declined part is stored as `""` (city, country) or `null` (region), in both `ProfileSchema` and `PartialProfileSchema`. A part named in `declined` must hold exactly that placeholder, and `""` without a `declined` entry is an error. Field rules (trimmed text, ISO code) run first; the declined pairing check runs after them, so a re-ask can need a second round. The engine ignores declined parts. `CountryCode` is shared with the program schema.
+- City and region are trimmed, with the same rule as program text fields (`Text` in `core/schema/common.ts`).
+- Engine matching (now a distance check, see the next section), the advisor wording and the server's validation and re-ask error land in #22, #25 and step 6.
+
+## Home coordinates and campus coordinates (issue #35, reshaped by docs/ux-two-stage.md)
+
+- Location is compared by distance, not parsed. The profile gains `homeLat` and `homeLon` (degrees, the model's approximate city centre); programs gain `campusLat` and `campusLon`. Ranges are -90 to 90 and -180 to 180, shared as `Latitude` and `Longitude` in `core/schema/common.ts`.
+- Declined: `homeLat` and `homeLon` hold `null`, and `null` without a `declined` entry is an error, the same pairing rule as the other home parts (the placeholders are `""` for city and country, `null` for region, latitude and longitude). Declining the city does not force declining the coordinates; the model sets both.
+- Campus coordinates are null only for online programs; any in-person or hybrid program must have `campusAddress`, `campusLat` and `campusLon`, like `city`, so the distance check never silently skips a program (validate-data fails otherwise).
+- The coordinates are checkable: `campusAddress` is the school's street address with an official-page source whose quote contains it (checked by an explicit rule, ignoring case, line breaks and punctuation; not a fact group, so a missing source gives one error), and `figureNotes` for `campusLat` and `campusLon` say they are derived from it. The research converter leaves them null and the overrides file sets them (`campusAddress`, `campusLat` and `campusLon` joined the allow-list), with the address source in `extraSources`. An online program must have all three null.
+- Commuting distance is 80 km by default, in `core/engine/constants.ts` (#22 adds it). `metro` stays in the program schema for now; #22 stops using it. Dropping the field is a later choice.
+- The step 4 records on the open PRs need `campusAddress`, `campusLat`, `campusLon`, an official-page `campusAddress` source and `figureNotes` for both coordinates once this merges; the values are in each PR's notes.
+- `homeLat` and `homeLon` are declined together: one `null` and one number is an error, so a half pair never reaches the engine.

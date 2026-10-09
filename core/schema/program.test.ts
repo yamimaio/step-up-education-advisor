@@ -144,6 +144,97 @@ describe("online programs", () => {
   });
 });
 
+describe("campus coordinates", () => {
+  it("accepts coordinates on site and null online", () => {
+    expect(problems(fakeExecutive)).toEqual([]);
+    expect(fakeCertificate.campusLat).toBeNull();
+    expect(problems(fakeCertificate)).toEqual([]);
+  });
+
+  it.each(["in_person", "hybrid"] as const)(
+    "validate-data rejects a %s program with null coordinates or address",
+    (format) => {
+      const p = clone(fakeExecutive);
+      p.format = format;
+      p.campusAddress = null;
+      p.campusLat = null;
+      p.campusLon = null;
+      const out = validateDataset([p], "2026-10-08", FixtureDatasetSchema).join("\n");
+      expect(out).toMatch(/campusAddress: required unless/);
+      expect(out).toMatch(/campusLat: required unless/);
+      expect(out).toMatch(/campusLon: required unless/);
+    },
+  );
+
+  it("rejects one null coordinate on site", () => {
+    const p = clone(fakeExecutive);
+    p.campusLon = null;
+    expect(problems(p).join("\n")).toMatch(/campusLon: required unless/);
+  });
+
+  it("reports the campus errors together with a missing city", () => {
+    const p = clone(fakeExecutive);
+    p.city = null;
+    p.campusAddress = null;
+    p.campusLat = null;
+    p.campusLon = null;
+    const out = problems(p).join("\n");
+    expect(out).toMatch(/city: required unless/);
+    expect(out).toMatch(/campusAddress: required unless/);
+    expect(out).toMatch(/campusLat: required unless/);
+  });
+
+  it("rejects campus fields on an online program", () => {
+    const p = clone(fakeCertificate);
+    p.campusLat = 42.36;
+    p.campusLon = -71.06;
+    p.campusAddress = "1 Fixture Way, Boston, MA 02110";
+    const out = problems(p).join("\n");
+    expect(out).toMatch(/campusLat: an online program has no campus/);
+    expect(out).toMatch(/campusLon: an online program has no campus/);
+    expect(out).toMatch(/campusAddress: an online program has no campus/);
+  });
+
+  it("rejects out-of-range and non-numeric coordinates", () => {
+    for (const bad of [{ campusLat: 91 }, { campusLon: -181 }, { campusLat: "42.36" }]) {
+      expect(ProgramSchema.safeParse({ ...clone(fakeExecutive), ...bad }).success).toBe(false);
+    }
+  });
+
+  it("needs a campusAddress source that quotes the address", () => {
+    const none = clone(fakeExecutive);
+    none.sources = none.sources.filter((s) => s.field !== "campusAddress");
+    expect(problems(none).join("\n")).toMatch(/campusAddress: needs an official_page source/);
+    expect(problems(none)).toHaveLength(1);
+    const wrong = clone(fakeExecutive);
+    for (const s of wrong.sources) if (s.field === "campusAddress") s.quote = "Visit us in Boston.";
+    expect(problems(wrong).join("\n")).toMatch(/campusAddress: needs an official_page source/);
+  });
+
+  it("does not accept correspondence as the source of the address", () => {
+    const p = clone(fakeExecutive);
+    for (const s of p.sources) if (s.field === "campusAddress") s.kind = "school_correspondence";
+    expect(problems(p).join("\n")).toMatch(/campusAddress: needs an official_page source/);
+  });
+
+  it("matches the address across line breaks, commas and spacing", () => {
+    const p = clone(fakeExecutive);
+    p.campusAddress = "2211 Campus Drive, Evanston, IL 60208";
+    for (const s of p.sources) {
+      if (s.field === "campusAddress") s.quote = "Visit 2211  Campus Drive\nEvanston IL 60208.";
+    }
+    expect(problems(p)).toEqual([]);
+  });
+
+  it("marks the coordinates as derived in the figure notes", () => {
+    const p = clone(fakeExecutive);
+    p.figureNotes = {};
+    const out = problems(p).join("\n");
+    expect(out).toMatch(/figureNotes.campusLat: say how/);
+    expect(out).toMatch(/figureNotes.campusLon: say how/);
+  });
+});
+
 describe("lodging", () => {
   it("needs a gsa.gov source for a US rate", () => {
     const p = clone(fakeExecutive);
