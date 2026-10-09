@@ -189,3 +189,14 @@ Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM 
 - Review round 3: persona E's stage 1 verdict is the executive MBA (28 over executive program 26): the only EMBA record publishes no duration, so length is a near miss and the type is not ruled out. `docs/chat-api.md` gives each `notice.kind` its next step: retry for `retryable` and `unknown`, drop the last message and restore the previous state for `refusal`, input off for `auth_or_credit`, and a new `empty_input` kind for the whitespace nudge, whose message the page drops.
 - `formatPreference` is in the stage 2 section of `advisor.md` as pending: the profile field comes with #65, and its chip set, checklist entry and persona answers go with it.
 - `docs/chat-api.md` returns separate `chips`, `confirm` and `direction` fields instead of build-steps' single `ui` union, so a turn can carry the assistant's text and the verdict together.
+
+## Step 7 (Stage 1 page, issue #9)
+
+- Stage 1 only: chat, chips, the "Here's what I understood" card, the verdict block and Download transcript. `ProgramCard`, the shortlists and `DataLimitsFooter` come with stage 2.
+- Until step 6 merges, `app/api/chat/route.ts` serves a scripted Stage 1 interview (`app/api/chat/fake.ts`) in the `docs/chat-api.md` shapes: fixed advisor lines, chip values from `CHIPS`, label rewrites in `replaceLastUserMessage`, a `check_contradictions` round, and the verdict from the real `recommendCategory`. It makes no model call. Step 6 replaces both files; whichever PR merges second resolves that one conflict. `tests/page.fake.test.tsx` drives the page through it with a mocked `fetch`.
+- The page can't import `server/` or the Anthropic SDK, so the contract types live in `app/lib/chatTypes.ts`, with message blocks typed loosely and passed back unchanged.
+- Typing while chips are pending sends a `ChipAnswer` with `typed` and no `chosen`; typing while the card is pending sends `{ confirmed: false, corrections }`.
+- A multi-select (needs, pick 3) numbers the taps in order; a second tap removes one, and a Send button is enabled once exactly `pick` are chosen.
+- The verdict block shows the winner, the runner-up (or the tie), the deciding needs, the resolved tensions or the "not yet" message, the declined fields, and every type's score or "Ruled out" with the engine's reasons. The "not yet" wording per trigger is fixed page text, not model text.
+- A request that never gets a `ChatResponse` is handled on the page: a network error or 5xx shows a Retry (same as `retryable`); a 4xx disables input (posting the same history would be refused again). Download transcript keeps working in both.
+- The page shows a fixed greeting that is not part of the history, since the history must start with the user's message.
