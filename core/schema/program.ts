@@ -1,10 +1,9 @@
 import { z } from "zod";
-import { IsoDate, HoursRange } from "./common";
+import { IsoDate, HoursRange, Text as text, CountryCode, Latitude, Longitude } from "./common";
 import { Attendance, Category, Format, LocationValue, PaymentOption, RatingKey } from "./enums";
 
 const nonNegative = z.number().nonnegative();
 const nonNegativeInt = z.number().int().nonnegative();
-const text = z.string().trim().min(1);
 
 const Rating = z.number().int().min(1).max(5);
 
@@ -55,10 +54,15 @@ const ProgramObject = z.strictObject({
   // Bare city name; null only for online programs.
   city: text.nullable(),
   state: text.nullable(),
+  // Approximate campus coordinates in degrees; the engine compares them with the user's home.
+  // The official street address the coordinates were derived from; needs a source quoting it.
+  campusAddress: text.nullable(),
+  campusLat: Latitude.nullable(),
+  campusLon: Longitude.nullable(),
   // Same-metro key (for example "boston" for Boston and Cambridge); resolved by core in step 3.
   metro: text.nullable(),
   // ISO 3166 alpha-2 code.
-  country: z.string().regex(/^[A-Z]{2}$/, "use a two-letter ISO country code like US"),
+  country: CountryCode,
   locationOffers: z
     .array(LocationValue)
     .refine((a) => new Set(a).size === a.length, "must not repeat a value"),
@@ -106,6 +110,11 @@ type FieldKey = keyof z.input<typeof ProgramObject>;
 export const PROGRAM_FIELDS = Object.keys(ProgramObject.shape) as FieldKey[];
 // Facts a source can be about: every field except the sources themselves.
 export const SOURCEABLE_FIELDS = PROGRAM_FIELDS.filter((k) => k !== "sources");
+
+const CAMPUS_FIELDS = ["campusAddress", "campusLat", "campusLon"] as const;
+
+// Compare addresses ignoring case, line breaks, extra spaces, commas and periods.
+const flatten = (s: string) => s.toLowerCase().replace(/[,.]/g, " ").replace(/\s+/g, " ").trim();
 
 // The plan's three fact groups. A group needs a source when any of its fields has a value.
 export const FACT_GROUPS = {
@@ -190,8 +199,34 @@ export const ProgramSchema = ProgramObject.superRefine((p, ctx) => {
       fail(["attendance"], 'an online program must have attendance "none"');
     if (p.lodgingPerNightUsd !== null)
       fail(["lodgingPerNightUsd"], "an online program has no lodging");
-  } else if (p.city === null) {
-    fail(["city"], "required unless the program is online");
+    for (const f of CAMPUS_FIELDS) {
+      if (p[f] !== null) fail([f], "an online program has no campus, so this must be null");
+    }
+  } else {
+    if (p.city === null) fail(["city"], "required unless the program is online");
+    for (const f of CAMPUS_FIELDS) {
+      if (p[f] === null) fail([f], "required unless the program is online");
+    }
+  }
+
+  // The coordinates are derived from the address, so the address is quoted from the school and
+  // the figure notes say so.
+  if (p.campusAddress !== null) {
+    const address = flatten(p.campusAddress);
+    const quotes = p.sources.filter(
+      (s) => s.field === "campusAddress" && s.kind === "official_page",
+    );
+    if (!quotes.some((s) => flatten(s.quote).includes(address))) {
+      fail(
+        ["campusAddress"],
+        "needs an official_page source with field campusAddress whose quote contains it",
+      );
+    }
+  }
+  for (const f of ["campusLat", "campusLon"] as const) {
+    if (p[f] !== null && !/derived/i.test(p.figureNotes[f] ?? "")) {
+      fail(["figureNotes", f], 'say how it was obtained, for example "derived from campusAddress"');
+    }
   }
 
   if (

@@ -9,6 +9,18 @@ export const IsoDate = z
     return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
   }, "not a real calendar date");
 
+// Non-blank text, trimmed so "Boston " compares equal to "Boston".
+export const Text = z.string().trim().min(1);
+
+// A two-letter ISO country code; shared by program records and the user's home country.
+export const CountryCode = z
+  .string()
+  .regex(/^[A-Z]{2}$/, "use a two-letter ISO country code like US");
+
+// Degrees; the model's approximate city centre for the user, a campus for a program.
+export const Latitude = z.number().min(-90).max(90);
+export const Longitude = z.number().min(-180).max(180);
+
 // Used for the user's hours per week and a program's published estimate.
 export const HoursRange = z
   .object({ min: z.number().nonnegative(), max: z.number().nonnegative() })
