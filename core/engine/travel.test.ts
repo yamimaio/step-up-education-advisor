@@ -166,6 +166,22 @@ describe("Travel estimate: published counts and relocation", () => {
     expect(travelEstimate(noTrips, buenosAires)).toMatchObject({ trips: null, tripsPerYear: null });
   });
 
+  it("keeps the yearly trip count when the program length isn't published (review #86)", () => {
+    const noLength = fixture("fake-executive", { durationMonths: null, durationMaxMonths: null });
+    expect(travelEstimate(noLength, buenosAires)).toMatchObject({
+      kind: "unknown",
+      totalUsd: null,
+      trips: null,
+      tripsPerYear: 3,
+    });
+    const noLengthNoCount = fixture("fake-executive", {
+      durationMonths: null,
+      durationMaxMonths: null,
+      residencyCount: null,
+    });
+    expect(travelEstimate(noLengthNoCount, buenosAires).tripsPerYear).toBeNull();
+  });
+
   it("needs no recurring travel for a user who would relocate to a full-time program", () => {
     const mba = fixture("fake-mba");
     const t = travelEstimate(mba, { ...buenosAires, relocate: true });

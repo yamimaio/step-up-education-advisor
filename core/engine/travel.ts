@@ -75,7 +75,15 @@ export function travelEstimate(
     notes.push("Your home or the campus location is unknown, so this assumes you travel.");
   }
   const months = program.durationMonths ?? program.durationMaxMonths;
-  if (months === null) return unknown("Program length not published.", notes);
+  if (months === null) {
+    // The yearly trip count can still be published; only the number of years is missing.
+    const published = program.residencyCount !== null && program.residencyCount > 0;
+    return unknown(
+      "Program length not published.",
+      notes,
+      published ? { tripsPerYear: program.residencyCount } : {},
+    );
+  }
   const years = Math.max(1, Math.ceil(months / 12));
 
   const count = program.residencyCount !== null && program.residencyCount > 0;

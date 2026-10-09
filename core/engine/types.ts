@@ -73,7 +73,8 @@ export interface TravelEstimate {
   kind: "none" | "estimate" | "unknown";
   totalUsd: number | null;
   // Over the whole program, and in a year of it (the same for a program of a year or less). Kept on
-  // an `unknown` estimate when the trips are published but another figure is missing.
+  // an `unknown` estimate when the trips are published but another figure is missing; with the
+  // program length unpublished only `tripsPerYear` is known.
   trips: number | null;
   tripsPerYear: number | null;
   nightsPerTrip: number | null;

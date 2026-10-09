@@ -198,6 +198,19 @@ describe("Travel fit (section 3a)", () => {
     });
   });
 
+  it("names the yearly trips when the program length isn't published (review #86)", () => {
+    const [p] = evaluate(
+      personaAProfile,
+      [fixture("fake-executive", { durationMonths: null, durationMaxMonths: null })],
+      today,
+    ).programs;
+    expect(p?.travelEstimate).toMatchObject({ kind: "unknown", trips: null, tripsPerYear: 3 });
+    expect(p?.score.travel).toEqual({
+      fit: 5,
+      text: "3 trips a year, which you said you enjoy.",
+    });
+  });
+
   it("needs no trips from a user who lives within commuting distance", () => {
     const local = evaluate(
       makeProfile({ ...BOSTON, travelComfort: "burden" }),

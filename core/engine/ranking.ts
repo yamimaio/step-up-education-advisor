@@ -75,11 +75,14 @@ export function travelFit(
   const needsTrips = travel.kind !== "none";
   if (comfort === "fine" || !needsTrips) return { fit: TRAVEL_FIT.neutral, text: null };
   // A program longer than a year gives the yearly count, so two schedules compare like for like.
+  // With the length unpublished only the yearly count is known.
   const count = (n: number, rest: string) =>
     `${travel.tripsEstimated ? "About " : ""}${n} trip${n === 1 ? "" : "s"} ${rest}`;
   const trips =
     travel.trips === null
-      ? "Needs travel to campus"
+      ? travel.tripsPerYear === null
+        ? "Needs travel to campus"
+        : count(travel.tripsPerYear, "a year")
       : travel.tripsPerYear !== null && travel.tripsPerYear !== travel.trips
         ? count(travel.tripsPerYear, "a year")
         : count(travel.trips, "to campus");
