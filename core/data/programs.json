@@ -47,7 +47,9 @@
     "ratingLowEvidence": ["network", "depth", "practicality", "costValue"],
     "figureNotes": {
       "tuitionUsd": "Price for the class entering in 2026; the 2027 price is not published.",
-      "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028."
+      "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028.",
+      "campusLat": "Derived from campusAddress (approximate, from the street address).",
+      "campusLon": "Derived from campusAddress (approximate, from the street address)."
     },
     "sources": [
       {
@@ -157,12 +159,22 @@
         "url": "https://executivemba.wharton.upenn.edu/class-profile/",
         "quote": "an average of 13-14 years of professional experience",
         "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "campusAddress",
+        "url": "https://sf.wharton.upenn.edu/connect/directions/",
+        "quote": "2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
       }
     ],
     "verification": {
       "status": "draft",
       "verifiedBy": null
     },
-    "locationOffers": ["network_density", "industry_hub"]
+    "locationOffers": ["network_density", "industry_hub"],
+    "campusAddress": "2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105",
+    "campusLat": 37.7916,
+    "campusLon": -122.3893
   }
 ]
