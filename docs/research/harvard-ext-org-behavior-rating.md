@@ -56,3 +56,33 @@ $$
 
 [^1]: harvard-ext-org-behavior.md
 
+## Reviewed ratings (Yami, Oct 9)
+
+Perplexity's answer above, reviewed under the rating rules from issue #87. The record uses these values; the evidence is in Perplexity's notes above.
+
+```json
+{
+  "ratings": {
+    "leadership_skills": 4,
+    "deep_expertise": 3,
+    "graduate_degree": 3,
+    "senior_network": 1,
+    "new_industry_or_city": 3
+  },
+  "ratingNotes": {
+    "leadership_skills": "Required organizational behavior and conflict management courses, with electives such as Leading Through Change.",
+    "deep_expertise": "Four graduate-credit courses in organizational behavior, without a capstone.",
+    "graduate_degree": "Courses can count toward a Harvard Extension master's in management or industrial-organizational psychology.",
+    "senior_network": "Online, with no required time together; earner titles range from business analyst to vice president.",
+    "new_industry_or_city": "Career webinars, advising and career fairs are open to certificate students."
+  },
+  "lowEvidence": [
+    "senior_network"
+  ]
+}
+```
+
+Changes from Perplexity's answer:
+
+- No rating changes. leadership_skills 4 now matches a defined level (required leadership courses, not built for experienced leaders), so it leaves lowEvidence.
+- graduate_degree stays 3, not the new 4: not every certificate course counts toward the master's.
