@@ -7,7 +7,7 @@ import type {
 } from "./types";
 
 // Stage 1's "No program yet": the goal is unclear, or no type fits (every type is out, or the
-// best score is under 4). Goal first.
+// best score is under NO_PROGRAM_THRESHOLD). Goal first.
 export function noProgramForDirection(
   profile: Pick<EffectiveDirection, "goalClarity">,
   category: Pick<CategoryResult, "scores">,

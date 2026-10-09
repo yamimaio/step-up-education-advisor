@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { evaluate } from "./evaluate";
+import { noProgramForDirection } from "./noProgram";
 import { fixtureDataset } from "../../tests/fixtures/dataset";
 import { BUENOS_AIRES, makeProfile } from "../../tests/fixtures/profiles";
 
@@ -26,7 +27,7 @@ describe("Each no-program trigger fires on its own example (S8-6)", () => {
 
   it("2 hours a week is a stage-1 answer: it rules the strong types out, so no type fits", () => {
     // Before the stage split this example was nothing_passes. Hours now decide in stage 1, which
-    // leaves only the certificate and the short course (3 each, under the threshold of 4).
+    // leaves only the certificate and the short course (12 each, under the threshold of 14).
     expect(
       run({ tuitionBudgetUsd: 3000, hoursPerWeek: { min: 1, max: 2 }, maxOnsiteDays: 0 }),
     ).toEqual({ triggered: true, trigger: "no_type_fits" });
@@ -52,7 +53,7 @@ describe("Each no-program trigger fires on its own example (S8-6)", () => {
     });
   });
 
-  it("does not fire no_type_fits for a new city as the only need, because a full-time MBA scores 6", () => {
+  it("does not fire no_type_fits for a new city as the only need, because a full-time MBA scores 16", () => {
     const profile = makeProfile({
       needs: ["new_industry_or_city", "senior_network", "graduate_degree"],
       keepWorking: false,
@@ -64,9 +65,32 @@ describe("Each no-program trigger fires on its own example (S8-6)", () => {
       homeCity: "Boston",
     });
     const result = evaluate(profile, fixtureDataset(), today);
-    // The MBA is not out: 2x3 for the new city, 0 for the network, 2x1 for the degree, -3 for no degree needed.
-    expect(result.category.scores.mba).toBe(5);
+    // The MBA is not out: 5x3 for the new city, 1x2 for the network, 5x1 for the degree, -6 for no degree needed.
+    expect(result.category.scores.mba).toBe(16);
     expect(result.noProgram.triggered).toBe(false);
+  });
+});
+
+describe("No type fits below the threshold of 14 (1-5 scale)", () => {
+  const scores = (best: number) => ({
+    scores: {
+      mba: "out" as const,
+      emba: "out" as const,
+      specialized_masters: best - 1,
+      executive: best,
+      certificate: 9,
+      short_course: 9,
+    },
+  });
+
+  it("fires at 13 and not at 14", () => {
+    expect(noProgramForDirection({ goalClarity: "clear" }, scores(13))).toEqual({
+      triggered: true,
+      trigger: "no_type_fits",
+    });
+    expect(noProgramForDirection({ goalClarity: "clear" }, scores(14))).toEqual({
+      triggered: false,
+    });
   });
 });
 

@@ -13,7 +13,7 @@ All files sit in `core/engine/`. They are pure: no I/O, no `node:` imports, and 
 | File | Exports |
 | --- | --- |
 | `types.ts` | `CheckId` (8), `CheckStatus`, `Check { id, status, value, limit, unit, unknown, note? }`, `ProgramEvaluation`, `CategoryResult`, `NoProgramResult`, `EffectiveDirection`, `DirectionResult`, `CategoryAccess`, `SearchResult`, `EngineResult`, `Contradiction` |
-| `constants.ts` | `TYPE_RATINGS` matrix, `NEED_WEIGHTS [3,2,1]`, `DEGREE_ADJUST {no:-3, unsure:-2, preferred:-1}`, `DEGREE_ADJUSTED_TYPES`, `REQUIRED_RULES_OUT`, `GROW_IN_ROLE_BONUS 2` + types, `NO_PROGRAM_THRESHOLD 4`, `NEAR_MISS_PCT 15`, `HOURS_PASS_PCT 25`, `HOURS_NEAR_PCT 50`, `SCENARIO_WEIGHTS`, `CATEGORY_BONUS 0.5`, `PEER_FIT`, `LOCATION_FIT`, `AIRFARE_MIDPOINTS`, `CONFIDENCE_WINDOW_DAYS 60`, `WEEKEND_TRIPS_PER_YEAR 26`, `COMMUTE_KM 80` (commuting distance) |
+| `constants.ts` | `TYPE_RATINGS` matrix, `NEED_WEIGHTS [3,2,1]`, `DEGREE_ADJUST {no:-6, unsure:-4, preferred:-2}`, `DEGREE_ADJUSTED_TYPES`, `REQUIRED_RULES_OUT`, `GROW_IN_ROLE_BONUS 4` + types, `NO_PROGRAM_THRESHOLD 14`, `NEAR_MISS_PCT 15`, `HOURS_PASS_PCT 25`, `HOURS_NEAR_PCT 50`, `SCENARIO_WEIGHTS`, `CATEGORY_BONUS 0.5`, `PEER_FIT`, `LOCATION_FIT`, `AIRFARE_MIDPOINTS`, `CONFIDENCE_WINDOW_DAYS 60`, `WEEKEND_TRIPS_PER_YEAR 26`, `COMMUTE_KM 80` (commuting distance) |
 | `normalize.ts` | `applyDirectionDefaults(directionProfile)` (stage 1) and `applyDeclinedDefaults(profile)` (stage 2, which reuses it) → the profile the engine actually uses plus `profileGaps` |
 | `distance.ts` | `withinCommute(home, program)`: great-circle distance between `{ homeLat, homeLon }` and `{ campusLat, campusLon }` against `COMMUTE_KM` (replaces the city-matching code: `places.ts`, `metro.ts` and `METRO_STATES`; `normalize.ts` stays for `applyDeclinedDefaults`; see `docs/ux-two-stage.md`) |
 | `travel.ts` | `travelEstimate(program, profile)` |
@@ -61,10 +61,10 @@ Also:
 
 | Rule | Function | Test |
 | --- | --- | --- |
-| Needs weighted 3/2/1 × matrix (Strong 2, Some 1, Little 0) | `categoryFit` | **S8-1** "reproduces the plan's worked example": executive 11, EMBA and MBA out because of length, specialized master's 1, certificate 3, short course 3, run on the fixtures |
-| Degree `no` −3, `unsure` −2, `preferred` −1 on MBA, EMBA and specialized master's | `categoryFit` | one case per value |
+| Needs weighted 3/2/1 × matrix (Strong 5, Some 3, Little 1) | `categoryFit` | **S8-1** "reproduces the plan's worked example": executive 28, EMBA and MBA out because of length, specialized master's 8, certificate 12, short course 12, run on the fixtures |
+| Degree `no` −6, `unsure` −4, `preferred` −2 on MBA, EMBA and specialized master's | `categoryFit` | one case per value |
 | Degree `required` rules out executive, certificate and short course | `categoryFit` | **S8-2** |
-| `grow_in_role` adds +2 to executive, certificate and short course | `categoryFit` | **S8-3** |
+| `grow_in_role` adds +4 to executive, certificate and short course | `categoryFit` | **S8-3** |
 | `step_up` adds nothing to any type; the matrix alone decides (MBA, EMBA and master's win through the degree and network ratings) | `categoryFit` | a `step_up` profile scores exactly its matrix subtotal plus degree adjustments |
 | A type with records but none passing or near-missing the stage-1 checks (length, hours, work-compatible) is out; budget, travel and location never rule a type out | `categoryFit` | covered by S8-1 (EMBA, MBA); E: the verdict is the same whatever the budget, travel or location |
 | A type with no records is never ruled out (D6) | `categoryFit` | **S8-9** |
@@ -102,7 +102,7 @@ Also:
 
 Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). ★ marks the ones that change results and that I'd like you to look at.
 
-1. ★ **The no-program "no type fits" example doesn't reproduce.** The plan's example is "the only real need is a new city". With a new city ranked first, the full-time MBA scores 3 × 2 = 6, or 3 even after the −3 degree adjustment plus its other needs, so the rule stays above 4. In practice the trigger fires only when the strong types are out. **Default:** keep the threshold at 4. Test 6a uses "a degree is required, but 3 months at most", which fires through rule-outs. I'll note that the plan's prose example doesn't fire the trigger.
+1. ★ **The no-program "no type fits" example doesn't reproduce.** The plan's example is "the only real need is a new city". With a new city ranked first, the full-time MBA scores 3 × 2 = 6, or 3 even after the −3 degree adjustment plus its other needs, so the rule stays above 4. In practice the trigger fires only when the strong types are out. **Default:** keep the threshold at 4. (On the 1–5 scale of Oct 9 the same holds: the MBA scores 16 against a threshold of 14.) Test 6a uses "a degree is required, but 3 months at most", which fires through rule-outs. I'll note that the plan's prose example doesn't fire the trigger.
 2. ★ **Programs of a type that is "out" in step 1.** If the degree is required, executive programs are ruled out, but an executive program can still pass every constraint. **Default:** programs of an out type are left out of the shortlists. They keep their evaluations, so the card or the advisor can still show them.
 3. ★ **Which length the length check uses.** **Default:** `durationMonths`, the fastest published pace. Null falls back to `durationMaxMonths`, and when both are null the unknown-value rule applies.
 4. ★ **Per-course tuition.** **Default:** the tuition check uses only `tuitionUsd`, so null follows the unknown-value rule. The "about $X at N courses" estimate goes in the check's `note` for the card and never decides pass or fail. It does count elsewhere: R2 uses it as the program's price, and an official source on `tuitionPerCourseUsd` meets confidence's published-price condition (`docs/decisions.md`).

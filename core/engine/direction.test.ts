@@ -29,12 +29,12 @@ describe("Stage 1 takes only the answers that decide the category", () => {
     expect(DirectionProfileSchema.parse(stageOne)).toEqual(stageOne);
     const { category, noProgram } = recommendCategory(stageOne, programs);
     expect(category.scores).toEqual({
-      executive: 11,
+      executive: 28,
       emba: "out",
       mba: "out",
-      specialized_masters: 1,
-      certificate: 3,
-      short_course: 3,
+      specialized_masters: 8,
+      certificate: 12,
+      short_course: 12,
     });
     expect(category.winner).toBe("executive");
     expect(category.reasons.emba.join(" ")).toContain("program length");

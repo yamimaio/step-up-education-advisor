@@ -11,12 +11,12 @@ describe("Category fit on the fixtures", () => {
   it("reproduces the plan's worked example", () => {
     const { category, noProgram } = evaluate(workedExampleProfile, fixtureDataset(), today);
     expect(category.scores).toEqual({
-      executive: 11,
+      executive: 28,
       emba: "out",
       mba: "out",
-      specialized_masters: 1,
-      certificate: 3,
-      short_course: 3,
+      specialized_masters: 8,
+      certificate: 12,
+      short_course: 12,
     });
     expect(category.winner).toBe("executive");
     expect(category.runnerUp).toBe("certificate");

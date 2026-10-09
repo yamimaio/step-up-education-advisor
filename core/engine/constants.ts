@@ -3,53 +3,57 @@ import type { Profile } from "../schema/profile";
 
 // Everything Thursday's tuning might touch lives here.
 
-// Strong = 2, Some = 1, Little = 0 (docs/build-plan.md, Step 1). A rating answers "how strongly
-// does this type address this need for our target user (a senior leader)?", not "could this
-// type teach it at all?".
-export const TYPE_RATINGS: Record<Category, Record<Need, 0 | 1 | 2>> = {
+// Every rating in the product is an integer from 1 to 5 (docs/need-based-ranking.md, section 1).
+export type Rating = 1 | 2 | 3 | 4 | 5;
+export const RATING_MIN = 1;
+
+// Strong = 5, Some = 3, Little = 1 (docs/build-plan.md, Step 1, mapped 2→5, 1→3, 0→1). A rating
+// answers "how strongly does this type address this need for our target user (a senior
+// leader)?", not "could this type teach it at all?".
+export const TYPE_RATINGS: Record<Category, Record<Need, Rating>> = {
   mba: {
-    leadership_skills: 1,
-    deep_expertise: 1,
-    graduate_degree: 2,
-    senior_network: 0,
-    new_industry_or_city: 2,
+    leadership_skills: 3,
+    deep_expertise: 3,
+    graduate_degree: 5,
+    senior_network: 1,
+    new_industry_or_city: 5,
   },
   emba: {
-    leadership_skills: 2,
-    deep_expertise: 1,
-    graduate_degree: 2,
-    senior_network: 2,
-    new_industry_or_city: 1,
+    leadership_skills: 5,
+    deep_expertise: 3,
+    graduate_degree: 5,
+    senior_network: 5,
+    new_industry_or_city: 3,
   },
   specialized_masters: {
-    leadership_skills: 1,
-    deep_expertise: 2,
-    graduate_degree: 2,
-    senior_network: 0,
-    new_industry_or_city: 1,
+    leadership_skills: 3,
+    deep_expertise: 5,
+    graduate_degree: 5,
+    senior_network: 1,
+    new_industry_or_city: 3,
   },
   executive: {
-    leadership_skills: 2,
-    deep_expertise: 1,
-    graduate_degree: 0,
-    senior_network: 2,
-    new_industry_or_city: 1,
+    leadership_skills: 5,
+    deep_expertise: 3,
+    graduate_degree: 1,
+    senior_network: 5,
+    new_industry_or_city: 3,
   },
   // A certificate is not a degree. Credit that counts toward one is a program fact; see
   // docs/decisions.md (post-challenge).
   certificate: {
-    leadership_skills: 1,
-    deep_expertise: 1,
-    graduate_degree: 0,
-    senior_network: 0,
-    new_industry_or_city: 0,
+    leadership_skills: 3,
+    deep_expertise: 3,
+    graduate_degree: 1,
+    senior_network: 1,
+    new_industry_or_city: 1,
   },
   short_course: {
-    leadership_skills: 1,
-    deep_expertise: 1,
-    graduate_degree: 0,
-    senior_network: 0,
-    new_industry_or_city: 0,
+    leadership_skills: 3,
+    deep_expertise: 3,
+    graduate_degree: 1,
+    senior_network: 1,
+    new_industry_or_city: 1,
   },
 };
 
@@ -60,16 +64,16 @@ export const CATEGORY_ORDER: readonly Category[] = Category.options;
 // Weights for the user's #1, #2 and #3 need.
 export const NEED_WEIGHTS = [3, 2, 1] as const;
 
-export const DEGREE_ADJUST = { no: -3, unsure: -2, preferred: -1 } as const;
+export const DEGREE_ADJUST = { no: -6, unsure: -4, preferred: -2 } as const;
 export const DEGREE_ADJUSTED_TYPES: readonly Category[] = ["mba", "emba", "specialized_masters"];
 
 // Types ruled out when the user's employer requires a degree.
 export const REQUIRED_RULES_OUT: readonly Category[] = ["executive", "certificate", "short_course"];
 
-export const GROW_IN_ROLE_BONUS = 2;
+export const GROW_IN_ROLE_BONUS = 4;
 export const GROW_IN_ROLE_TYPES: readonly Category[] = ["executive", "certificate", "short_course"];
 
-export const NO_PROGRAM_THRESHOLD = 4;
+export const NO_PROGRAM_THRESHOLD = 14;
 
 // Percent over a limit that still counts as a near miss.
 export const NEAR_MISS_PCT = 15;

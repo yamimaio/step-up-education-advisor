@@ -8,6 +8,7 @@ import {
   GROW_IN_ROLE_BONUS,
   GROW_IN_ROLE_TYPES,
   NEED_WEIGHTS,
+  RATING_MIN,
   REQUIRED_RULES_OUT,
   TYPE_RATINGS,
 } from "./constants";
@@ -137,7 +138,7 @@ export function categoryFit(
 }
 
 // The two needs where weight × (winner rating − runner-up rating) is largest; ties go to the
-// higher-ranked need.
+// higher-ranked need. With no runner-up the baseline is the lowest rating.
 function decidingNeeds(needs: Need[], winner: Category | null, runnerUp: Category | null): Need[] {
   if (!winner) return [];
   return needs
@@ -146,7 +147,7 @@ function decidingNeeds(needs: Need[], winner: Category | null, runnerUp: Categor
       i,
       gap:
         (NEED_WEIGHTS[i] ?? 0) *
-        (TYPE_RATINGS[winner][need] - (runnerUp ? TYPE_RATINGS[runnerUp][need] : 0)),
+        (TYPE_RATINGS[winner][need] - (runnerUp ? TYPE_RATINGS[runnerUp][need] : RATING_MIN)),
     }))
     .sort((a, b) => b.gap - a.gap || a.i - b.i)
     .slice(0, 2)

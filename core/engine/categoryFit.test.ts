@@ -17,26 +17,26 @@ const degreeFirst: Partial<Profile> = {
 describe("Needs are weighted 3/2/1 times the type matrix", () => {
   it("scores each type from its ratings", () => {
     const { scores } = score({ ...degreeFirst, degreeRequired: "preferred" });
-    // graduate_degree x3, leadership x2, expertise x1, then the preferred adjustment of -1
+    // graduate_degree x3, leadership x2, expertise x1, then the preferred adjustment of -2
     expect(scores).toEqual({
-      mba: 8,
-      emba: 10,
-      specialized_masters: 9,
-      executive: 5,
-      certificate: 3,
-      short_course: 3,
+      mba: 22,
+      emba: 26,
+      specialized_masters: 24,
+      executive: 16,
+      certificate: 12,
+      short_course: 12,
     });
   });
 });
 
 describe("The degree answer adjusts MBA, EMBA and specialized master's", () => {
   it.each([
-    ["no", 6, 8, 7],
-    ["unsure", 7, 9, 8],
-    ["preferred", 8, 10, 9],
+    ["no", 18, 22, 20],
+    ["unsure", 20, 24, 22],
+    ["preferred", 22, 26, 24],
   ] as const)("%s", (degreeRequired, mba, emba, masters) => {
     const { scores } = score({ ...degreeFirst, degreeRequired });
-    expect(scores).toMatchObject({ mba, emba, specialized_masters: masters, executive: 5 });
+    expect(scores).toMatchObject({ mba, emba, specialized_masters: masters, executive: 16 });
   });
 });
 
@@ -47,17 +47,17 @@ describe("A required degree rules out executive, certificate and short course (S
       executive: "out",
       certificate: "out",
       short_course: "out",
-      mba: 9,
-      emba: 11,
-      specialized_masters: 10,
+      mba: 24,
+      emba: 28,
+      specialized_masters: 26,
     });
     expect(tie).toBeUndefined();
     expect(winner).toBe("emba");
   });
 });
 
-describe("Growing in the role adds 2 to executive, certificate and short course (S8-3)", () => {
-  it("adds 2 to those three types only", () => {
+describe("Growing in the role adds 4 to executive, certificate and short course (S8-3)", () => {
+  it("adds 4 to those three types only", () => {
     const base = score({ ...degreeFirst, degreeRequired: "preferred" }).scores;
     const grown = score({
       ...degreeFirst,
@@ -65,9 +65,9 @@ describe("Growing in the role adds 2 to executive, certificate and short course 
       careerGoal: { kind: "grow_in_role", description: "Lead better" },
     }).scores;
     expect(grown).toMatchObject({
-      executive: 7,
-      certificate: 5,
-      short_course: 5,
+      executive: 20,
+      certificate: 16,
+      short_course: 16,
       mba: base.mba,
       emba: base.emba,
       specialized_masters: base.specialized_masters,
@@ -76,7 +76,7 @@ describe("Growing in the role adds 2 to executive, certificate and short course 
 
   it("step_up adds nothing: the matrix and degree adjustment alone decide", () => {
     const { scores } = score({ ...degreeFirst, degreeRequired: "no" });
-    expect(scores).toMatchObject({ mba: 6, executive: 5, certificate: 3, short_course: 3 });
+    expect(scores).toMatchObject({ mba: 18, executive: 16, certificate: 12, short_course: 12 });
   });
 });
 
@@ -106,7 +106,7 @@ describe("A type with no records is never ruled out (D6, S8-9)", () => {
 });
 
 describe("A tie is not broken by formula", () => {
-  // A degree x3, a new city x2 and a network x1 score MBA and EMBA 10 each; the master's has 8.
+  // A degree x3, a new city x2 and a network x1 score MBA and EMBA 26 each; the master's has 22.
   const tied: Partial<Profile> = {
     needs: ["graduate_degree", "new_industry_or_city", "senior_network"],
     degreeRequired: "required",
@@ -114,7 +114,7 @@ describe("A tie is not broken by formula", () => {
 
   it("returns the tied pair in matrix order", () => {
     const result = score(tied);
-    expect(result.scores).toMatchObject({ mba: 10, emba: 10, specialized_masters: 8 });
+    expect(result.scores).toMatchObject({ mba: 26, emba: 26, specialized_masters: 22 });
     expect(result.tie).toEqual(["mba", "emba"]);
   });
 
@@ -135,6 +135,31 @@ describe("The two needs that decided it", () => {
     // worked-example needs: network, leadership, expertise
     expect(result.winner).toBe("executive");
     expect(result.decidingNeeds).toHaveLength(2);
+  });
+
+  it("measures against the lowest rating when there is no runner-up", () => {
+    // Only the master's is left. Gaps from 1: network 3x0, degree 2x4, new city 1x2. From 0 the
+    // network (3x1) would tie the new city (1x3) and win on rank, which the 0-2 scale never did.
+    const result = categoryFit(
+      applyDeclinedDefaults(
+        makeProfile({
+          needs: ["senior_network", "graduate_degree", "new_industry_or_city"],
+          degreeRequired: "required",
+        }),
+      ).profile,
+      [
+        { id: "a", category: "mba" },
+        { id: "b", category: "emba" },
+        { id: "c", category: "specialized_masters" },
+      ],
+      [
+        { id: "a", status: "fail" },
+        { id: "b", status: "fail" },
+        { id: "c", status: "pass" },
+      ],
+    );
+    expect(result).toMatchObject({ winner: "specialized_masters", runnerUp: null });
+    expect(result.decidingNeeds).toEqual(["graduate_degree", "new_industry_or_city"]);
   });
 
   it("is empty when every type is out", () => {

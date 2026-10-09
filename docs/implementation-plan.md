@@ -193,8 +193,8 @@ evaluate(profile: Profile, programs: Program[], today: Date): EngineResult
 
 Steps, as the plan defines them:
 
-1. **`categoryFit`** (stage 1): weights 3, 2, 1 on the ranked needs × the type ratings matrix (Strong 2, Some 1, Little 0). Adjustments in this order: degree `no` → MBA, EMBA, specialized master's −3, `unsure` → −2, `preferred` → −1 (graded, Yami's review Oct 8; the approved plan had −3 for all three); `required` → executive, certificate, short course out; goal `grow_in_role` → executive, certificate, short course +2; a type with records but none passing or near-missing **the stage-1 checks (length, hours, work-compatible)** → out (D6: a type with no records is never ruled out on this rule). Budget, travel and location never rule a type out.
-2. **`noProgram`**: stage 1 fires `goal_unclear` (`goalClarity` = unclear) or `no_type_fits` (no type ≥ 4, including every type out); stage 2 fires `nothing_passes` (no program of a type that isn't out passes or near-misses all eight checks).
+1. **`categoryFit`** (stage 1): weights 3, 2, 1 on the ranked needs × the type ratings matrix (Strong 5, Some 3, Little 1; `docs/need-based-ranking.md` section 1). Adjustments in this order: degree `no` → MBA, EMBA, specialized master's −6, `unsure` → −4, `preferred` → −2 (graded, Yami's review Oct 8; doubled with the 1–5 scale on Oct 9); `required` → executive, certificate, short course out; goal `grow_in_role` → executive, certificate, short course +4; a type with records but none passing or near-missing **the stage-1 checks (length, hours, work-compatible)** → out (D6: a type with no records is never ruled out on this rule). Budget, travel and location never rule a type out.
+2. **`noProgram`**: stage 1 fires `goal_unclear` (`goalClarity` = unclear) or `no_type_fits` (no type ≥ 14 on the 1–5 scale, including every type out); stage 2 fires `nothing_passes` (no program of a type that isn't out passes or near-misses all eight checks).
 3. **`checkConstraints`** (stage 2; stage 1 runs only length, hours and work-compatible): the plan's eight checks per program. Each returns pass, near miss (fails by 15% or less) or fail, with the numbers used. **Location** follows the travel answers, not the format label: a program needs the student nearby only when it is full-time and in person (`format` in_person and not `workCompatible`, except a residential program, which the student flies in for) or meets in the evenings or daily (`attendance`), and then it passes only if the campus is within commuting distance (80 km) of home or they would relocate. Every other program is reachable by travel, and whether that travel works is decided by the on-site days, longest stretch away and travel budget checks. A program that needs the student nearby has no time away, so the longest-stretch check passes for it with a note; on-site days still apply, because commuting doesn't remove days on campus. The home country and region also set which airfare question to ask. **Hours are looser**, because both sides are estimates: the program's hours (a range when the school gives one) pass if they overlap the user's range or sit up to 25% above its top, with a note on the card (for example a user at 5 to 10 and a program at 12: "about 2 hours a week more than you planned"); up to 50% above is a near miss; beyond that it fails. Unknown values (null tuition) count as a near miss only when the user set a limit for that check; with no limit ("No set limit", "Not a concern") the check passes. Either way the card shows "not published" and confidence is lowered, because confidence describes the data, not the fit.
 4. **`scoreScenarios`** (stage 2): weighted sum with the plan's three weight rows, +0.5 when the program's category is the confirmed winner, plus peer fit (−1, +0.5, or −1 for a gap over 5 years at the same level).
 
@@ -282,9 +282,9 @@ Then the end-to-end run and saved example from the Day 2 plan.
 
 Engine (Vitest, no model):
 
-1. The plan's worked example: executive program 11, EMBA and full-time MBA out on length, specialized master's 1, certificate 3, short course 3.
+1. The plan's worked example: executive program 28, EMBA and full-time MBA out on length, specialized master's 8, certificate 12, short course 12.
 2. `degreeRequired: "required"` rules out executive, certificate and short course.
-3. `grow_in_role` gives +2 to executive, certificate and short course.
+3. `grow_in_role` gives +4 to executive, certificate and short course.
 4. A near miss at 14% stays visible and named; at 16% it fails.
 5. Null tuition with a tuition budget set is a near miss shown as "not published"; with no budget set it passes. Both lower confidence.
 6. Each no-program trigger fires on its own example from the plan.
@@ -338,7 +338,7 @@ These came out of Yami's review on Oct 7 and 8 and take precedence over `docs/bu
 - `hoursPerWeek` is a range on both the user and program side, with a looser check (section 4).
 - `paymentPlan` gains `no_preference`; `paymentOptions` uses fixed values and never filters or scores (section 3).
 - "Reachable location" is defined: only full-time in-person programs need home city or relocation; everything else is decided by the travel checks (section 4).
-- Degree adjustment is graded: `no` −3, `unsure` −2, `preferred` −1 for MBA, EMBA and specialized master's (the approved plan used −3 for all three).
+- Degree adjustment is graded: `no` −3, `unsure` −2, `preferred` −1 for MBA, EMBA and specialized master's (the approved plan used −3 for all three). Doubled to −6 / −4 / −2 with the 1–5 scale (Oct 9, `docs/need-based-ranking.md`).
 - PhDs are out of scope and referred; executive doctorates are a follow-up (section 11).
 - Program research and ratings run in Perplexity, not Claude (D13); the build runs on Sonnet 5.5 with fresh-session code reviews (D15).
 - Program schema changed after reading the first four research files: lodging as a range, `attendance`, per-course tuition, `lodgingIncluded`, nullable duration, credits and accreditation, ISO `country`, `metro`, `figureNotes` and `source.kind` (section 3).

@@ -101,6 +101,15 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - R2 uses only degree programs with a known price (total, or the per-course estimate) as evidence, and fires only when every known price is over the budget. With no known price, including an empty dataset, it stays quiet.
 - The hours check shows the user's limit as their range in both paths ("5-10"), whether or not the program publishes hours.
 
+### One 1–5 scale for the category table (PR #22, Oct 9; `docs/need-based-ranking.md` section 1)
+- `TYPE_RATINGS` moves from 0–2 to 1–5 with 0→1, 1→3, 2→5 (new = 2 × old + 1). With weights 3, 2 and 1, every category score becomes 2 × old + 6, so the order and every verdict stay the same. The table is the current one, with Yami's two changes above (full-time MBA leadership 3, certificate degree 1), not the pre-change table printed in the spec. `Rating` (`1 | 2 | 3 | 4 | 5`) and `RATING_MIN` are in `constants.ts`.
+- The constants tied to the scale double: `NO_PROGRAM_THRESHOLD` 4 → 14, `DEGREE_ADJUST` −3/−2/−1 → −6/−4/−2, `GROW_IN_ROLE_BONUS` 2 → 4.
+- The worked example asserts executive 28, certificate 12, short course 12, specialized master's 8 (14 − 6), EMBA and full-time MBA out on length. The hand-computed scores in `categoryFit.test.ts` and the "new city as the only need" example (MBA 16, over 14) moved with the scale. New tests: the no-type-fits boundary (13 fires, 14 doesn't).
+- Default: with no runner-up (only one type left), the deciding needs measure each need from the lowest rating, 1, instead of 0. From 0 the order could change on the new scale (a weight-3 need rated 1 would tie a weight-1 need rated 3); from 1 every gap is exactly twice the old one, so the order matches the 0–2 scale. Tested.
+- Scale-only, so the old sections above keep their numbers as history (for example "the certificate, at 3" is 12 now). `docs/build-plan.md`, `docs/implementation-plan.md` (sections 4, 8, 12), `docs/build-steps.md` and `docs/step-3-engine-plan.md` show the new numbers.
+- Not in this PR: stage 2 scoring (`scenarios.ts`, the lenses, the category bonus and peer fit) stays as it is; #65 replaces it with the need-based ranking.
+- Unchanged from the distance work: `normalize.ts` stays. It no longer has any city handling and only holds the declined-field defaults (`applyDirectionDefaults`, `applyDeclinedDefaults`) that both stages use.
+
 ## Structured home location (issue #35)
 
 - `homeCity` was one free-text string, and the engine had to parse spellings like "Cambridge, MA" and "Washington, D.C.". The profile now holds `homeCity` (non-empty), `homeRegion` (string or null) and `homeCountry` (two-letter ISO code, same rule as `country` in the program schema). The model fills them in from the conversation.

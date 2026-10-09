@@ -175,14 +175,14 @@ From here on, every command in this plan written as `npm …` means `./run npm �
 
 **Files (all pure, no I/O; `today` is passed in)**
 - `core/engine/types.ts`: `Check`, `CheckId` (8: `tuition`, `travelBudget`, `onsiteDays`, `longestStretch`, `length`, `hours`, `workCompatible`, `location`), `ProgramEvaluation`, `DirectionResult`, `SearchResult`, `CategoryAccess`, `EngineResult` (implementation plan section 4 shape)
-- `core/engine/constants.ts`: the type ratings matrix, need weights 3/2/1, degree adjustments (−3/−2/−1), the `required` rule-outs, the `grow_in_role` +2, the no-program threshold 4, near miss 0.15, hours +25% pass and +50% near miss, the scenario weight rows, the category bonus 0.5, peer fit (−1 / +0.5 / −1 when the gap is over 5 years), location fit (D9), the D8 airfare midpoints, and the confidence window of 60 days
+- `core/engine/constants.ts`: the type ratings matrix, need weights 3/2/1, degree adjustments (−6/−4/−2), the `required` rule-outs, the `grow_in_role` +4, the no-program threshold 14, near miss 0.15, hours +25% pass and +50% near miss, the scenario weight rows, the category bonus 0.5, peer fit (−1 / +0.5 / −1 when the gap is over 5 years), location fit (D9), the D8 airfare midpoints, and the confidence window of 60 days
 - `categoryFit.ts`, `constraints.ts`, `noProgram.ts`, `scenarios.ts`, `peerFit.ts`, `locationFit.ts`, `travel.ts`, `confidence.ts`, `contradictions.ts`, `distance.ts`, `normalize.ts`, `direction.ts` (stage 1: `recommendCategory`), `search.ts` (stage 2: `evaluatePrograms`), `evaluate.ts` (both in order), each as in implementation plan section 4
 - `core/index.ts` exports `recommendCategory`, `evaluatePrograms`, `evaluate`, `checkContradictions`, schemas (including `DirectionProfileSchema`), types, `loadPrograms`
 
 **Two stages (implementation plan section 4).** `recommendCategory` (stage 1): declined-field defaults for the stage-1 answers → the stage-1 checks for every program (length, hours, work-compatible) → category fit (whose "type with records but none passing or near-missing → out" rule uses only those checks) → the stage-1 no-program rule (`goal_unclear`, `no_type_fits`). `evaluatePrograms` (stage 2, given the confirmed category): all declined-field defaults → travel and all eight checks → peer fit, location fit, confidence, scenarios with the bonus for the confirmed winner → shortlists → `nothing_passes` → `access` → profile gaps. `evaluate` runs both in order. Declined fields get neutral defaults: no limit, `doesnt_matter`, `fine`.
 
 **Tests**
-- `core/engine/*.test.ts`: the nine tests in implementation plan section 8, one `describe` each. Test 1 is the worked example, run on the fixtures: executive 11, EMBA and MBA out because of length, specialized master's 1, certificate 3, short course 3.
+- `core/engine/*.test.ts`: the nine tests in implementation plan section 8, one `describe` each. Test 1 is the worked example, run on the fixtures: executive 28, EMBA and MBA out because of length, specialized master's 8, certificate 12, short course 12 (1–5 scale, `docs/need-based-ranking.md`).
 - Edge tests added here:
   - exactly 15% over is a near miss, 15.01% fails
   - a limit of 0 has no near miss (DQ10)
@@ -328,7 +328,7 @@ Each issue's body has the goal and the acceptance checklist. Each PR body starts
 
 3. **Step 3: Scoring engine with tests**
    Goal: the pure TS engine from implementation plan section 4 (category fit, constraints, no-program rule, scenarios, peer fit, location fit, travel, confidence, contradictions, `evaluate`).
-   - [ ] the plan's worked example reproduces exactly (executive 11, EMBA and full-time MBA out on length, specialized master's 1, certificate 3, short course 3)
+   - [ ] the plan's worked example reproduces exactly (executive 28, EMBA and full-time MBA out on length, specialized master's 8, certificate 12, short course 12)
    - [ ] all nine engine tests from implementation plan section 8 pass
 
 4. **Step 4: First 4 program records from the Perplexity research** (parent issue)
