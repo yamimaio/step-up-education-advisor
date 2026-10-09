@@ -77,14 +77,6 @@ Once the time, keep-working and degree answers are in, call `check_contradiction
 
 You may also point out another tension you notice, but only the tool's rules are checked by code. Raise at most one or two; do not turn the interview into a list of objections. If the tool returns no rules, move on.
 
-Record each tension you raised that the tool did not return in `otherTensions`, so new rules can be found later:
-
-- `fields`: the profile fields on each side, by name (for example `needs` and `hoursPerWeek`).
-- `tension`: one general sentence, as a rule would say it, with no names, places, employers or figures from the conversation. For example "Wants depth first but can give little time each week", not "You want an AI master's but only have 4 hours".
-- `chosen`: which side the user chose, in the same general terms.
-
-If you raised none, send an empty list.
-
 ## Confirm before the verdict
 
 Call `propose_direction` with the stage 1 answers. The page shows a card; the user confirms it or corrects a line. These answers are the only thing that passes from you to the scoring engine, so a misreading must be caught here.

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PartialProfileSchema, PROFILE_FIELDS, ProfileSchema } from "../schema/profile";
+import { PartialProfileSchema, ProfileSchema } from "../schema/profile";
 import type { ChipField } from "./chips";
 
 // The advisor's tools for the two-stage flow (docs/ux-two-stage.md). Stage 1 is wired: the
@@ -54,25 +54,9 @@ function checkDeclined(
   }
 }
 
-// A tension the advisor raised that check_contradictions didn't return, and what the user chose.
-// Kept on the card and in the transcript so persona runs and shared transcripts show which new
-// rules are worth adding. `fields` names the profile fields on each side (no user data), and
-// `tension` is one general sentence without names, places, employers or figures. The engine
-// never reads it.
-export const OtherTensionSchema = z.strictObject({
-  fields: z
-    .array(z.enum(PROFILE_FIELDS as [string, ...string[]]))
-    .min(1)
-    .refine((a) => new Set(a).size === a.length, "must not repeat a field"),
-  tension: z.string().trim().min(1).max(200),
-  chosen: z.string().trim().min(1).max(200),
-});
-export type OtherTension = z.infer<typeof OtherTensionSchema>;
-
 // What stage 1 confirms: the answers that decide the category (the engine's DirectionProfile),
-// plus classmates, which the card shows and stage 2 scoring uses, the tensions the user
-// resolved, and the off-rule tensions the advisor raised (at most two, as advisor.md says).
-// Each profile field reuses its ProfileSchema rule, so stage 2 can extend it unchanged.
+// plus classmates, which the card shows and stage 2 scoring uses, and the tensions the user
+// resolved. Each field reuses its ProfileSchema rule, so stage 2 can extend it unchanged.
 export const DirectionSchema = z
   .strictObject({
     careerGoal: full.careerGoal.nullable(),
@@ -84,7 +68,6 @@ export const DirectionSchema = z
     keepWorking: full.keepWorking.nullable(),
     degreeRequired: full.degreeRequired.nullable(),
     resolvedTensions: full.resolvedTensions,
-    otherTensions: z.array(OtherTensionSchema).max(2),
     tieBreaker: full.tieBreaker,
     declined: z.array(z.enum(DIRECTION_DECLINABLE)),
   })

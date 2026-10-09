@@ -32,7 +32,6 @@ const direction: Direction = {
   keepWorking: personaAProfile.keepWorking,
   degreeRequired: personaAProfile.degreeRequired,
   resolvedTensions: [],
-  otherTensions: [],
   declined: [],
 };
 
@@ -89,7 +88,7 @@ describe("ask_choice offers exactly the stage 1 chip sets", () => {
 describe("propose_direction carries the stage 1 answers and nothing else", () => {
   it("has every stage 1 field, plus tensions, a tie-breaker and declined", () => {
     expect(Object.keys(DirectionSchema.shape).sort()).toEqual(
-      [...stage1Fields, "resolvedTensions", "otherTensions", "tieBreaker", "declined"].sort(),
+      [...stage1Fields, "resolvedTensions", "tieBreaker", "declined"].sort(),
     );
   });
 
@@ -146,7 +145,6 @@ describe("A declined stage 1 field holds null, never an invented answer", () => 
     expect(engine.declined).toEqual(["needs", "hoursPerWeek"]);
     expect(engine).not.toHaveProperty("peerPreference");
     expect(engine).not.toHaveProperty("resolvedTensions");
-    expect(engine).not.toHaveProperty("otherTensions");
     // Every field is a valid ProfileSchema value, as the engine's DirectionProfile requires.
     for (const [k, v] of Object.entries(engine)) {
       const schema = ProfileSchema.shape[k as keyof typeof ProfileSchema.shape];
@@ -159,36 +157,5 @@ describe("A declined stage 1 field holds null, never an invented answer", () => 
     expect(engine.needs).toEqual(direction.needs);
     expect(engine.hoursPerWeek).toEqual(direction.hoursPerWeek);
     expect(engine.careerGoal).toEqual(direction.careerGoal);
-  });
-});
-
-describe("Off-rule tensions are kept for finding new rules", () => {
-  const parse = (otherTensions: unknown) =>
-    ProposeDirectionInput.safeParse({ direction: { ...direction, otherTensions } }).success;
-  const tension = {
-    fields: ["needs", "hoursPerWeek"],
-    tension: "Wants depth first but can give little time each week",
-    chosen: "Time: a shorter, lighter step for now",
-  };
-
-  it("accepts up to two, with profile field names", () => {
-    expect(parse([tension])).toBe(true);
-    expect(parse([tension, { ...tension, fields: ["keepWorking", "tuitionBudgetUsd"] }])).toBe(
-      true,
-    );
-  });
-
-  it("refuses a third, an unknown field, a repeated field or an empty sentence", () => {
-    expect(parse([tension, tension, tension])).toBe(false);
-    expect(parse([{ ...tension, fields: ["salary"] }])).toBe(false);
-    expect(parse([{ ...tension, fields: ["needs", "needs"] }])).toBe(false);
-    expect(parse([{ ...tension, tension: "  " }])).toBe(false);
-    expect(parse([{ ...tension, fields: [] }])).toBe(false);
-  });
-
-  it("never reaches the engine", () => {
-    const engine = toEngineDirection({ ...direction, otherTensions: [tension] } as Direction);
-    expect(engine).not.toHaveProperty("otherTensions");
-    expect(engine).toEqual(toEngineDirection(direction));
   });
 });
