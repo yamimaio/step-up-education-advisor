@@ -10,7 +10,8 @@
   "campusLon": -71.0955,
   "figureNotes": {
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
-    "campusLon": "Derived from campusAddress (approximate, from the street address)."
+    "campusLon": "Derived from campusAddress (approximate, from the street address).",
+    "cohortMedianExperienceYears": "An average, not a median, across past participants (MIT TLP brochure, July 2026)."
   },
   "extraSources": [
     {
@@ -19,6 +20,21 @@
       "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
       "checkedOn": "2026-10-07",
       "kind": "official_page"
+    },
+    {
+      "field": "cohortMedianExperienceYears",
+      "quote": "With an average of 19 years of professional experience and representation from 20+ industries, participants in this program contribute to a high-touch peer network.",
+      "checkedOn": "2026-10-09",
+      "kind": "school_correspondence"
+    },
+    {
+      "field": "workCompatible",
+      "quote": "Through advanced education programs led and taught by MIT professors and lecturers, it offers continuing education and lifelong learning opportunities for working professionals at all levels.",
+      "checkedOn": "2026-10-09",
+      "kind": "school_correspondence"
     }
-  ]
+  ],
+  "workCompatible": true,
+  "cohortMedianExperienceYears": 19,
+  "cohortExperienceBasis": "average"
 }

@@ -31,8 +31,8 @@
     "paymentOptions": null,
     "minExperienceYears": 6,
     "accreditation": [],
-    "cohortMedianExperienceYears": null,
-    "cohortExperienceBasis": null,
+    "cohortMedianExperienceYears": 19,
+    "cohortExperienceBasis": "average",
     "cohortSeniority": "Technology leaders and experienced practitioners; relevant roles include C-level positions, Heads of Engineering/Technology, engineering managers, product managers, team leaders, senior functional managers, and delivery heads.",
     "lodgingPerNightUsd": {
       "min": 213,
@@ -42,20 +42,21 @@
       "leadership_skills": 5,
       "deep_expertise": 3,
       "graduate_degree": 2,
-      "senior_network": 5,
+      "senior_network": 4,
       "new_industry_or_city": 2
     },
     "ratingNotes": {
       "leadership_skills": "Leadership is the core: leading strategic change, the human side of technology, and innovation teams.",
       "deep_expertise": "Several technology strategy modules and strategy projects throughout, without academic credit.",
       "graduate_degree": "Certificate of completion with 42 CEUs; no stated path to a graduate degree.",
-      "senior_network": "Aimed at C-level and heads of engineering, admitted by application, with three residential weeks at MIT.",
+      "senior_network": "Past participants average 19 years of experience across 20+ industries; three residential weeks at MIT.",
       "new_industry_or_city": "An MIT Professional Education alumni LinkedIn group; no career services published."
     },
-    "ratingLowEvidence": ["deep_expertise", "senior_network", "new_industry_or_city"],
+    "ratingLowEvidence": ["deep_expertise", "new_industry_or_city"],
     "figureNotes": {
       "campusLat": "Derived from campusAddress (approximate, from the street address).",
-      "campusLon": "Derived from campusAddress (approximate, from the street address)."
+      "campusLon": "Derived from campusAddress (approximate, from the street address).",
+      "cohortMedianExperienceYears": "An average, not a median, across past participants (MIT TLP brochure, July 2026)."
     },
     "sources": [
       {
@@ -176,6 +177,18 @@
         "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
         "checkedOn": "2026-10-07",
         "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "quote": "With an average of 19 years of professional experience and representation from 20+ industries, participants in this program contribute to a high-touch peer network.",
+        "checkedOn": "2026-10-09",
+        "kind": "school_correspondence"
+      },
+      {
+        "field": "workCompatible",
+        "quote": "Through advanced education programs led and taught by MIT professors and lecturers, it offers continuing education and lifelong learning opportunities for working professionals at all levels.",
+        "checkedOn": "2026-10-09",
+        "kind": "school_correspondence"
       }
     ],
     "verification": {
