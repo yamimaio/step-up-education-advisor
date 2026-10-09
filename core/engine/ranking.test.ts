@@ -245,10 +245,16 @@ const scores = {
 } as const;
 const confirmed = { winner: "executive", runnerUp: "certificate", scores } as const;
 const ids = (list: { id: string }[]) => list.map((r) => r.id);
+// The access card names no alternative unless a test says so.
+const rank = (
+  evaluations: ProgramEvaluation[],
+  category: Parameters<typeof rankPrograms>[1],
+  alternative: Parameters<typeof rankPrograms>[2]["alternative"] = null,
+) => rankPrograms(evaluations, category, { alternative });
 
 describe("Order", () => {
   it("puts passing programs before near misses, then by score", () => {
-    const r = rankPrograms(
+    const r = rank(
       [
         ev("fake-a", { total: 25 }),
         ev("fake-near", { total: 45, status: "near_miss" }),
@@ -265,7 +271,7 @@ describe("Order", () => {
   });
 
   it("breaks ties by location fit, then lower known total cost, unknown last, then id", () => {
-    const r = rankPrograms(
+    const r = rank(
       [
         ev("fake-unknown", { totalCostUsd: null }),
         ev("fake-h", { totalCostUsd: 20000 }),
@@ -286,7 +292,7 @@ describe("Order", () => {
   });
 
   it("leaves out failures and programs of a ruled-out type", () => {
-    const r = rankPrograms(
+    const r = rank(
       [
         ev("fake-fail", { status: "fail" }),
         ev("fake-out", { category: "short_course" }),
@@ -299,7 +305,7 @@ describe("Order", () => {
   });
 
   it("lists nothing while there is no confirmed category", () => {
-    expect(rankPrograms([ev("fake-a")], { ...confirmed, winner: null, runnerUp: null })).toEqual({
+    expect(rank([ev("fake-a")], { ...confirmed, winner: null, runnerUp: null })).toEqual({
       ranked: [],
       alsoWorthALook: [],
     });
@@ -310,7 +316,7 @@ describe("Also worth a look", () => {
   it("holds up to 2 passing programs of the runner-up, best first, never a near miss", () => {
     const cert = (id: string, total: number, status: "pass" | "near_miss" = "pass") =>
       ev(id, { category: "certificate", total, status });
-    const r = rankPrograms(
+    const r = rank(
       [
         ev("fake-exec"),
         cert("fake-c1", 20),
@@ -322,6 +328,74 @@ describe("Also worth a look", () => {
     );
     expect(ids(r.ranked)).toEqual(["fake-exec"]);
     expect(ids(r.alsoWorthALook)).toEqual(["fake-c2", "fake-c3"]);
+  });
+
+  it("holds the access card's alternative when the confirmed category has nothing to rank", () => {
+    // A third category, not the runner-up, near misses after passes.
+    const withShort = { ...confirmed, scores: { ...scores, short_course: 10 } };
+    const r = rank(
+      [
+        ev("fake-exec", { status: "fail" }),
+        ev("fake-cert", { category: "certificate", status: "fail" }),
+        ev("fake-s1", { category: "short_course", status: "near_miss", total: 45 }),
+        ev("fake-s2", { category: "short_course", total: 20 }),
+      ],
+      withShort,
+      "short_course",
+    );
+    expect(r.ranked).toEqual([]);
+    expect(ids(r.alsoWorthALook)).toEqual(["fake-s2", "fake-s1"]);
+  });
+
+  it("lists the runner-up's near miss when it is the only program within reach (review #86)", () => {
+    // Persona A who can spend at most a day on site, a day at a time: every program fails but
+    // the online certificate, a near miss on unpublished hours.
+    const result = evaluate(
+      { ...personaAProfile, maxOnsiteDays: 1, maxStretchDays: 1 },
+      fixtureDataset(),
+      today,
+    );
+    expect(result.programs.filter((p) => p.status !== "fail").map((p) => p.id)).toEqual([
+      "fake-certificate",
+    ]);
+    expect(result.noProgram).toEqual({ triggered: false });
+    expect(result.access).toMatchObject({
+      status: "none_within_limits",
+      alternative: "certificate",
+    });
+    expect(result.ranking).toEqual({
+      ranked: [],
+      alsoWorthALook: [
+        {
+          id: "fake-certificate",
+          why: "Also worth a look for leadership skills and deep expertise.",
+        },
+      ],
+    });
+  });
+});
+
+describe("The list agrees with the access card and the no-program result", () => {
+  // Whenever stage 2 doesn't say "nothing passes" and a category is confirmed, something is listed.
+  it.each([
+    ["the worked example", {}],
+    ["a tight budget", { tuitionBudgetUsd: 20000 }],
+    ["no time on site", { maxOnsiteDays: 0 }],
+    ["one day on site", { maxOnsiteDays: 1, maxStretchDays: 1 }],
+    ["Buenos Aires, one day on site", { ...personaAProfile, maxOnsiteDays: 1, maxStretchDays: 1 }],
+    ["a degree required", { degreeRequired: "required" as const, maxProgramMonths: 24 }],
+  ])("%s", (_name, overrides) => {
+    const result = evaluate(makeProfile(overrides), fixtureDataset(), today);
+    const shown = result.ranking.ranked.length + result.ranking.alsoWorthALook.length;
+    if (result.category.winner !== null && !result.noProgram.triggered) {
+      expect(shown).toBeGreaterThan(0);
+    }
+    if (result.access.alternative !== null && result.ranking.ranked.length === 0) {
+      const listed = result.ranking.alsoWorthALook.map(
+        (r) => result.programs.find((p) => p.id === r.id)?.category,
+      );
+      expect(listed).toContain(result.access.alternative);
+    }
   });
 });
 

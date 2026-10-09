@@ -15,6 +15,7 @@ import {
 } from "./constants";
 import { tuitionTotal } from "./constraints";
 import type {
+  CategoryAccess,
   CategoryResult,
   EffectiveProfile,
   Fit,
@@ -169,11 +170,15 @@ function byRank(a: ProgramEvaluation, b: ProgramEvaluation): number {
 }
 
 // One list: the confirmed category's programs within or near the limits (passes first), then up
-// to RUNNER_UP_LIMIT passing programs of the runner-up category. A ruled-out type is never
-// listed. With no confirmed category (an unresolved tie) nothing is listed yet.
+// to RUNNER_UP_LIMIT passing programs of the runner-up category. When the confirmed category has
+// nothing within or near the limits, "Also worth a look" holds the programs of the category the
+// access card names instead (`access.alternative`), near misses after passes, so the list never
+// comes back empty while a program is within reach. A ruled-out type is never listed. With no
+// confirmed category (an unresolved tie) nothing is listed yet.
 export function rankPrograms(
   evaluations: ProgramEvaluation[],
   category: Pick<CategoryResult, "winner" | "runnerUp" | "scores">,
+  access: Pick<CategoryAccess, "alternative">,
 ): Ranking {
   const { winner, runnerUp, scores } = category;
   if (winner === null) return { ranked: [], alsoWorthALook: [] };
@@ -189,12 +194,14 @@ export function rankPrograms(
       id: e.id,
       why: whyLine(`Ranked ${ORDINALS[i] ?? `#${i + 1}`}`, e.score),
     }));
+  const instead = ranked.length === 0;
+  const other = instead ? access.alternative : runnerUp;
   const alsoWorthALook =
-    runnerUp === winner
+    other === winner
       ? []
-      : listed(runnerUp)
-          .filter((e) => e.status === "pass")
-          .sort(byRank)
+      : listed(other)
+          .filter((e) => instead || e.status === "pass")
+          .sort(passFirst)
           .slice(0, RUNNER_UP_LIMIT)
           .map((e): RankedProgram => ({ id: e.id, why: whyLine("Also worth a look", e.score) }));
   return { ranked, alsoWorthALook };

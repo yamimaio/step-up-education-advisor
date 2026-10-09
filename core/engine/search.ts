@@ -38,11 +38,12 @@ export function evaluatePrograms(
       score: programScore(program, p, travel),
     };
   });
+  const access = categoryAccess(category, evaluations);
   return {
     programs: evaluations,
-    ranking: rankPrograms(evaluations, category),
+    ranking: rankPrograms(evaluations, category, access),
     noProgram: noProgramForSearch(category, evaluations),
-    access: categoryAccess(category, evaluations),
+    access,
     profileGaps,
   };
 }

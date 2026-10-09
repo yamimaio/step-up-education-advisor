@@ -24,8 +24,10 @@ describe("Stage 2 never changes the confirmed category", () => {
     });
     expect(result.programs.find((p) => p.id === "fake-executive")?.status).toBe("fail");
     expect(result.ranking.ranked).toEqual([]);
-    // Only passing runner-up programs are listed; the certificate is a near miss on hours.
-    expect(result.ranking.alsoWorthALook).toEqual([]);
+    // Nothing to rank, so the category the card names fills "Also worth a look", near miss
+    // (hours unpublished) included.
+    expect(result.ranking.alsoWorthALook.map((r) => r.id)).toEqual(["fake-certificate"]);
+    expect(result.noProgram).toEqual({ triggered: false });
   });
 
   it("uses the category it is given, not one it works out itself", () => {
