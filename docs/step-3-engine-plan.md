@@ -2,7 +2,7 @@
 
 ## Context
 
-Step 3 builds the pure TypeScript engine from implementation plan section 4. It turns a confirmed `Profile` and the `Program[]` dataset into one `EngineResult`: the category verdict, the no-program trigger, the constraint checks per program, and three scenario shortlists. Every number on a card comes from this engine (rule 7), so each rule needs a named test. Section 12 and the section 11 follow-ups (travel, metro, unknown duration/tuition) take precedence over `docs/build-plan.md`. DQ10, DQ11 and DQ18 in `docs/build-steps.md` fix near-miss-at-0, the six contradiction predicates and city matching.
+Step 3 builds the pure TypeScript engine from implementation plan section 4. It follows the two-stage flow with one function per stage: `recommendCategory` turns the stage-1 answers (`DirectionProfile`) and the dataset into the category verdict and the stage-1 no-program trigger; `evaluatePrograms` turns the full `Profile`, the confirmed category and the dataset into the constraint checks per program, three scenario shortlists, the stage-2 trigger and `access`. `evaluate` runs both in order and returns one `EngineResult`. Every number on a card comes from this engine (rule 7), so each rule needs a named test. Section 12 and the section 11 follow-ups (travel, metro, unknown duration/tuition) take precedence over `docs/build-plan.md`. DQ10, DQ11 and DQ18 in `docs/build-steps.md` fix near-miss-at-0, the six contradiction predicates and city matching.
 
 Branch `step-3-engine` from `main` (PR 2 is merged). The PR body starts with `Closes #5`. After the build, a fresh **Opus 5.5** session reviews it with `/code-review --comment`.
 
@@ -12,35 +12,46 @@ All files sit in `core/engine/`. They are pure: no I/O, no `node:` imports, and 
 
 | File | Exports |
 | --- | --- |
-| `types.ts` | `CheckId` (8), `CheckStatus`, `Check { id, status, value, limit, unit, unknown, note? }`, `ProgramEvaluation`, `CategoryResult`, `NoProgramResult`, `EngineResult`, `Contradiction` |
+| `types.ts` | `CheckId` (8), `CheckStatus`, `Check { id, status, value, limit, unit, unknown, note? }`, `ProgramEvaluation`, `CategoryResult`, `NoProgramResult`, `EffectiveDirection`, `DirectionResult`, `CategoryAccess`, `SearchResult`, `EngineResult`, `Contradiction` |
 | `constants.ts` | `TYPE_RATINGS` matrix, `NEED_WEIGHTS [3,2,1]`, `DEGREE_ADJUST {no:-3, unsure:-2, preferred:-1}`, `DEGREE_ADJUSTED_TYPES`, `REQUIRED_RULES_OUT`, `GROW_IN_ROLE_BONUS 2` + types, `NO_PROGRAM_THRESHOLD 4`, `NEAR_MISS_PCT 15`, `HOURS_PASS_PCT 25`, `HOURS_NEAR_PCT 50`, `SCENARIO_WEIGHTS`, `CATEGORY_BONUS 0.5`, `PEER_FIT`, `LOCATION_FIT`, `AIRFARE_MIDPOINTS`, `CONFIDENCE_WINDOW_DAYS 60`, `WEEKEND_TRIPS_PER_YEAR 26`, `COMMUTE_KM 80` (commuting distance) |
-| `normalize.ts` | `applyDeclinedDefaults(profile)` → the profile the engine actually uses plus `profileGaps` |
+| `normalize.ts` | `applyDirectionDefaults(directionProfile)` (stage 1) and `applyDeclinedDefaults(profile)` (stage 2, which reuses it) → the profile the engine actually uses plus `profileGaps` |
 | `distance.ts` | `withinCommute(home, program)`: great-circle distance between `{ homeLat, homeLon }` and `{ campusLat, campusLon }` against `COMMUTE_KM` (replaces the city-matching code: `places.ts`, `metro.ts` and `METRO_STATES`; `normalize.ts` stays for `applyDeclinedDefaults`; see `docs/ux-two-stage.md`) |
 | `travel.ts` | `travelEstimate(program, profile)` |
-| `constraints.ts` | `overshoot()` helper, one function per check, `checkConstraints(program, profile, travel)` → `{ checks, status }` |
-| `categoryFit.ts` | `categoryFit(profile, programs, evaluations)` |
-| `noProgram.ts` | `noProgram(profile, category, evaluations)` |
+| `constraints.ts` | `overshoot()` helper, one function per check, `checkDirection(program, profile)` (stage 1: length, hours, work-compatible) and `checkConstraints(program, profile, travel)` (stage 2: all eight) → `{ checks, status }` |
+| `categoryFit.ts` | `categoryFit(profile, programs, evaluations)` on the stage-1 checks; `rankCategories`, `failedChecks` |
+| `noProgram.ts` | `noProgramForDirection(profile, category)` (`goal_unclear`, `no_type_fits`) and `noProgramForSearch(category, evaluations)` (`nothing_passes`) |
 | `peerFit.ts` | `peerFit(profile, program)` → `{ points, text }` |
 | `locationFit.ts` | `locationFit(profile, program)` → 1 to 5 |
 | `confidence.ts` | `confidence(program, checks, today)` → `{ level, reasons[] }` |
 | `scenarios.ts` | `scenarioScores(...)`, `shortlists(...)` |
 | `contradictions.ts` | `checkContradictions(partial, programs)` (signature from DQ11) |
-| `evaluate.ts` | `evaluate(profile, programs, today)` |
+| `direction.ts` | `recommendCategory(directionProfile, programs)` → `DirectionResult` (stage 1) |
+| `search.ts` | `evaluatePrograms(profile, category, programs, today)` → `SearchResult`, and `categoryAccess` (stage 2) |
+| `evaluate.ts` | `evaluate(profile, programs, today)`: both stages in order |
 
 Also:
-- `core/index.ts` exports `evaluate`, `checkContradictions` and the engine types.
+- `core/index.ts` exports `recommendCategory`, `evaluatePrograms`, `evaluate`, `checkContradictions`, `DirectionProfileSchema` and the engine types.
 - `tests/fixtures/profiles.ts` adds `workedExampleProfile` and a `makeProfile(overrides)` helper.
 - `.github/workflows/ci.yml` adds a coverage report for `core/engine` with no threshold (DQ15). `@vitest/coverage-v8` is already installed.
 - `docs/decisions.md` gets a "Step 3" section that records the defaults below.
 
-**Order inside `evaluate`** (from build-steps):
-1. Apply the declined-field defaults.
-2. Compute the travel estimate and the constraint checks for each program.
+**Order of the two stages** (from build-steps; split on Oct 9, `docs/decisions.md` "Engine split by stage"):
+
+`recommendCategory` (stage 1):
+1. Apply the declined-field defaults to the stage-1 answers.
+2. Run the stage-1 checks (length, hours, work-compatible) for each program.
 3. Run category fit.
-4. Run the no-program rule.
-5. Compute peer fit, location fit, confidence and scenario scores for each program.
-6. Build the shortlists.
-7. List the profile gaps.
+4. Run the stage-1 no-program rule (`goal_unclear`, `no_type_fits`).
+
+`evaluatePrograms` (stage 2, given the confirmed category):
+1. Apply all the declined-field defaults.
+2. Compute the travel estimate and the eight constraint checks for each program.
+3. Compute peer fit, location fit, confidence and scenario scores (bonus for the confirmed winner).
+4. Build the shortlists.
+5. Run the stage-2 no-program rule (`nothing_passes`) and `access`.
+6. List the profile gaps.
+
+`evaluate` runs stage 1, then stage 2 with stage 1's category.
 
 ## Rule → function → test
 
@@ -55,12 +66,13 @@ Also:
 | Degree `required` rules out executive, certificate and short course | `categoryFit` | **S8-2** |
 | `grow_in_role` adds +2 to executive, certificate and short course | `categoryFit` | **S8-3** |
 | `step_up` adds nothing to any type; the matrix alone decides (MBA, EMBA and master's win through the degree and network ratings) | `categoryFit` | a `step_up` profile scores exactly its matrix subtotal plus degree adjustments |
-| A type with records but none passing or near-missing is out | `categoryFit` | covered by S8-1 (EMBA, MBA) |
+| A type with records but none passing or near-missing the stage-1 checks (length, hours, work-compatible) is out; budget, travel and location never rule a type out | `categoryFit` | covered by S8-1 (EMBA, MBA); E: the verdict is the same whatever the budget, travel or location |
 | A type with no records is never ruled out (D6) | `categoryFit` | **S8-9** |
 | A tie returns `tie: [A, B]`; `tieBreaker` resolves it | `categoryFit` | E: tie, and tie plus tieBreaker |
-| No type ≥ 4 → `no_type_fits` | `noProgram` | **S8-6a**: the degree is required but the user allows only 3 months. Executive, certificate and short course are ruled out by the degree rule; MBA, EMBA and master's are out on length; no type is left |
-| Nothing passes or near-misses → `nothing_passes` | `noProgram` | **S8-6b**: $3k budget, 2 h/week, 0 on-site days |
-| `goalClarity` unclear → `goal_unclear` | `noProgram` | **S8-6c** |
+| No type ≥ 4 → `no_type_fits` (stage 1) | `noProgramForDirection` | **S8-6a**: the degree is required but the user allows only 3 months. Executive, certificate and short course are ruled out by the degree rule; MBA, EMBA and master's are out on length; no type is left |
+| Nothing passes or near-misses (types that aren't out only) → `nothing_passes` (stage 2) | `noProgramForSearch` | **S8-6b**: $3k budget and 0 on-site days (2 h/week, in the original example, is now a stage-1 answer and gives `no_type_fits`) |
+| Stage 2 keeps the confirmed category; when its programs are out of reach, `access` names the failing checks and the best-scoring alternative | `evaluatePrograms`, `categoryAccess` | E: a $20k budget against the $30k executive program keeps the verdict, `none_within_limits`, `blockedBy: [tuition]`, alternative certificate; a given category is used, not recomputed |
+| `goalClarity` unclear → `goal_unclear` (stage 1) | `noProgramForDirection` | **S8-6c** |
 | Near miss when 15% or less over the limit | `overshoot` | **S8-4**: 14% near miss and named, 16% fails. E: exactly 15% is a near miss, 15.01% fails |
 | A limit of 0 has no near miss (DQ10) | `overshoot` | E |
 | Tuition ≤ budget; null tuition with a budget set → near miss, "not published"; with no limit → pass | `checkTuition` | **S8-5**, including that both cases lower confidence |
@@ -111,7 +123,7 @@ Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). �
     - `locationValues`: none, so no location-fit points
 
     `profileGaps` = the `declined` fields plus `airfareRange: unknown`.
-12. **No-program precedence when several triggers fire.** `goal_unclear`, then `nothing_passes`, then `no_type_fits`. An empty dataset counts as `nothing_passes`. Shortlists are still built ("if you decide to go anyway"), and with no winner there's no +0.5 bonus.
+12. **No-program precedence when several triggers fire.** Stage 1 first: `goal_unclear`, then `no_type_fits`; then stage 2's `nothing_passes` (changed from `goal_unclear`, `nothing_passes`, `no_type_fits` when the engine split by stage on Oct 9). An empty dataset counts as `nothing_passes`. Shortlists are still built ("if you decide to go anyway"), and with no winner there's no +0.5 bonus.
 13. **Winner when every type is out.** `winner` and `runnerUp` are `Category | null`, and `no_type_fits` fires.
 14. **Ties.** A tie exists only between the top two non-out scores. A three-way tie takes the first two in matrix order. `tieBreaker` makes that type the winner only if it's one of the tied pair.
 15. **`decidingNeeds` ("the two needs that decided it").** No formula is given. **Default:** the two needs where `weight × (winner rating − runner-up rating)` is largest, with ties broken by need rank.

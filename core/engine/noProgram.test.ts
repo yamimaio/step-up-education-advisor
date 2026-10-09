@@ -15,10 +15,19 @@ describe("Each no-program trigger fires on its own example (S8-6)", () => {
     });
   });
 
-  it("nothing passes: $3,000, 2 hours a week and no on-site days", () => {
+  it("nothing passes: $3,000 and no on-site days (stage 2)", () => {
+    expect(run({ tuitionBudgetUsd: 3000, maxOnsiteDays: 0 })).toEqual({
+      triggered: true,
+      trigger: "nothing_passes",
+    });
+  });
+
+  it("2 hours a week is a stage-1 answer: it rules the strong types out, so no type fits", () => {
+    // Before the stage split this example was nothing_passes. Hours now decide in stage 1, which
+    // leaves only the certificate and the short course (3 each, under the threshold of 4).
     expect(
       run({ tuitionBudgetUsd: 3000, hoursPerWeek: { min: 1, max: 2 }, maxOnsiteDays: 0 }),
-    ).toEqual({ triggered: true, trigger: "nothing_passes" });
+    ).toEqual({ triggered: true, trigger: "no_type_fits" });
   });
 
   it("goal unclear", () => {
@@ -32,6 +41,13 @@ describe("Each no-program trigger fires on its own example (S8-6)", () => {
   it("puts goal_unclear before nothing_passes, and counts an empty dataset as nothing_passes", () => {
     expect(run({ goalClarity: "unclear", tuitionBudgetUsd: 1 }).trigger).toBe("goal_unclear");
     expect(run({}, []).trigger).toBe("nothing_passes");
+  });
+
+  it("puts stage 1's no_type_fits before stage 2's nothing_passes", () => {
+    expect(run({ degreeRequired: "required", maxProgramMonths: 3, tuitionBudgetUsd: 1 })).toEqual({
+      triggered: true,
+      trigger: "no_type_fits",
+    });
   });
 
   it("does not fire no_type_fits for a new city as the only need, because a full-time MBA scores 6", () => {
@@ -64,12 +80,13 @@ describe("A declined goal clarity is not 'goal unclear'", () => {
 });
 
 describe("Programs of a ruled-out type do not count as a way forward", () => {
-  it("fires no_type_fits when every passing program belongs to a type the degree rule removed", () => {
+  it("fires nothing_passes when every passing program belongs to a type the degree rule removed", () => {
     // Degree required, only the executive record: it passes the limits but its type is out.
+    // Stage 1 still has a verdict (the EMBA, kept in by D6 with no records), so this is stage 2's.
     const executive = fixtureDataset().filter((p) => p.id === "fake-executive");
-    expect(run({ degreeRequired: "required" }, executive)).toEqual({
-      triggered: true,
-      trigger: "no_type_fits",
-    });
+    const result = evaluate(makeProfile({ degreeRequired: "required" }), executive, today);
+    expect(result.category.winner).toBe("emba");
+    expect(result.noProgram).toEqual({ triggered: true, trigger: "nothing_passes" });
+    expect(result.access).toMatchObject({ status: "no_programs", alternative: null });
   });
 });

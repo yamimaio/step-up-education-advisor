@@ -11,13 +11,42 @@ import {
   REQUIRED_RULES_OUT,
   TYPE_RATINGS,
 } from "./constants";
-import type { Check, CategoryResult, EffectiveProfile, ProgramEvaluation } from "./types";
+import type {
+  Check,
+  CheckId,
+  CategoryResult,
+  EffectiveDirection,
+  ProgramEvaluation,
+} from "./types";
 
 type Evaluated = Pick<ProgramEvaluation, "id" | "status"> & { checks?: Check[] };
 
-// Step 1: pick the type of program before any specific program.
+// Types that aren't out, best score first; equal scores keep matrix order.
+export function rankCategories(scores: Record<Category, number | "out">): Category[] {
+  return CATEGORY_ORDER.flatMap((c) => {
+    const s = scores[c];
+    return s === "out" ? [] : [{ category: c, score: s }];
+  })
+    .sort((a, b) => b.score - a.score) // stable: ties keep matrix order
+    .map((x) => x.category);
+}
+
+// The checks that failed across a set of programs, most common first (ties in check order).
+export function failedChecks(checkLists: Check[][]): CheckId[] {
+  const failed = new Map<CheckId, number>();
+  for (const checks of checkLists) {
+    for (const c of checks) {
+      if (c.status === "fail") failed.set(c.id, (failed.get(c.id) ?? 0) + 1);
+    }
+  }
+  return [...failed.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
+}
+
+// Stage 1: pick the type of program before any specific program. `evaluations` hold each
+// program's stage-1 checks (checkDirection), so a type is ruled out only by length, hours or
+// keeping a job, never by budget, travel or location.
 export function categoryFit(
-  profile: EffectiveProfile,
+  profile: EffectiveDirection,
   programs: Pick<Program, "id" | "category">[],
   evaluations: Evaluated[],
 ): CategoryResult {
@@ -47,15 +76,9 @@ export function categoryFit(
     // D6: a type with no records is never ruled out here.
     if (records.length > 0 && !reachable) {
       // Name what rules the type out: the failed checks, most common first.
-      const failed = new Map<string, number>();
-      for (const p of records) {
-        for (const c of byId.get(p.id)?.checks ?? []) {
-          if (c.status === "fail") failed.set(c.id, (failed.get(c.id) ?? 0) + 1);
-        }
-      }
-      const names = [...failed.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .map(([id]) => CHECK_LABELS[id as keyof typeof CHECK_LABELS]);
+      const names = failedChecks(records.map((p) => byId.get(p.id)?.checks ?? [])).map(
+        (id) => CHECK_LABELS[id],
+      );
       why.push(
         `Out: no program of this type is within your limits${names.length ? ` (${names.join(", ")})` : ""}.`,
       );
@@ -80,10 +103,7 @@ export function categoryFit(
     scores[category] = score;
   }
 
-  const ranked = CATEGORY_ORDER.flatMap((c) => {
-    const s = scores[c];
-    return s === "out" ? [] : [{ category: c, score: s }];
-  }).sort((a, b) => b.score - a.score); // stable: ties keep matrix order
+  const ranked = rankCategories(scores).map((c) => ({ category: c, score: scores[c] as number }));
 
   const first = ranked[0];
   const second = ranked[1];

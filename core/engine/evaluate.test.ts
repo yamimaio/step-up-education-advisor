@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { recommendCategory } from "./direction";
 import { evaluate } from "./evaluate";
+import { evaluatePrograms } from "./search";
 import { fixtureDataset } from "../../tests/fixtures/dataset";
 import { CAMBRIDGE_MA, makeProfile, workedExampleProfile } from "../../tests/fixtures/profiles";
 
@@ -39,6 +41,31 @@ describe("Category fit on the fixtures", () => {
       expect(p?.status).toBe("fail");
       expect(p?.checks.find((c) => c.id === "length")?.status).toBe("fail");
     }
+  });
+});
+
+describe("evaluate runs stage 1, then stage 2 with the stage-1 category", () => {
+  it("equals the two stages called in order", () => {
+    const programs = fixtureDataset();
+    const direction = recommendCategory(workedExampleProfile, programs);
+    const search = evaluatePrograms(workedExampleProfile, direction.category, programs, today);
+    expect(evaluate(workedExampleProfile, programs, today)).toEqual({
+      category: direction.category,
+      noProgram: search.noProgram,
+      programs: search.programs,
+      scenarios: search.scenarios,
+      access: search.access,
+      profileGaps: search.profileGaps,
+    });
+  });
+
+  it("reports stage 1's trigger over stage 2's", () => {
+    const result = evaluate(
+      makeProfile({ goalClarity: "unclear", tuitionBudgetUsd: 1 }),
+      fixtureDataset(),
+      today,
+    );
+    expect(result.noProgram.trigger).toBe("goal_unclear");
   });
 });
 

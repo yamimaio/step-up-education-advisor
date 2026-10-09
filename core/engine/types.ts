@@ -54,6 +54,19 @@ export type EffectiveProfile = Omit<
   relocate: boolean | null;
 };
 
+// What stage 1 uses: the answers that decide the category, after the declined defaults.
+export type EffectiveDirection = Pick<
+  EffectiveProfile,
+  | "careerGoal"
+  | "goalClarity"
+  | "needs"
+  | "degreeRequired"
+  | "maxProgramMonths"
+  | "hoursPerWeek"
+  | "keepWorking"
+  | "tieBreaker"
+>;
+
 export interface TravelEstimate {
   // none: no trips needed (online, within commuting distance, no on-site time). unknown: a figure is missing.
   kind: "none" | "estimate" | "unknown";
@@ -111,11 +124,44 @@ export interface NoProgramResult {
   trigger?: NoProgramTrigger;
 }
 
+// Stage 1 (recommendCategory): the verdict and the stage-1 "not yet" triggers.
+export interface DirectionResult {
+  category: CategoryResult;
+  // goal_unclear or no_type_fits only.
+  noProgram: NoProgramResult;
+  // Declined stage-1 fields.
+  profileGaps: string[];
+}
+
+// Whether the confirmed category has a program within all of the user's limits. The verdict
+// never changes in stage 2; when its programs are out of reach, the card says so and names the
+// best-scoring category that has one (`alternative`).
+export interface CategoryAccess {
+  category: Category | null;
+  // no_winner: an unresolved tie or every type out. no_programs: no records of that type yet.
+  status: "available" | "none_within_limits" | "no_programs" | "no_winner";
+  // The checks that failed the category's programs, most common first.
+  blockedBy: CheckId[];
+  alternative: Category | null;
+}
+
+// Stage 2 (evaluatePrograms): programs for the confirmed category and the user's limits.
+export interface SearchResult {
+  programs: ProgramEvaluation[];
+  scenarios: Record<Scenario, string[]>;
+  // nothing_passes only.
+  noProgram: NoProgramResult;
+  access: CategoryAccess;
+  profileGaps: string[];
+}
+
+// Both stages in one (evaluate). `noProgram` is stage 1's trigger when it fires, else stage 2's.
 export interface EngineResult {
   category: CategoryResult;
   noProgram: NoProgramResult;
   programs: ProgramEvaluation[];
   scenarios: Record<Scenario, string[]>;
+  access: CategoryAccess;
   profileGaps: string[];
 }
 

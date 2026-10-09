@@ -1,7 +1,14 @@
 import type { Program } from "../schema/program";
 import { HOURS_NEAR_PCT, HOURS_PASS_PCT, NEAR_MISS_PCT } from "./constants";
 import { needsLocalPresence, withinCommute } from "./distance";
-import type { Check, CheckId, CheckStatus, EffectiveProfile, TravelEstimate } from "./types";
+import type {
+  Check,
+  CheckId,
+  CheckStatus,
+  EffectiveDirection,
+  EffectiveProfile,
+  TravelEstimate,
+} from "./types";
 
 // Compare after rounding to six decimals, so 8.05 against 7 is exactly 15% over and a float
 // product like 5000.000000000001 equals 5000.
@@ -89,7 +96,10 @@ export function checkLongestStretch(program: Program, profile: EffectiveProfile)
 }
 
 // The fastest published pace; null falls back to the slowest, and both null is unknown.
-export function checkLength(program: Program, profile: EffectiveProfile): Check {
+export function checkLength(
+  program: Program,
+  profile: Pick<EffectiveDirection, "maxProgramMonths">,
+): Check {
   return limitCheck(
     "length",
     program.durationMonths ?? program.durationMaxMonths,
@@ -100,7 +110,10 @@ export function checkLength(program: Program, profile: EffectiveProfile): Check 
 
 // Both sides are estimates, so hours are looser: a program that needs no more than the user's
 // top passes, up to 25% above passes with a note, up to 50% above is a near miss.
-export function checkHours(program: Program, profile: EffectiveProfile): Check {
+export function checkHours(
+  program: Program,
+  profile: Pick<EffectiveDirection, "hoursPerWeek">,
+): Check {
   const user = profile.hoursPerWeek;
   const hours = program.hoursPerWeek;
   if (hours === null) return limitCheck("hours", null, user ? user.max : null, "hours a week");
@@ -121,7 +134,10 @@ export function checkHours(program: Program, profile: EffectiveProfile): Check {
   };
 }
 
-export function checkWorkCompatible(program: Program, profile: EffectiveProfile): Check {
+export function checkWorkCompatible(
+  program: Program,
+  profile: Pick<EffectiveDirection, "keepWorking">,
+): Check {
   const ok = !profile.keepWorking || program.workCompatible;
   return {
     id: "workCompatible",
@@ -165,6 +181,27 @@ export function checkLocation(program: Program, profile: EffectiveProfile): Chec
 
 const RANK: Record<CheckStatus, number> = { pass: 0, near_miss: 1, fail: 2 };
 
+// A program's status is its worst check.
+const worst = (checks: Check[]): CheckStatus =>
+  checks.reduce<CheckStatus>((w, c) => (RANK[c.status] > RANK[w] ? c.status : w), "pass");
+
+// Stage 1: the checks that can remove a whole category (length, hours, keep working). Budget,
+// travel and location are stage 2's, so they never change the verdict.
+export const DIRECTION_CHECKS = ["length", "hours", "workCompatible"] as const;
+
+export function checkDirection(
+  program: Program,
+  profile: EffectiveDirection,
+): { checks: Check[]; status: CheckStatus } {
+  const checks = [
+    checkLength(program, profile),
+    checkHours(program, profile),
+    checkWorkCompatible(program, profile),
+  ];
+  return { checks, status: worst(checks) };
+}
+
+// Stage 2: all eight checks.
 export function checkConstraints(
   program: Program,
   profile: EffectiveProfile,
@@ -180,9 +217,5 @@ export function checkConstraints(
     checkWorkCompatible(program, profile),
     checkLocation(program, profile),
   ];
-  const status = checks.reduce<CheckStatus>(
-    (worst, c) => (RANK[c.status] > RANK[worst] ? c.status : worst),
-    "pass",
-  );
-  return { checks, status };
+  return { checks, status: worst(checks) };
 }
