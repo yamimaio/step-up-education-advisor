@@ -42,7 +42,7 @@ export const NO_HOME = {
 export const NO_HOME_DECLINED = ["homeCity", "homeRegion", "homeCountry", "homeLat", "homeLon"];
 
 // Persona A (docs/implementation-plan.md section 9): 16 years in, 12 leading, wants an
-// executive role, senior classmates, a year at most, blended is fine.
+// executive role, senior classmates, a year at most, prefers blended and enjoys the trips.
 export const personaAProfile: Profile = {
   yearsExperience: 16,
   yearsLeading: 12,
@@ -58,6 +58,7 @@ export const personaAProfile: Profile = {
   travelBudgetUsd: 10000,
   airfareRange: "1000_1500",
   travelComfort: "appeal",
+  formatPreference: "blended",
   hoursPerWeek: { min: 5, max: 10 },
   maxProgramMonths: 12,
   keepWorking: true,

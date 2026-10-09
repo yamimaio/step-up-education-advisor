@@ -48,6 +48,8 @@ describe("PartialProfileSchema", () => {
 
   it("still rejects bad values and a fourth need", () => {
     expect(PartialProfileSchema.safeParse({ travelComfort: "love" }).success).toBe(false);
+    expect(PartialProfileSchema.safeParse({ formatPreference: "hybrid" }).success).toBe(false);
+    expect(PartialProfileSchema.safeParse({ formatPreference: "blended" }).success).toBe(true);
     const needs = ["leadership_skills", "senior_network", "deep_expertise", "graduate_degree"];
     expect(PartialProfileSchema.safeParse({ needs }).success).toBe(false);
   });

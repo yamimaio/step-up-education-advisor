@@ -1,20 +1,21 @@
 # You are rating one US leadership program (test fixture prompt)
 
 Return exactly:
-"ratings": { "network": n, "depth": n, "practicality": n, "costValue": n },
-"ratingNotes": { "network": "...", "depth": "...", "practicality": "...", "costValue": "..." },
-"lowEvidence": [ list of ratings marked low evidence, or empty ]
+"ratings": { "leadership_skills": n, "deep_expertise": n, "graduate_degree": n, "senior_network": n, "new_industry_or_city": n },
+"ratingNotes": { "leadership_skills": "...", "deep_expertise": "...", "graduate_degree": "...", "senior_network": "...", "new_industry_or_city": "..." },
+"lowEvidence": [ list of needs rated on thin evidence, or empty ]
 
 Research attached
 
-"ratings": { "network": 4, "depth": 3, "practicality": 4, "costValue": 3 },
+"ratings": { "leadership_skills": 5, "deep_expertise": 3, "graduate_degree": 2, "senior_network": 4, "new_industry_or_city": 3 },
 "ratingNotes": {
-"network": "Two residencies with a senior cohort support 4; alumni size is not established. ",[^1]
-"depth": "Thirty CEUs and named faculty support 3; no graduate credit. ",[^1]
-"practicality": "Designed for working leaders with live online sessions; own-organization projects not documented. ",[^1]
-"costValue": "\$24,000 for six months is in line with similar programs (low evidence). "[^1]
+"leadership_skills": "Leadership modules for experienced managers are the core of the program. ",[^1]
+"deep_expertise": "Retains default 3: several technology strategy modules; no credit-bearing depth. ",[^1]
+"graduate_degree": "default 1 → 2 because \"participants earn 30 CEUs\"; no stated path to a degree. ",[^1]
+"senior_network": "default 5 → 4 because two residencies with mostly directors; no published median. ",[^1]
+"new_industry_or_city": "Retains default 3: an alumni group; no career services for the \$24,000 fee. "[^1]
 },
-"lowEvidence": ["costValue"]
+"lowEvidence": ["senior_network", "new_industry_or_city"]
 
 <div align="center">⁂</div>
 

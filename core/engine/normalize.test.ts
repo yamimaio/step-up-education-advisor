@@ -21,12 +21,14 @@ describe("Declined fields get neutral defaults and appear in profileGaps", () =>
       makeProfile({
         peerPreference: "same_level",
         travelComfort: "burden",
+        formatPreference: "online",
         airfareRange: "over_1500",
         degreeRequired: "required",
         homeCity: "Boston",
         declined: [
           "peerPreference",
           "travelComfort",
+          "formatPreference",
           "airfareRange",
           "degreeRequired",
           "homeCity",
@@ -38,6 +40,7 @@ describe("Declined fields get neutral defaults and appear in profileGaps", () =>
     expect(profile).toMatchObject({
       peerPreference: "doesnt_matter",
       travelComfort: "fine",
+      formatPreference: "no_preference",
       airfareRange: "unknown",
       degreeRequired: null,
       homeCity: null,

@@ -1,4 +1,5 @@
 import { verifiedOn } from "../schema/derived";
+import type { Need } from "../schema/enums";
 import type { Program } from "../schema/program";
 import { CHECK_LABELS, CONFIDENCE_WINDOW_DAYS } from "./constants";
 import { needsLocalPresence } from "./distance";
@@ -18,9 +19,15 @@ const officialFor = (program: Program, fields: string[]) =>
 
 const DAY_MS = 86_400_000;
 
-// Confidence describes the data, not the fit. Four conditions; all met is high, one missing
-// is medium, two or more is low. A draft record is capped at low (D7).
-export function confidence(program: Program, checks: Check[], today: Date): ConfidenceResult {
+// Confidence describes the data, not the fit. Four conditions, and a fifth when the user ranked
+// senior peers; all met is high, one missing is medium, two or more is low. A draft record is
+// capped at low (D7).
+export function confidence(
+  program: Program,
+  checks: Check[],
+  today: Date,
+  needs: readonly Need[],
+): ConfidenceResult {
   const reasons: string[] = [];
 
   const verified = program.verification.status === "verified";
@@ -57,7 +64,18 @@ export function confidence(program: Program, checks: Check[], today: Date): Conf
     reasons.push(`Not published: ${unknowns.map((c) => CHECK_LABELS[c.id]).join(", ")}.`);
   }
 
-  const missing = [fresh, costOk, onsiteOk, unknowns.length === 0].filter((ok) => !ok).length;
+  // Senior peers is computed from the cohort figure when published; without it, the score uses
+  // the record's rating, a judgment rather than a fact (docs/need-based-ranking.md, section 2).
+  const peersOk = !needs.includes("senior_network") || program.cohortMedianExperienceYears !== null;
+  if (!peersOk) {
+    reasons.push(
+      "Classmates' experience is not published, so the senior peers rating is a judgment.",
+    );
+  }
+
+  const missing = [fresh, costOk, onsiteOk, unknowns.length === 0, peersOk].filter(
+    (ok) => !ok,
+  ).length;
   let level: ConfidenceResult["level"] = missing === 0 ? "high" : missing === 1 ? "medium" : "low";
   if (!verified) level = "low";
   return { level, reasons };

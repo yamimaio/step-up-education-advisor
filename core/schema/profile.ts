@@ -29,6 +29,8 @@ const ProfileObject = z.strictObject({
   travelBudgetUsd: z.number().nonnegative().nullable(),
   airfareRange: AirfareRange,
   travelComfort: z.enum(["appeal", "fine", "burden"]),
+  // Stage 2: how the user would like to study. A program's `hybrid` format counts as blended.
+  formatPreference: z.enum(["online", "blended", "in_person", "no_preference"]),
   hoursPerWeek: HoursRange,
   maxProgramMonths: z.number().nonnegative(),
   keepWorking: z.boolean(),

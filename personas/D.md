@@ -21,19 +21,20 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 
 ### Stage 2 (not wired yet)
 
-| Entry           | Answer                                                       |
-| --------------- | ------------------------------------------------------------ |
-| tuition         | `Over $80k`; `Employer support`                              |
-| travelBudget    | `Over $10k`                                                  |
-| travelComfort   | `Fine`                                                       |
-| onsite          | `Up to 40`; `A few days`                                     |
-| home            | San Francisco; CA; US; 37.7749, -122.4194; `No, I would not` |
-| airfare         | `$500 to $1,000`                                             |
-| locationValues  | `Network density`, `A target industry hub`                   |
-| yearsExperience | 14                                                           |
-| degree          | `Bachelor's`; Finance                                        |
-| currentRole     | `Director`                                                   |
-| yearsLeading    | 9                                                            |
+| Entry            | Answer                                                       |
+| ---------------- | ------------------------------------------------------------ |
+| tuition          | `Over $80k`; `Employer support`                              |
+| travelBudget     | `Over $10k`                                                  |
+| travelComfort    | `Fine`                                                       |
+| formatPreference | `In person`                                                  |
+| onsite           | `Up to 40`; `A few days`                                     |
+| home             | San Francisco; CA; US; 37.7749, -122.4194; `No, I would not` |
+| airfare          | `$500 to $1,000`                                             |
+| locationValues   | `Network density`, `A target industry hub`                   |
+| yearsExperience  | 14                                                           |
+| degree           | `Bachelor's`; Finance                                        |
+| currentRole      | `Director`                                                   |
+| yearsLeading     | 9                                                            |
 
 ## In their voice
 

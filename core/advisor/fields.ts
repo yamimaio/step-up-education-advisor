@@ -1,6 +1,7 @@
 import type { ChipField } from "./chips";
 
-// The 17-field checklist (docs/build-plan.md, "Intake questions"), split by stage
+// The checklist (docs/build-plan.md, "Intake questions", plus format preference from
+// docs/need-based-ranking.md section 3a), split by stage
 // (docs/ux-two-stage.md). Stage 1 asks only what decides the category and ends at
 // propose_direction; stage 2 (not wired yet) asks the rest before programs are shown.
 // The server's "set by chip" check uses `chips` to know which profile fields must come from a tap.
@@ -81,6 +82,13 @@ export const CHECKLIST: ChecklistEntry[] = [
     fields: ["travelComfort"],
     intent: "How they feel about traveling for the program",
     chips: ["travelComfort"],
+  },
+  {
+    id: "formatPreference",
+    stage: 2,
+    fields: ["formatPreference"],
+    intent: "Whether they would rather study online, blended (a few trips a year) or in person",
+    chips: ["formatPreference"],
   },
   {
     id: "onsite",

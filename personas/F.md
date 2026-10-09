@@ -21,19 +21,20 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 
 ### Stage 2 (not wired yet)
 
-| Entry           | Answer                                                       |
-| --------------- | ------------------------------------------------------------ |
-| tuition         | `$40k to $80k`; `Loans`                                      |
-| travelBudget    | `$5k to $10k`                                                |
-| travelComfort   | `Part of the appeal`                                         |
-| onsite          | `More`; `Longer`                                             |
-| home            | Bengaluru; KA; IN; 12.9716, 77.5946; `Yes, I would relocate` |
-| airfare         | `Over $1,500`                                                |
-| locationValues  | `International exposure`, `A path to relocate`               |
-| yearsExperience | 8                                                            |
-| degree          | `Master's`; Computer Science                                 |
-| currentRole     | `Manager`                                                    |
-| yearsLeading    | 3                                                            |
+| Entry            | Answer                                                       |
+| ---------------- | ------------------------------------------------------------ |
+| tuition          | `$40k to $80k`; `Loans`                                      |
+| travelBudget     | `$5k to $10k`                                                |
+| travelComfort    | `Part of the appeal`                                         |
+| formatPreference | `In person`                                                  |
+| onsite           | `More`; `Longer`                                             |
+| home             | Bengaluru; KA; IN; 12.9716, 77.5946; `Yes, I would relocate` |
+| airfare          | `Over $1,500`                                                |
+| locationValues   | `International exposure`, `A path to relocate`               |
+| yearsExperience  | 8                                                            |
+| degree           | `Master's`; Computer Science                                 |
+| currentRole      | `Manager`                                                    |
+| yearsLeading     | 3                                                            |
 
 ## In their voice
 

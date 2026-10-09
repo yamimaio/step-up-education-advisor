@@ -14,7 +14,7 @@ export function evaluate(profile: Profile, programs: Program[], today: Date): En
     // Stage 1's "not yet" comes first: if the direction fails, programs don't matter.
     noProgram: direction.noProgram.triggered ? direction.noProgram : search.noProgram,
     programs: search.programs,
-    scenarios: search.scenarios,
+    ranking: search.ranking,
     access: search.access,
     profileGaps: search.profileGaps,
   };

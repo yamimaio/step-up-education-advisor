@@ -78,6 +78,12 @@ export const CHIPS = {
     { label: "Fine", value: "fine" },
     { label: "A burden", value: "burden" },
   ],
+  formatPreference: [
+    { label: "Online", value: "online" },
+    { label: "Blended", value: "blended" },
+    { label: "In person", value: "in_person" },
+    { label: "No preference", value: "no_preference" },
+  ],
   hoursPerWeek: [
     { label: "Under 5", value: { min: 0, max: 5 } },
     { label: "5 to 10", value: { min: 5, max: 10 } },
@@ -141,6 +147,7 @@ export const CHIP_TARGET: Record<ChipField, string> = {
   travelBudgetUsd: "travelBudgetUsd",
   airfareRange: "airfareRange",
   travelComfort: "travelComfort",
+  formatPreference: "formatPreference",
   hoursPerWeek: "hoursPerWeek",
   maxProgramMonths: "maxProgramMonths",
   keepWorking: "keepWorking",
