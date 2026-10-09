@@ -209,6 +209,18 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 
 `Dockerfile` and `Dockerfile.dev` pull `public.ecr.aws/docker/library/node:24-alpine`, Amazon ECR Public's copy of the official Docker Hub `node` image, instead of `node:24-alpine` from Docker Hub. CI pulls without logging in, and Docker Hub's anonymous limit (100 pulls per 6 hours per IP) failed the `docker` job on shared GitHub runners with `429 Too Many Requests`. ECR Public's anonymous limit is 1 pull per second, so a burst of PRs can fail at worst for seconds, not hours. Logging in to Docker Hub from CI would also work but needs a token stored as a repository secret.
 
+## Step 7 (Stage 1 page, issue #9)
+
+- Stage 1 only: chat, chips, the "Here's what I understood" card, the verdict block and Download transcript. `ProgramCard`, the shortlists and `DataLimitsFooter` come with stage 2.
+- Until step 6 merged, `app/api/chat/route.ts` served a scripted Stage 1 interview (`app/api/chat/fake.ts`). Step 6 (PR #100, merged second) replaced both: `tests/page.fake.test.tsx` now drives the page through the real route with a mocked `fetch` and `MODEL_FAKE=1`, so the server's rewrites, checks and engine run for real against persona A's scripted advisor (`server/model/personaA.ts`).
+- The page can't import `server/` or the Anthropic SDK, so the contract types live in `app/lib/chatTypes.ts`, with message blocks typed loosely and passed back unchanged.
+- Typing while chips are pending sends a `ChipAnswer` with `typed` and no `chosen`; typing while the card is pending sends `{ confirmed: false, corrections }`.
+- A multi-select (needs, pick 3) numbers the taps in order; a second tap removes one, and a Send button is enabled once exactly `pick` are chosen.
+- The verdict block shows the winner, the runner-up (or the tie), the deciding needs, the resolved tensions or the "not yet" message, the declined fields, and every type's score or "Ruled out" with the engine's reasons. The "not yet" wording per trigger is fixed page text, not model text. Review round 1: when "not yet" fires, the block and the transcript name no winner, runner-up, tie or deciding needs, even though the engine still ranks a winner; the score table stays.
+- A request that never gets a `ChatResponse` is handled on the page: a network error or 5xx shows a Retry (same as `retryable`); a 4xx disables input (posting the same history would be refused again). Download transcript keeps working in both.
+- The page shows a fixed greeting that is not part of the history, since the history must start with the user's message.
+- Contract additions from step 6 (PR #100, `docs/chat-api.md` "Message cap"): a `limit` notice is handled like `auth_or_credit` (history kept, verdict and template text taken from the response when it carries `direction`, input off, no Retry); the wrap-up note stays in the history but `toTurns` skips it, so neither the chat nor the transcript shows it. It is matched by its whole text, `WRAP_UP_NOTE` from `core/advisor/wrapUp.ts` (changed from a prefix match in PR #100's round 1 review), so a user's own text that starts the same way still shows.
+
 ## Step 6, Stage 1 (issue #8)
 
 Stage 1 only. Yami split step 6 by stage (Oct 9, on the round 1 review of PR #100): PR #100 closes #8 with its Stage 1 acceptance, and the Stage 2 items from #8 and the rest of the step 6 Done-when (persona A through `propose_search` to `results`, location validation) moved to #99. Where `docs/build-steps.md` step 6 and `docs/chat-api.md` differ, the contract wins (separate `chips`, `confirm`, `direction` and `notice` fields, not a `ui` union). On confirm the server runs `recommendCategory`, not `evaluate`.
