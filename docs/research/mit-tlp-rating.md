@@ -96,9 +96,9 @@ Changes from Perplexity's answer:
 - senior_network stays 5 (Perplexity kept it only as the default). Yami: the target audience is C-level ("C-level positions including CEOs, CTOs, COOs, CIOs") and admission is by application ($200 application fee), so the standard is enforced. Yami's own cohort averages about 22 years. Still low evidence: no published median.
 - new_industry_or_city 3 → 2: the only fact is the alumni LinkedIn group, a network with no career services (new rubric level 2).
 
-## Reviewed ratings (rate-program v1, 2026-10-09; reviewed by: pending)
+## Reviewed ratings (rate-program v2, 2026-10-09; reviewed by: Yami)
 
-Re-rated under rate-program v1 after the MIT TLP brochure (July 2026) published a class profile. That fact is in `mit-tlp-overrides.json` with its quote, not in `mit-tlp.md`.
+Re-rated under rate-program v2 (R9) after the MIT TLP brochure (July 2026) published a class profile with an experience breakdown. Those facts are in `mit-tlp-overrides.json` with their quotes, not in `mit-tlp.md`.
 
 ```json
 {
@@ -106,21 +106,21 @@ Re-rated under rate-program v1 after the MIT TLP brochure (July 2026) published 
     "leadership_skills": 5,
     "deep_expertise": 3,
     "graduate_degree": 2,
-    "senior_network": 4,
+    "senior_network": 5,
     "new_industry_or_city": 2
   },
   "ratingNotes": {
     "leadership_skills": "Leadership is the core: leading strategic change, the human side of technology, and innovation teams.",
     "deep_expertise": "Several technology strategy modules and strategy projects throughout, without academic credit.",
     "graduate_degree": "Certificate of completion with 42 CEUs; no stated path to a graduate degree.",
-    "senior_network": "Past participants average 19 years of experience across 20+ industries; three residential weeks at MIT.",
+    "senior_network": "Half of past participants have 20+ years of experience, across 20+ industries; three residential weeks at MIT.",
     "new_industry_or_city": "An MIT Professional Education alumni LinkedIn group; no career services published."
   },
   "reasoning": {
     "leadership_skills": "Category default 5 stands: pillars 'Leading and Managing Strategic Change' and 'Leading the Human Side of Technology'; modules Leadership Development, Build and Lead Innovation Teams, Coaching and Developing Others.",
     "deep_expertise": "Category default 3 stands: several technology strategy modules and strategy projects throughout; no academic credit, capstone or thesis.",
     "graduate_degree": "default 1 → 2 because participants 'are eligible to earn 42 Continuing Education Units (CEUs)'; the credential is a Certificate of Completion with no stated path to a degree.",
-    "senior_network": "default 5 → 4 because the brochure publishes a class profile: 'With an average of 19 years of professional experience and representation from 20+ industries'. The rubric uses a published average (as in R2), and 19 falls in the 15 to 19 band. R1 no longer applies: it covers the case where no class profile is published. The engine derives the same 4 from the record's 19.",
+    "senior_network": "Category default 5 stands, per R9: the brochure's breakdown (25+ years 21%, 20-25 years 29%, 15-20 years 26%, 10-15 years 17%, less than 10 years 7%) puts exactly half the participants at 20+ years, so the median is 20 (band 20+). The stated average of 19 is in figureNotes. Three residential weeks give sustained in-person time. The engine derives the same 5 from the record's 20.",
     "new_industry_or_city": "default 3 → 2 per R5: the only career-related fact is the MIT Professional Education Alumni LinkedIn Group; no career services published."
   },
   "lowEvidence": [
@@ -132,5 +132,5 @@ Re-rated under rate-program v1 after the MIT TLP brochure (July 2026) published 
 
 Changes from the reviewed block above:
 
-- senior_network 5 → 4: a published average of 19 years replaces the target-audience reasoning of R1 (rubric band 15 to 19, as in R2).
+- senior_network stays 5, now on a published class profile (R9) instead of the target audience (R1).
 - senior_network leaves lowEvidence: it rests on a published class profile.

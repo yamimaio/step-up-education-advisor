@@ -7,7 +7,7 @@ A draft record built from `docs/research/mit-tlp.md`. The first section lists wh
 **Mine (derived, assumed or set by hand):**
 
 - `workCompatible: true` now also rests on the MIT TLP brochure (July 2026, a gated download, so `school_correspondence`): "it offers continuing education and lifelong learning opportunities for working professionals at all levels". The published schedule backs it too: three Monday-to-Friday weeks on campus, with live online modules spread over the months between (14+ sessions in eight months). The participant testimonial stays as a further source.
-- `cohortMedianExperienceYears: 19` with `cohortExperienceBasis: average` comes from the same brochure: "With an average of 19 years of professional experience and representation from 20+ industries". It is set in the overrides file with that quote, and `figureNotes` says it is an average.
+- `cohortMedianExperienceYears: 20` with `cohortExperienceBasis: median` comes from the same brochure's experience breakdown (25+ years 21%, 20-25 years 29%, 15-20 years 26%, 10-15 years 17%, under 10 years 7%): exactly half the participants have 20+ years. The brochure's stated average of 19 is in `figureNotes`. Ruling R9 (rate-program v2) prefers the breakdown's median.
 - `attendance: residencies` is derived from `residencyCount: 3`; `onsiteNote` is the school's own phrase from the residencies quote; `locationOffers` is my proposal (network_density, industry_hub).
 - `lodgingPerNightUsd {213, 365}` is the range of the three GSA seasonal rates in the quote (the engine uses the max).
 - `category: executive` and `state` ("Massachusetts", split from the research city) have no quote of their own.
@@ -22,7 +22,7 @@ A draft record built from `docs/research/mit-tlp.md`. The first section lists wh
 - **Tuition coverage:** The \$28,000 program fee is published, but inclusions and exclusions—especially lodging, meals, travel, materials, and residency expenses—are not specified.
 - **Lodging value:** GSA publishes a monthly seasonal rate for Boston/Cambridge, so there is no truthful single current-fiscal-year lodging number without knowing residence dates.
 
-**Ratings marked low evidence:** deep_expertise, new_industry_or_city. senior_network was re-rated 5 → 4 with rate-program v1 after the brochure's class profile (see the last block of `mit-tlp-rating.md`).
+**Ratings marked low evidence:** deep_expertise, new_industry_or_city. senior_network stays 5, now on the brochure's class profile under R9 (see the last block of `mit-tlp-rating.md`).
 
 ## Fields, quotes and URLs
 

@@ -11,7 +11,7 @@
   "figureNotes": {
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
     "campusLon": "Derived from campusAddress (approximate, from the street address).",
-    "cohortMedianExperienceYears": "An average, not a median, across past participants (MIT TLP brochure, July 2026).",
+    "cohortMedianExperienceYears": "Median from the brochure's experience breakdown (July 2026): half of past participants have 20+ years. The brochure's stated average is 19.",
     "onsiteDaysPerYear": "Three Monday-to-Friday weeks on campus in the 2026-27 schedule, which MIT says is subject to change; travel days not counted."
   },
   "extraSources": [
@@ -54,11 +54,17 @@
       "quote": "Module 2 On Campus Sept 21 - 25, 2026 ... Module 3 Live Online Oct, 2026 - Jan, 2027 ... Module 4 On Campus Jan 25 - 29, 2027 ... Module 5 Live Online Feb - April, 2027 ... Module 6 On Campus 26 April - 30 April, 2027",
       "checkedOn": "2026-10-09",
       "kind": "official_page"
+    },
+    {
+      "field": "cohortMedianExperienceYears",
+      "quote": "Typical Work Experience 25+ years 21% 20-25 years 29% 15-20 years 26% 10-15 years 17% Less than 10 years 7%",
+      "checkedOn": "2026-10-09",
+      "kind": "school_correspondence"
     }
   ],
   "workCompatible": true,
-  "cohortMedianExperienceYears": 19,
-  "cohortExperienceBasis": "average",
+  "cohortMedianExperienceYears": 20,
+  "cohortExperienceBasis": "median",
   "onsiteDaysPerYear": 15,
   "longestStretchDays": 5
 }
