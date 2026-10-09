@@ -171,6 +171,26 @@ describe("the server checks the card before it shows", () => {
     expect(errors[0]).toMatchObject({ content: expect.stringContaining("maxProgramMonths") });
   });
 
+  it("leaves the text of a rejected turn out of what the user sees", async () => {
+    const { r } = await atLastTap([
+      turn(toolUse("check_contradictions", { profile: {} })),
+      turn(
+        text("Here's what I understood."),
+        toolUse("propose_direction", {
+          direction: { ...PERSONA_A_DIRECTION, maxProgramMonths: 24 },
+        }),
+      ),
+      turn(
+        text("Sorry, let me fix that. Here's what I understood."),
+        toolUse("propose_direction", { direction: PERSONA_A_DIRECTION }),
+      ),
+    ]);
+    expect(r.confirm).not.toBeNull();
+    expect(r.text).toBe("Sorry, let me fix that. Here's what I understood.");
+    // The rejected turn stays in the history the page stores.
+    expect(r.messages).toHaveLength(5);
+  });
+
   it("refuses needs in a different order from the tap", async () => {
     const reordered = ["leadership_skills", "senior_network", "deep_expertise"];
     const { r } = await atLastTap([
@@ -229,6 +249,42 @@ describe("the server checks the card before it shows", () => {
     ]);
     expect(r.chips).toBeNull();
     expect(errorResultsIn(r.messages)).toHaveLength(1);
+  });
+});
+
+describe("persona A's fake under MODEL_FAKE=1", () => {
+  it("builds the card from the taps the page sent, not persona A's", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    while (page.last?.chips) {
+      const field = page.last.chips.field;
+      await page.tap(
+        ...(field === "maxProgramMonths" ? ["Up to 2 years"] : PERSONA_A_TAPS[field]!),
+      );
+    }
+    expect(page.last?.confirm?.direction.maxProgramMonths).toBe(24);
+    const r = await page.confirm();
+    expect(r.direction).not.toBeNull();
+    expect(r.notice).toBeNull();
+  });
+
+  it("stops with a plain turn after the server refuses a call", () => {
+    const refused = personaAScript({
+      system: [],
+      tools: [],
+      messages: [
+        textMessage("hi"),
+        { role: "assistant", content: [toolUse("propose_direction", {}, "toolu_x")] },
+        {
+          role: "user",
+          content: [{ type: "tool_result", tool_use_id: "toolu_x", content: "no", is_error: true }],
+        },
+      ],
+    });
+    expect(refused.stopReason).toBe("end_turn");
+    expect(refused.content.some((b) => b.type === "tool_use")).toBe(false);
   });
 });
 

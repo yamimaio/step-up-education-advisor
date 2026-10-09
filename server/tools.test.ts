@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CheckContradictionsInput, ProposeDirectionInput } from "../core/advisor/tools";
 import { PERSONA_A_DIRECTION } from "./model/personaA";
 import { advisorPrompt, SYSTEM } from "./prompt";
-import { parseToolInput, TOOLS, toStrictSchema } from "./tools";
+import { TOOLS, toStrictSchema } from "./tools";
 
 const BANNED = [
   "$schema",
@@ -35,16 +35,12 @@ describe("strict tool schemas (DQ14)", () => {
         for (const key of BANNED) expect(n, key).not.toHaveProperty(key);
         if (n.type === "object") {
           expect(n.additionalProperties).toBe(false);
-          expect([...(n.required as string[])].sort()).toEqual(
-            Object.keys(n.properties as object).sort(),
-          );
         }
-        expect(Array.isArray(n.type)).toBe(false);
       });
     },
   );
 
-  it("turns an optional property into a required, nullable one", () => {
+  it("keeps optional properties optional and closes every object", () => {
     const strict = toStrictSchema({
       type: "object",
       properties: { a: { type: "string", minLength: 1 }, b: { type: ["number", "null"] } },
@@ -52,46 +48,40 @@ describe("strict tool schemas (DQ14)", () => {
     });
     expect(strict).toEqual({
       type: "object",
-      properties: {
-        a: { type: "string" },
-        b: { anyOf: [{ type: "number" }, { type: "null" }] },
-      },
-      required: ["a", "b"],
+      properties: { a: { type: "string" }, b: { type: ["number", "null"] } },
+      required: ["a"],
       additionalProperties: false,
     });
   });
 
-  it("reads an all-null draft as an empty one", () => {
-    const draft = {
-      careerGoal: null,
-      goalClarity: null,
-      needs: ["senior_network"],
-      peerPreference: null,
-      maxProgramMonths: null,
-      hoursPerWeek: null,
-      keepWorking: null,
-      degreeRequired: null,
-      resolvedTensions: [{ rule: "R4", chosen: null }],
-      declined: null,
-    };
-    const parsed = parseToolInput(CheckContradictionsInput, { profile: draft });
-    expect(parsed.success && parsed.data.profile).toEqual({
-      needs: ["senior_network"],
-      resolvedTensions: [{ rule: "R4" }],
-    });
+  // The API's schema complexity limits, summed over every strict tool in a request
+  // (platform.claude.com/docs/en/build-with-claude/structured-outputs). Over them, every call
+  // is a 400.
+  it("stays inside the API's complexity limits", () => {
+    let optional = 0;
+    let unions = 0;
+    for (const tool of TOOLS) {
+      walk(tool.input_schema, (n) => {
+        if (Array.isArray(n.anyOf) || Array.isArray(n.type)) unions++;
+        if (n.type === "object" && typeof n.properties === "object" && n.properties) {
+          const required = new Set((n.required as string[] | undefined) ?? []);
+          optional += Object.keys(n.properties).filter((k) => !required.has(k)).length;
+        }
+      });
+    }
+    expect(TOOLS.filter((t) => t.strict).length).toBeLessThanOrEqual(20);
+    expect(optional).toBeLessThanOrEqual(24);
+    expect(unions).toBeLessThanOrEqual(16);
   });
 
-  it("keeps the nulls that mean declined, and drops a null tieBreaker", () => {
-    const direction = { ...PERSONA_A_DIRECTION, hoursPerWeek: null, declined: ["hoursPerWeek"] };
-    const parsed = parseToolInput(ProposeDirectionInput, { direction });
-    expect(parsed.success).toBe(true);
-    expect(parsed.success && parsed.data.direction.hoursPerWeek).toBeNull();
-    expect(parsed.success && "tieBreaker" in parsed.data.direction).toBe(false);
-  });
-
-  it("still enforces what the strict subset can't (exactly 3 needs)", () => {
-    const direction = { ...PERSONA_A_DIRECTION, needs: ["senior_network"] };
-    expect(parseToolInput(ProposeDirectionInput, { direction }).success).toBe(false);
+  it("parses inputs with the zod schema, which enforces what strict mode can't", () => {
+    expect(
+      CheckContradictionsInput.safeParse({ profile: { needs: ["senior_network"] } }).success,
+    ).toBe(true);
+    const short = { ...PERSONA_A_DIRECTION, needs: ["senior_network"] };
+    expect(ProposeDirectionInput.safeParse({ direction: short }).success).toBe(false);
+    const negative = { ...PERSONA_A_DIRECTION, maxProgramMonths: -1 };
+    expect(ProposeDirectionInput.safeParse({ direction: negative }).success).toBe(false);
   });
 });
 

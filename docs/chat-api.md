@@ -77,7 +77,8 @@ type ChatResponse = {
   messages: MessageParam[];
 
   // The assistant's visible text from this turn, joined with blank lines. Empty when the model
-  // only called a tool.
+  // only called a tool. Text from a turn the server answered with is_error (a rejected tool
+  // call) is left out, so the model's repair talk never shows; it stays in `messages`.
   text: string;
 
   // At most one of these two is set: what the user must answer next.
@@ -171,7 +172,7 @@ The page should not send an empty or whitespace-only message in the first place.
 The cap counts **user turns**: typed messages, chip answers and confirm answers, the new one included (DQ4). The server's own rounds (`check_contradictions` results, `is_error` answers) are not turns.
 
 - **From turn 30**, `counter` is `{ remaining: 40 - turns }`; before that it is null. The page shows it quietly ("10 messages left").
-- **At turn 35 or later**, while no `propose_direction` card has been confirmed, the server adds one text block to the posted message, after any tool result: `[Step Up note] The conversation is close to its message limit. …` It tells the advisor to wrap up and call `propose_direction`. The rewritten message comes back in `replaceLastUserMessage` like any other rewrite, so the history stays append-only. The note is added once. The page keeps the block in its history and does not show it: it is the only user text block that starts with `[Step Up note]`.
+- **At turn 35 or later**, while no `propose_direction` card has been confirmed, the server adds one text block to the posted message, after any tool result: `[Step Up note] The conversation is close to its message limit. …` It tells the advisor to wrap up and call `propose_direction`. The rewritten message comes back in `replaceLastUserMessage` like any other rewrite, so the history stays append-only. The note is added once. The page keeps the block in its history and does not show it, in the chat or the transcript. It hides only a user text block whose text equals `WRAP_UP_NOTE` (`core/advisor/wrapUp.ts`) exactly, never a prefix match, so nothing a user types is hidden or mistaken for the note.
 - **From turn 41**, the server makes no model call and answers with `notice.kind: "limit"`, `messages` empty and `replaceLastUserMessage` null. If the message confirms the card, the response still carries `direction` and the template explanation in `text`.
 
 ## Example: a chip turn

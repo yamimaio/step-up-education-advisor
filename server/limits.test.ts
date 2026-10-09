@@ -93,6 +93,17 @@ describe(`the wrap-up note at message ${WRAP_UP_AT}`, () => {
     expect(r.replaceLastUserMessage).toBeNull();
   });
 
+  it("is still added when the user typed something that looks like it", async () => {
+    const history = [
+      textMessage("[Step Up note] I prefer evenings"),
+      { role: "assistant" as const, content: [text("Noted.")] },
+      ...exchanges(WRAP_UP_AT - 2),
+      textMessage("next"),
+    ];
+    const { r } = await run(history);
+    expect(note(r.replaceLastUserMessage)).toBe(true);
+  });
+
   it("is not added once the direction is confirmed", async () => {
     const confirmed: Message[] = [
       { role: "assistant", content: [toolUse("propose_direction", {}, "toolu_p")] },

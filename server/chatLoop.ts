@@ -22,7 +22,7 @@ import {
   userTurns,
   type Message,
 } from "./history";
-import { COUNTER_FROM, MESSAGE_CAP, WRAP_UP_AT, WRAP_UP_NOTE, WRAP_UP_PREFIX } from "./limits";
+import { COUNTER_FROM, MESSAGE_CAP, WRAP_UP_AT, WRAP_UP_NOTE } from "./limits";
 import { logRequest, type RequestLog, type RequestStatus } from "./log";
 import { ModelError, type ModelClient, type ModelErrorKind } from "./model/adapter";
 import { SYSTEM } from "./prompt";
@@ -119,8 +119,7 @@ function resolveLastMessage(posted: Message[], programs: Program[]) {
 const hasWrapUpNote = (history: Message[]) =>
   history.some(
     (m) =>
-      m.role === "user" &&
-      blocksOf(m).some((b) => b.type === "text" && b.text.startsWith(WRAP_UP_PREFIX)),
+      m.role === "user" && blocksOf(m).some((b) => b.type === "text" && b.text === WRAP_UP_NOTE),
   );
 
 const textOf = (messages: Message[]) =>
@@ -189,6 +188,9 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
   const added: Message[] = [];
   let chips: PendingChips | null = null;
   let confirm: PendingConfirm | null = null;
+  // The text the user sees: every turn but those the server sent back with is_error, so the
+  // model's repair talk after a rejected call never reaches the page.
+  const shown: string[] = [];
 
   try {
     for (let rounds = 0; ; rounds++) {
@@ -208,9 +210,13 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
       }
       const content = turn.content as Anthropic.ContentBlockParam[];
       added.push({ role: "assistant", content });
+      const said = textOf([{ role: "assistant", content }]);
       const uses = content.filter((b): b is Anthropic.ToolUseBlockParam => b.type === "tool_use");
       const [use] = uses;
-      if (!use) break;
+      if (!use) {
+        shown.push(said);
+        break;
+      }
 
       let results: Anthropic.ToolResultBlockParam[];
       if (uses.length > 1) {
@@ -228,6 +234,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
             options: CHIPS[field].map((c) => ({ label: c.label, value: c.value })),
             pick: pickOf(field),
           };
+          shown.push(said);
           break;
         }
         results = [errorResult(use.id, ask.problems)];
@@ -235,6 +242,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
         const checked = validateProposeDirection(use.input, [...history, ...added.slice(0, -1)]);
         if (checked.ok) {
           confirm = { toolUseId: use.id, direction: checked.direction };
+          shown.push(said);
           break;
         }
         results = [errorResult(use.id, checked.problems)];
@@ -248,6 +256,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
       } else {
         results = [errorResult(use.id, `There is no tool named ${use.name} in this stage.`)];
       }
+      if (!results.every((r) => r.is_error)) shown.push(said);
       // Each answered round costs a model call; the loop stops a model that never settles.
       if (rounds >= MAX_SERVER_ROUNDS) throw new ModelError("unknown");
       added.push({ role: "user", content: results });
@@ -262,7 +271,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
   return {
     replaceLastUserMessage: lastMessage === posted.at(-1) ? null : lastMessage,
     messages: added,
-    text: textOf(added),
+    text: shown.filter(Boolean).join("\n\n"),
     chips,
     confirm,
     direction,

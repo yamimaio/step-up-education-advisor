@@ -1,9 +1,12 @@
+import { hasConfirmedDirection, latestTaps, type Message } from "../history";
 import type { ModelRequest, ModelTurn } from "./adapter";
 import { text, toolUse, turn } from "./fake";
 
 // Persona A's stage 1 interview (personas/A.md) as a fake model: the advisor's side of the
 // conversation, chosen from what the last message answers. The persona test drives it with the
 // persona's taps, and MODEL_FAKE=1 serves it to the page for local work without spend (DQ17).
+// The card is built from the taps in the history, so a page that taps other chips still gets a
+// card the server accepts; a field with no tap (typed or skipped) is sent as declined.
 
 const CHIP_ORDER = [
   "careerGoalKind",
@@ -38,10 +41,57 @@ export const PERSONA_A_DIRECTION = {
   keepWorking: true,
   degreeRequired: "no",
   resolvedTensions: [],
-  // Strict tool inputs send every property; an unset optional one is null.
-  tieBreaker: null,
   declined: [],
 } as const;
+
+// The direction the taps in the history give, with persona A's goal in words.
+export function directionFromTaps(messages: Message[]) {
+  const taps = latestTaps(messages);
+  const declined: string[] = [];
+  const tapped = (chipField: string, field = chipField) => {
+    if (taps.has(chipField)) return taps.get(chipField);
+    declined.push(field);
+    return null;
+  };
+  const kind = tapped("careerGoalKind", "careerGoal");
+  return {
+    careerGoal: kind === null ? null : { kind, description: PERSONA_A_GOAL },
+    goalClarity: "clear",
+    needs: tapped("needs"),
+    peerPreference: tapped("peerPreference"),
+    maxProgramMonths: tapped("maxProgramMonths"),
+    hoursPerWeek: tapped("hoursPerWeek"),
+    keepWorking: tapped("keepWorking"),
+    degreeRequired: tapped("degreeRequired"),
+    resolvedTensions: [],
+    declined,
+  };
+}
+
+// check_contradictions gets the answers so far, without the declined fields (advisor.md).
+function draftFromTaps(messages: Message[]) {
+  const direction = directionFromTaps(messages);
+  return Object.fromEntries(Object.entries(direction).filter(([, value]) => value !== null));
+}
+
+const propose = (request: ModelRequest, lead: string) =>
+  turn(
+    text(lead),
+    toolUse(
+      "propose_direction",
+      { direction: directionFromTaps(request.messages) },
+      `toolu_a_propose_${request.messages.length}`,
+    ),
+  );
+
+const check = (request: ModelRequest) =>
+  turn(
+    toolUse(
+      "check_contradictions",
+      { profile: draftFromTaps(request.messages) },
+      `toolu_a_check_${request.messages.length}`,
+    ),
+  );
 
 export const VERDICT_TEXT =
   "An executive program is your step: you want a room of senior leaders more than a curriculum, and you can give it a year while you keep working.\n\nWant to see programs that fit?";
@@ -51,17 +101,20 @@ type Field = (typeof CHIP_ORDER)[number];
 const askBlock = (field: Field) =>
   toolUse("ask_choice", { field, question: QUESTIONS[field] }, `toolu_a_${field}`);
 
-// The tool call the last message answers, if it answers one.
-function answered(request: ModelRequest): { name: string; input: Record<string, unknown> } | null {
+// The tool call the last message answers, if it answers one, and whether the server refused it.
+function answered(
+  request: ModelRequest,
+): { name: string; input: Record<string, unknown>; isError: boolean } | null {
   const last = request.messages.at(-1);
   if (!last || typeof last.content === "string") return null;
   const result = last.content.find((b) => b.type === "tool_result");
   if (!result || result.type !== "tool_result") return null;
+  const isError = result.is_error === true;
   for (const m of request.messages) {
     if (typeof m.content === "string") continue;
     for (const b of m.content) {
       if (b.type === "tool_use" && b.id === result.tool_use_id) {
-        return { name: b.name, input: b.input as Record<string, unknown> };
+        return { name: b.name, input: b.input as Record<string, unknown>, isError };
       }
     }
   }
@@ -80,8 +133,13 @@ const asked = (request: ModelRequest, field: Field) =>
 
 export function personaAScript(request: ModelRequest): ModelTurn {
   const call = answered(request);
+  if (call?.isError) {
+    // The server refused the call: say so and stop, rather than send the same call again.
+    return turn(text("Something didn't line up on my side. Tell me what to change, or say go on."));
+  }
   if (!call) {
-    // A typed message: the opening, the goal in words, or a yes to programs after the verdict.
+    // A typed message: the opening, the goal in words, a reply after a refused call, or a yes to
+    // programs after the verdict.
     if (!asked(request, "careerGoalKind")) {
       return turn(
         text("Let's find the step that fits. First, your goal."),
@@ -94,6 +152,9 @@ export function personaAScript(request: ModelRequest): ModelTurn {
         askBlock("needs"),
       );
     }
+    if (asked(request, "degreeRequired") && !hasConfirmedDirection(request.messages)) {
+      return check(request);
+    }
     return turn(text("The program step is coming next. Your direction stands."));
   }
   if (call.name === "ask_choice") {
@@ -102,38 +163,11 @@ export function personaAScript(request: ModelRequest): ModelTurn {
       return turn(text("In your own words, what would that step up look like?"));
     }
     const next = CHIP_ORDER[CHIP_ORDER.indexOf(field) + 1];
-    if (next) return turn(askBlock(next));
-    // check_contradictions takes the draft, which has no tieBreaker.
-    const profile = Object.fromEntries(
-      Object.entries(PERSONA_A_DIRECTION).filter(([key]) => key !== "tieBreaker"),
-    );
-    return turn(toolUse("check_contradictions", { profile }, "toolu_a_check"));
+    return next ? turn(askBlock(next)) : check(request);
   }
-  if (call.name === "check_contradictions") {
-    return turn(
-      text("Here's what I understood."),
-      toolUse("propose_direction", { direction: PERSONA_A_DIRECTION }, "toolu_a_propose"),
-    );
-  }
+  if (call.name === "check_contradictions") return propose(request, "Here's what I understood.");
   // propose_direction: the verdict after a confirm; after a correction, the card again.
-  const last = request.messages.at(-1)!;
-  const confirmed =
-    typeof last.content !== "string" &&
-    last.content.some(
-      (b) =>
-        b.type === "tool_result" &&
-        typeof b.content === "string" &&
-        b.content.startsWith('{"confirmed":true'),
-    );
-  if (!confirmed) {
-    return turn(
-      text("Thanks, here's the card again."),
-      toolUse(
-        "propose_direction",
-        { direction: PERSONA_A_DIRECTION },
-        `toolu_a_propose_${request.messages.length}`,
-      ),
-    );
-  }
-  return turn(text(VERDICT_TEXT));
+  return hasConfirmedDirection(request.messages)
+    ? turn(text(VERDICT_TEXT))
+    : propose(request, "Thanks, here's the card again.");
 }

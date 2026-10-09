@@ -14,7 +14,6 @@ import type { DirectionResult } from "../core/engine/types";
 import type { Program } from "../core/schema/program";
 import { MAX_TEXT_CHARS } from "./limits";
 import { calledBefore, chipValue, latestTaps, type Message } from "./history";
-import { parseToolInput } from "./tools";
 
 // The server's side of each stage 1 tool (docs/chat-api.md): running check_contradictions,
 // checking what the model sends to the pausing tools, and turning the page's answers (chip
@@ -39,14 +38,14 @@ export class EmptyInput extends Error {
 const problemsOf = (error: z.ZodError) => z.prettifyError(error);
 
 export function runCheckContradictions(input: unknown, programs: Program[]) {
-  const parsed = parseToolInput(CheckContradictionsInput, input);
+  const parsed = CheckContradictionsInput.safeParse(input);
   if (!parsed.success) return { isError: true, content: problemsOf(parsed.error) };
   const tensions = checkContradictions(parsed.data.profile, programs);
   return { isError: false, content: JSON.stringify({ tensions }) };
 }
 
 export function validateAskChoice(input: unknown) {
-  const parsed = parseToolInput(AskChoiceInput, input);
+  const parsed = AskChoiceInput.safeParse(input);
   return parsed.success
     ? { ok: true as const, input: parsed.data }
     : { ok: false as const, problems: problemsOf(parsed.error) };
@@ -87,7 +86,7 @@ export function validateProposeDirection(
   input: unknown,
   history: Message[],
 ): { ok: true; direction: Direction } | { ok: false; problems: string } {
-  const parsed = parseToolInput(ProposeDirectionInput, input);
+  const parsed = ProposeDirectionInput.safeParse(input);
   if (!parsed.success) return { ok: false, problems: problemsOf(parsed.error) };
   const { direction } = parsed.data;
   const problems: string[] = [];
