@@ -59,3 +59,36 @@ $$
 
 [^1]: wharton-emba-sf.md
 
+## Reviewed ratings (Yami, Oct 9)
+
+Perplexity's answer above, reviewed under the rating rules from issue #87. The record uses these values; the evidence is in Perplexity's notes above.
+
+```json
+{
+  "ratings": {
+    "leadership_skills": 5,
+    "deep_expertise": 3,
+    "graduate_degree": 5,
+    "senior_network": 3,
+    "new_industry_or_city": 3
+  },
+  "ratingNotes": {
+    "leadership_skills": "MBA curriculum with required co-curricular leadership sessions on the San Francisco calendar.",
+    "deep_expertise": "A general MBA of 19 course units.",
+    "graduate_degree": "Awards the Wharton MBA, the same degree as the full-time program.",
+    "senior_network": "Class of 2028 averages 13 to 14 years of experience; class weekends every other week.",
+    "new_industry_or_city": "Students keep full-time jobs throughout; career services for executive students are not described."
+  },
+  "lowEvidence": [
+    "leadership_skills",
+    "deep_expertise",
+    "new_industry_or_city"
+  ]
+}
+```
+
+Changes from Perplexity's answer:
+
+- senior_network 5 → 3: the most recent class profile now counts (Class of 2028, "an average of 13-14 years of professional experience"), which is level 3. The engine derives the same 3 from the record's 13.5.
+- senior_network leaves lowEvidence: it rests on a published class profile.
+- new_industry_or_city stays 3: the research has no career facts, so the rule "default or 3, whichever is lower" applies.
