@@ -42,19 +42,19 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 
 ## Expected verdict
 
-Hand-computed on the 1 to 5 category table (`docs/need-based-ranking.md`), not an engine run; step 7's run is the check.
+Hand-computed on the 1 to 5 category table and the category rules on #22 (`docs/need-based-ranking.md`), not an engine run; step 7's run is the check.
 
 ### Stage 1
 
 - `goalClarity`: clear
-- Category: executive program, 26 (15 + 10 + 1). The EMBA scores 28 after −2 for a preferred degree, but it is out on length: two years against one.
+- Category: executive MBA, 28 (15 + 10 + 5, minus 2 for a preferred degree), with the executive program the runner-up at 26 (15 + 10 + 1). The only EMBA record publishes no duration, so its length check is a near miss, not a fail, and the EMBA is not ruled out on a one-year limit. If a record with a published length over 12 months ever makes every EMBA fail, the executive program wins instead; that belongs in the records, not here.
 - Tension to raise: none yet. R1 reads on-site days, which stage 1 doesn't ask.
 - Ends with "Want to see programs that fit?"
 
 ### Stage 2 (not wired yet)
 
 - Once the on-site answers are in, and before `propose_search`, the advisor raises R1: the senior network is ranked first but the person allows fewer than 10 on-site days a year, and networks are mostly built in person. It names both sides and lets the user choose.
-- What follows depends on the choice. If they raise their on-site limit, expect executive programs. If they keep it at zero, the verdict stays an executive program, the card says none is within their limits and points to an online alternative, and the advisor says the network will be thinner than they want.
+- What follows depends on the choice. If they raise their on-site limit, expect the EMBA record, as a near miss on its unpublished figures. If they keep it at zero, the verdict stays an executive MBA, the card says none is within their limits (the only record is in person) and points to an alternative category, and the advisor says the network will be thinner than they want.
 
 ## What a sharp advisor should notice
 

@@ -56,7 +56,7 @@ type ConfirmAnswer = { confirmed: true } | { confirmed: false; corrections: stri
 
 A typed message, a `typed` chip answer and a correction pass through unchanged.
 
-**Limits** (from `docs/build-steps.md`, step 6): at most 120 messages, at most 4,000 characters per user text block, a body of at most 1 MB. Empty or whitespace-only text gets a friendly nudge without a model call.
+**Limits** (from `docs/build-steps.md`, step 6): at most 120 messages, at most 4,000 characters per user text block, a body of at most 1 MB. Empty or whitespace-only text gets a friendly nudge without a model call: a 200 with `notice.kind: "empty_input"` (see "After a notice"), which tells the page to drop that message.
 
 ## Response
 
@@ -89,10 +89,14 @@ type ChatResponse = {
   // From message 30: the messages left before the cap.
   counter: { remaining: number } | null;
 
-  // A plain message for the user when the model failed. `messages` is then empty (server-tool
+  // A plain message for the user when the model failed or the input was empty. What the page
+  // does next depends on `kind` (see "After a notice"). `messages` is then empty (server-tool
   // rounds from the failed request are dropped, and a retry runs them again) and `text` is empty
   // or the post-confirm template.
-  notice: { kind: "retryable" | "auth_or_credit" | "refusal" | "unknown"; message: string } | null;
+  notice: {
+    kind: "retryable" | "auth_or_credit" | "refusal" | "unknown" | "empty_input";
+    message: string;
+  } | null;
 };
 
 type PendingChips = {
@@ -145,9 +149,20 @@ The server answers with `is_error` and the problems, so the model asks again, wi
 | 400 | The body fails the request schema, breaks a limit, or doesn't answer the pending tool | `{ error: "bad_request" }`, never echoing the input |
 | 405 | Any method but `POST` | `{ error: "method_not_allowed" }` |
 
-Model failures are not HTTP errors: they return 200 with `notice` set, so the page can keep the history and offer a retry.
+### After a notice
 
-**Retrying.** After a failure the history the page holds is exactly what it posted: the server returned no messages and no replacement, so the last message is still the page's own (a typed message, a label-only `ChipAnswer` or a `{ confirmed }` answer). The page's only next request is that same history, unchanged, behind a Retry button; input stays disabled until a retry succeeds. The server treats it as a first attempt: it resolves the labels or reruns `recommendCategory` (deterministic, so the verdict is the same) and, on success, returns the rewrite in `replaceLastUserMessage`. A rewritten result (`chosen` holding objects, or `confirmed` with a `result`) is valid only earlier in the history, never as the last message; as the last message it gets a 400.
+Model failures and empty input are not HTTP errors: they return 200 with `notice` set, so the page can keep the interview going. Whenever `notice` is set, `messages` is empty and `replaceLastUserMessage` is null, so the page's history still ends with the message it posted. What the page does next depends on `notice.kind`:
+
+| `notice.kind` | What the page does |
+| --- | --- |
+| `retryable`, `unknown` | Keeps its history and shows the message with a Retry button. Input stays disabled until a retry succeeds (see Retrying). |
+| `refusal` | Retrying the same history would be refused again. The page drops its last message and goes back to the state before it: typed text returns to the input box, or the pending chips or confirm card show again (from the previous response). Input is enabled, so the user can rephrase or choose again. |
+| `auth_or_credit` | No retry can help. The page shows the message and disables input. A verdict card already shown, and the transcript download, keep working. |
+| `empty_input` | The text was empty or whitespace only, so no model call was made. The page drops that message from its history, clears the input and shows `notice.message` as a nudge next to it. It is never stored as a turn. |
+
+The page should not send an empty or whitespace-only message in the first place. `empty_input` is the server's guard, not the normal path.
+
+**Retrying** (`retryable` and `unknown` only). After a failure the history the page holds is exactly what it posted: the server returned no messages and no replacement, so the last message is still the page's own (a typed message, a label-only `ChipAnswer` or a `{ confirmed }` answer). The page's only next request is that same history, unchanged, behind a Retry button; input stays disabled until a retry succeeds. The server treats it as a first attempt: it resolves the labels or reruns `recommendCategory` (deterministic, so the verdict is the same) and, on success, returns the rewrite in `replaceLastUserMessage`. A rewritten result (`chosen` holding objects, or `confirmed` with a `result`) is valid only earlier in the history, never as the last message; as the last message it gets a 400.
 
 ## Example: a chip turn
 
