@@ -103,7 +103,8 @@ export const SENIOR_PEER_BANDS: readonly { minYears: number; rating: Rating }[] 
   { minYears: 0, rating: 1 },
 ];
 
-// Passing programs of the runner-up category shown under "Also worth a look".
+// How many programs "Also worth a look" holds: passing runner-up programs, or the access card's
+// alternative (near misses included) when the confirmed category has nothing to rank.
 export const RUNNER_UP_LIMIT = 2;
 
 // Location fit (D9) now carries only the user's location values, and only breaks ties.

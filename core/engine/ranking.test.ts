@@ -185,6 +185,19 @@ describe("Travel fit (section 3a)", () => {
     expect(viaEngine?.score.travel.text).toBe("3 trips a year, which you said you enjoy.");
   });
 
+  it("names the published trips when the lodging rate isn't published (review #86)", () => {
+    const [p] = evaluate(
+      personaAProfile,
+      [fixture("fake-executive", { lodgingPerNightUsd: null })],
+      today,
+    ).programs;
+    expect(p?.travelEstimate.kind).toBe("unknown");
+    expect(p?.score.travel).toEqual({
+      fit: 5,
+      text: "3 trips to campus, which you said you enjoy.",
+    });
+  });
+
   it("needs no trips from a user who lives within commuting distance", () => {
     const local = evaluate(
       makeProfile({ ...BOSTON, travelComfort: "burden" }),
@@ -330,6 +343,18 @@ describe("Order", () => {
       "fake-a-travel-even",
       "fake-online",
     ]);
+  });
+
+  it("orders two unknown totals by id, whatever their lodging (review #86)", () => {
+    const lodgingOnly = { lodgingOnly: true } as ProgramEvaluation["travelEstimate"];
+    const r = rank(
+      [
+        ev("fake-b", { totalCostUsd: null }),
+        ev("fake-a", { totalCostUsd: null, travelEstimate: lodgingOnly }),
+      ],
+      confirmed,
+    );
+    expect(ids(r.ranked)).toEqual(["fake-a", "fake-b"]);
   });
 
   it("words every position, past eighth", () => {

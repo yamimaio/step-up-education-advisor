@@ -16,14 +16,22 @@ const base: TravelEstimate = {
   notes: [],
 };
 
-// `earlier` carries notes already made (an unknown location), so they survive the return.
-const unknown = (note: string, earlier: string[] = []): TravelEstimate => ({
+// `earlier` carries notes already made (an unknown location), so they survive the return. `known`
+// keeps the trip figures already worked out when something else is missing, for the card.
+const unknown = (
+  note: string,
+  earlier: string[] = [],
+  known: Partial<
+    Pick<TravelEstimate, "trips" | "tripsPerYear" | "nightsPerTrip" | "tripsEstimated">
+  > = {},
+): TravelEstimate => ({
   ...base,
   kind: "unknown",
   totalUsd: null,
   trips: null,
   tripsPerYear: null,
   nightsPerTrip: null,
+  ...known,
   notes: [...earlier, note],
 });
 
@@ -104,7 +112,12 @@ export function travelEstimate(
       `Trip count estimated: about ${WEEKEND_TRIPS_PER_YEAR} weekends a year, ${WEEKEND_NIGHTS_PER_TRIP} nights each.`,
     );
   } else if (count) {
-    return unknown("On-site days a year not published.", notes);
+    // The trips are published; only their length, and so the lodging, is missing.
+    const perYearCount = program.residencyCount as number;
+    return unknown("On-site days a year not published.", notes, {
+      trips: perYearCount * years,
+      tripsPerYear: perYearCount,
+    });
   } else if (days !== null) {
     return unknown("Number of trips not published.", notes);
   } else {
@@ -119,7 +132,12 @@ export function travelEstimate(
     lodgingRate = program.lodgingPerNightUsd.max;
     lodging = trips * nights * lodgingRate;
   } else {
-    return unknown("Lodging rate not published.", notes);
+    return unknown("Lodging rate not published.", notes, {
+      trips,
+      tripsPerYear: perYear,
+      nightsPerTrip: nights,
+      tripsEstimated,
+    });
   }
 
   const airfare = AIRFARE_MIDPOINTS[profile.airfareRange];

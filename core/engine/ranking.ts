@@ -203,16 +203,18 @@ function whyLine(lead: string, score: ProgramScore): string {
 
 const byId = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
-// Higher score; then higher location fit, lower total cost (unknown last; on equal costs a
+// Higher score; then higher location fit, lower total cost (unknown last; on equal known costs a
 // lodging-only estimate goes behind a complete one, since its airfare is still to add), id.
 function byRank(a: ProgramEvaluation, b: ProgramEvaluation): number {
   const cost = (e: ProgramEvaluation) => e.totalCostUsd ?? Infinity;
   const partial = (e: ProgramEvaluation) => Number(e.travelEstimate.lodgingOnly);
+  // Two unknown totals go straight to the id.
+  const bothKnown = a.totalCostUsd !== null && b.totalCostUsd !== null;
   return (
     b.score.total - a.score.total ||
     b.locationFit - a.locationFit ||
     (cost(a) === cost(b) ? 0 : cost(a) < cost(b) ? -1 : 1) ||
-    partial(a) - partial(b) ||
+    (bothKnown ? partial(a) - partial(b) : 0) ||
     byId(a.id, b.id)
   );
 }

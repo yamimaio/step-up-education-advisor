@@ -72,7 +72,8 @@ export interface TravelEstimate {
   // none: no trips needed (online, within commuting distance, no on-site time). unknown: a figure is missing.
   kind: "none" | "estimate" | "unknown";
   totalUsd: number | null;
-  // Over the whole program, and in a year of it (the same for a program of a year or less).
+  // Over the whole program, and in a year of it (the same for a program of a year or less). Kept on
+  // an `unknown` estimate when the trips are published but another figure is missing.
   trips: number | null;
   tripsPerYear: number | null;
   nightsPerTrip: number | null;
@@ -154,7 +155,9 @@ export interface RankedProgram {
 }
 
 // One list ranked by the user's needs: the confirmed category's programs (passing, then near
-// misses), and up to RUNNER_UP_LIMIT passing programs of the runner-up under "Also worth a look".
+// misses). "Also worth a look" holds up to RUNNER_UP_LIMIT passing programs of the runner-up; when
+// the confirmed category has nothing to rank, it holds programs of `access.alternative` instead
+// (which may not be the runner-up), near misses included. Read each entry's status from `programs`.
 export interface Ranking {
   ranked: RankedProgram[];
   alsoWorthALook: RankedProgram[];
