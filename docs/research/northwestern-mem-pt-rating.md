@@ -62,3 +62,35 @@ $$
 
 [^1]: northwestern-mem-pt.md
 
+## Reviewed ratings (Yami, Oct 9)
+
+Perplexity's answer above, reviewed under the rating rules from issue #87. The record uses these values; the evidence is in Perplexity's notes above.
+
+```json
+{
+  "ratings": {
+    "leadership_skills": 4,
+    "deep_expertise": 5,
+    "graduate_degree": 5,
+    "senior_network": 2,
+    "new_industry_or_city": 3
+  },
+  "ratingNotes": {
+    "leadership_skills": "Required Leadership and Organizational Behavior course and rotating leadership roles in a simulation.",
+    "deep_expertise": "Twelve-course master's in engineering management with a required strategy capstone course.",
+    "graduate_degree": "Awards the Master of Engineering Management.",
+    "senior_network": "Designed for experienced STEM professionals; the school cites seven years of STEM experience.",
+    "new_industry_or_city": "Internship-like client projects exist; access for part-time students and career services are not confirmed."
+  },
+  "lowEvidence": [
+    "senior_network",
+    "new_industry_or_city"
+  ]
+}
+```
+
+Changes from Perplexity's answer:
+
+- leadership_skills 5 → 4: one required leadership course plus a simulation is a major strand with required courses, not a curriculum built for experienced leaders (new rubric level 4).
+- senior_network 1 → 2: the homepage's "seven years STEM experience" falls in the 5 to 9 band. Still low evidence: not labelled as a median or a part-time figure.
+- new_industry_or_city stays 3: no career facts for part-time students, so the default (3) applies.
