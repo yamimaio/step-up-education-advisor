@@ -205,6 +205,10 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 - **Converter.** Anchors on the last `"ratings": {` (fixes #16). It reads clean JSON only: a `lowEvidence` list that Perplexity's markdown shows between `$$ … $$` is rejected, and the rating file is fixed to `[ … ]` instead.
 - **Format preference in the advisor** (from the #25 review, done when #65 merged after it): a `formatPreference` chip set (Online, Blended, In person, No preference) and a stage 2 checklist entry right after `travelComfort`, so the checklist has 18 entries. `advisor.md` no longer marks it pending. Persona answers, inferred from each persona file since none states a format: A `Blended` (Yami's own case, spec 3a), B `No preference`, C `Online` (travel is a burden, time is tight), D `In person` (senior peers in a hub), E `Online` (no time on site), F `In person` (would relocate).
 
+## Node base image from the ECR Public mirror (issue #107)
+
+`Dockerfile` and `Dockerfile.dev` pull `public.ecr.aws/docker/library/node:24-alpine`, Amazon ECR Public's copy of the official Docker Hub `node` image, instead of `node:24-alpine` from Docker Hub. CI pulls without logging in, and Docker Hub's anonymous limit (100 pulls per 6 hours per IP) failed the `docker` job on shared GitHub runners with `429 Too Many Requests`. ECR Public's anonymous limit is 1 pull per second, so a burst of PRs can fail at worst for seconds, not hours. Logging in to Docker Hub from CI would also work but needs a token stored as a repository secret.
+
 ## Step 6, Stage 1 (issue #8)
 
 Stage 1 only. Yami split step 6 by stage (Oct 9, on the round 1 review of PR #100): PR #100 closes #8 with its Stage 1 acceptance, and the Stage 2 items from #8 and the rest of the step 6 Done-when (persona A through `propose_search` to `results`, location validation) moved to #99. Where `docs/build-steps.md` step 6 and `docs/chat-api.md` differ, the contract wins (separate `chips`, `confirm`, `direction` and `notice` fields, not a `ui` union). On confirm the server runs `recommendCategory`, not `evaluate`.
