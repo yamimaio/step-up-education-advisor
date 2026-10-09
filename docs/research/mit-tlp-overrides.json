@@ -47,6 +47,13 @@
       "quote": "Module 2 On Campus Sept 21 - 25, 2026 ... Module 4 On Campus Jan 25 - 29, 2027 ... Module 6 On Campus 26 April - 30 April, 2027 ... *Program schedule is subject to change",
       "checkedOn": "2026-10-09",
       "kind": "official_page"
+    },
+    {
+      "field": "workCompatible",
+      "url": "https://d1vwxdpzbgdqj.cloudfront.net/s3-public-files/mit-tlp/mittlpprogram_schedule.pdf",
+      "quote": "Module 2 On Campus Sept 21 - 25, 2026 ... Module 3 Live Online Oct, 2026 - Jan, 2027 ... Module 4 On Campus Jan 25 - 29, 2027 ... Module 5 Live Online Feb - April, 2027 ... Module 6 On Campus 26 April - 30 April, 2027",
+      "checkedOn": "2026-10-09",
+      "kind": "official_page"
     }
   ],
   "workCompatible": true,

@@ -6,7 +6,7 @@ A draft record built from `docs/research/mit-tlp.md`. The first section lists wh
 
 **Mine (derived, assumed or set by hand):**
 
-- `workCompatible: true` now also rests on the MIT TLP brochure (July 2026, a gated download, so `school_correspondence`): "it offers continuing education and lifelong learning opportunities for working professionals at all levels". The participant testimonial stays as a second source.
+- `workCompatible: true` now also rests on the MIT TLP brochure (July 2026, a gated download, so `school_correspondence`): "it offers continuing education and lifelong learning opportunities for working professionals at all levels". The published schedule backs it too: three Monday-to-Friday weeks on campus, with live online modules spread over the months between (14+ sessions in eight months). The participant testimonial stays as a further source.
 - `cohortMedianExperienceYears: 19` with `cohortExperienceBasis: average` comes from the same brochure: "With an average of 19 years of professional experience and representation from 20+ industries". It is set in the overrides file with that quote, and `figureNotes` says it is an average.
 - `attendance: residencies` is derived from `residencyCount: 3`; `onsiteNote` is the school's own phrase from the residencies quote; `locationOffers` is my proposal (network_density, industry_hub).
 - `lodgingPerNightUsd {213, 365}` is the range of the three GSA seasonal rates in the quote (the engine uses the max).
@@ -17,7 +17,7 @@ A draft record built from `docs/research/mit-tlp.md`. The first section lists wh
 - **Next cohort status:** MIT’s official catalog lists September 11, 2026 to April 30, 2027, while the MIT/Great Learning landing page says “Next Cohort TBD” and “Hybrid · To be announced.” The catalog dates are used because they are the only published specific dates.
 - **Immersion locations:** The landing page describes “3 residential weeks at MIT, Cambridge, Boston,” while the catalog lists “MIT Campus \& Live-Online.” The exact campus venue and exact schedule for each residential week are not published.
 - **Onsite-day counts** (settled by the public program schedule PDF, checked 2026-10-09)**:** on campus Sept 21–25, 2026, Jan 25–29, 2027 and April 26–30, 2027, each Monday to Friday, so `onsiteDaysPerYear: 15` and `longestStretchDays: 5`, set in the overrides file with that quote. Travel days are not counted, and the schedule says it is subject to change.
-- **Weekly workload:** The program publishes 14+ live online sessions but not their length, total online hours, asynchronous-study expectations, or a weekly workload range.
+- **Weekly workload:** still unpublished. The schedule and the 14+ live online sessions show a part-time load, but neither the session length nor reading and project time is published, so `hoursPerWeek` stays null rather than an estimate.
 - **Cohort statistics** (settled by the brochure for average experience; see above)**:** No official cohort size, median/average work experience, or systematic title distribution is published. Participant testimonials are not treated as a class profile.
 - **Tuition coverage:** The \$28,000 program fee is published, but inclusions and exclusions—especially lodging, meals, travel, materials, and residency expenses—are not specified.
 - **Lodging value:** GSA publishes a monthly seasonal rate for Boston/Cambridge, so there is no truthful single current-fiscal-year lodging number without knowing residence dates.
