@@ -98,6 +98,14 @@ describe("A declined goal clarity or location values", () => {
   });
 });
 
+describe("Declined needs", () => {
+  it("leave no needs, whatever placeholders the profile carries, and are a gap", () => {
+    const { profile, profileGaps } = applyDeclinedDefaults(makeProfile({ declined: ["needs"] }));
+    expect(profile.needs).toEqual([]);
+    expect(profileGaps).toContain("needs");
+  });
+});
+
 describe("Declined fields outside the limits", () => {
   it("neutralises keepWorking, relocate and yearsExperience", () => {
     const { profile } = applyDeclinedDefaults(

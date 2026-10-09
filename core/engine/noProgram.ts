@@ -7,12 +7,15 @@ import type {
 } from "./types";
 
 // Stage 1's "No program yet": the goal is unclear, or no type fits (every type is out, or the
-// best score is under NO_PROGRAM_THRESHOLD). Goal first.
+// best score is under NO_PROGRAM_THRESHOLD). Goal first. A declined "what is missing" leaves no
+// needs, the gap half of the goal, so it counts as an unclear goal: any spend is premature.
 export function noProgramForDirection(
-  profile: Pick<EffectiveDirection, "goalClarity">,
+  profile: Pick<EffectiveDirection, "goalClarity" | "needs">,
   category: Pick<CategoryResult, "scores">,
 ): NoProgramResult {
-  if (profile.goalClarity === "unclear") return { triggered: true, trigger: "goal_unclear" };
+  if (profile.goalClarity === "unclear" || profile.needs.length === 0) {
+    return { triggered: true, trigger: "goal_unclear" };
+  }
   const best = Math.max(
     -Infinity,
     ...Object.values(category.scores).filter((s): s is number => s !== "out"),

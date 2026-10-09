@@ -19,7 +19,10 @@ export function applyDirectionDefaults(profile: DirectionProfile): {
   const out = (field: string) => profileGaps.includes(field);
   return {
     profile: {
-      needs: profile.needs,
+      // Needs have no neutral value: the verdict is built from them. Declined, there are none, so
+      // no type wins and stage 1 says "not yet" (noProgramForDirection), rather than letting the
+      // placeholders the schema requires pick a type the card would explain with them.
+      needs: out("needs") ? [] : profile.needs,
       ...(profile.tieBreaker ? { tieBreaker: profile.tieBreaker } : {}),
       hoursPerWeek: out("hoursPerWeek") ? null : profile.hoursPerWeek,
       maxProgramMonths: out("maxProgramMonths") ? null : profile.maxProgramMonths,

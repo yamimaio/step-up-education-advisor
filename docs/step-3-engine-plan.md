@@ -121,6 +121,7 @@ Each default goes into `docs/decisions.md` and the PR body (CLAUDE.md rule 8). â
     - `homeCity`, `homeRegion`, `homeCountry`, `homeLat`, `homeLon`: no distance (unknown location). A program that needs you local is a **near miss** unless you'd relocate, never a pass or a fail (`docs/decisions.md`, "Location by distance")
     - `goalClarity`: `clear` (the AI marks it unclear only after follow-ups, so a declined value is never "unclear")
     - `locationValues`: none, so no location-fit points
+    - `needs`: none, so no type wins, there are no deciding needs, and stage 1 fires `goal_unclear` (there is no neutral ranking; `docs/decisions.md`, "Round 4 review")
 
     `profileGaps` = the `declined` fields plus `airfareRange: unknown`.
 12. **No-program precedence when several triggers fire.** Stage 1 first: `goal_unclear`, then `no_type_fits`; then stage 2's `nothing_passes` (changed from `goal_unclear`, `nothing_passes`, `no_type_fits` when the engine split by stage on Oct 9). An empty dataset counts as `nothing_passes`. Shortlists are still built ("if you decide to go anyway"), and with no winner there's no +0.5 bonus.

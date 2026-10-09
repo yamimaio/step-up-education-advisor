@@ -16,6 +16,7 @@ import { evaluate } from "./evaluate";
 import { travelEstimate } from "./travel";
 import { fixture } from "../../tests/fixtures/dataset";
 import {
+  BOSTON,
   BUENOS_AIRES,
   CAMBRIDGE_MA,
   CHICAGO,
@@ -365,6 +366,31 @@ describe("The longest stretch away doesn't apply to a program that needs the stu
   });
 });
 
+describe("The longest stretch away doesn't apply within commuting distance", () => {
+  // A Boston campus, residencies of up to 5 days: reached by travel only from farther away.
+  const exec = fixture("fake-executive", { longestStretchDays: 5 });
+
+  it.each([3, 0])(
+    "passes a Boston residency program for a Boston user who allows %i days",
+    (max) => {
+      const profile = eff({ ...BOSTON, maxStretchDays: max });
+      expect(checkLongestStretch(exec, profile)).toMatchObject({ status: "pass", unknown: false });
+      expect(checkLongestStretch(exec, profile).note).toMatch(/within commuting distance/);
+      expect(travelEstimate(exec, profile).kind).toBe("none");
+    },
+  );
+
+  it("still applies it from beyond commuting distance or with an unknown distance", () => {
+    expect(checkLongestStretch(exec, eff({ ...BUENOS_AIRES, maxStretchDays: 3 })).status).toBe(
+      "fail",
+    );
+    expect(
+      checkLongestStretch(exec, eff({ ...NO_HOME, declined: NO_HOME_DECLINED, maxStretchDays: 3 }))
+        .status,
+    ).toBe("fail");
+  });
+});
+
 describe("The airfare-unknown note is kept whatever the travel-budget status", () => {
   it("is on a near miss and a fail, not only on a pass turned near miss", () => {
     const status = (travelBudgetUsd: number) => {
@@ -408,7 +434,8 @@ describe("A program's status is its worst check", () => {
 
 describe("An unpublished figure against a limit of 0 fails (DQ10)", () => {
   it("fails on-site days and stretch when the user allows none", () => {
-    const profile = eff({ maxOnsiteDays: 0, maxStretchDays: 0 });
+    // From far away: within commuting distance there is no stretch away to check.
+    const profile = eff({ ...BUENOS_AIRES, maxOnsiteDays: 0, maxStretchDays: 0 });
     const program = fixture("fake-executive", {
       onsiteDaysPerYear: null,
       longestStretchDays: null,

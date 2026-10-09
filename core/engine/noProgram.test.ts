@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evaluate } from "./evaluate";
 import { noProgramForDirection } from "./noProgram";
+import type { Need } from "../schema/enums";
 import { fixtureDataset } from "../../tests/fixtures/dataset";
 import { BUENOS_AIRES, makeProfile } from "../../tests/fixtures/profiles";
 
@@ -72,6 +73,10 @@ describe("Each no-program trigger fires on its own example (S8-6)", () => {
 });
 
 describe("No type fits below the threshold of 14 (1-5 scale)", () => {
+  const clear = {
+    goalClarity: "clear" as const,
+    needs: ["senior_network", "leadership_skills", "deep_expertise"] as Need[],
+  };
   const scores = (best: number) => ({
     scores: {
       mba: "out" as const,
@@ -84,11 +89,11 @@ describe("No type fits below the threshold of 14 (1-5 scale)", () => {
   });
 
   it("fires at 13 and not at 14", () => {
-    expect(noProgramForDirection({ goalClarity: "clear" }, scores(13))).toEqual({
+    expect(noProgramForDirection(clear, scores(13))).toEqual({
       triggered: true,
       trigger: "no_type_fits",
     });
-    expect(noProgramForDirection({ goalClarity: "clear" }, scores(14))).toEqual({
+    expect(noProgramForDirection(clear, scores(14))).toEqual({
       triggered: false,
     });
   });

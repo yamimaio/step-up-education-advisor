@@ -101,3 +101,27 @@ describe("Stage 1 takes only the answers that decide the category", () => {
     expect(recommendCategory(stageOne, programs)).toEqual(recommendCategory(stageOne, programs));
   });
 });
+
+describe("Declined needs give no verdict", () => {
+  const declined = (needs: DirectionProfile["needs"]) =>
+    recommendCategory({ ...stageOne, needs, declined: ["needs"] }, programs);
+
+  it("has no winner or deciding needs, says 'not yet' and lists the gap", () => {
+    const { category, noProgram, profileGaps } = declined([
+      "senior_network",
+      "leadership_skills",
+      "deep_expertise",
+    ]);
+    expect(category).toMatchObject({ winner: null, runnerUp: null, decidingNeeds: [] });
+    expect(category.tie).toBeUndefined();
+    expect(category.reasons.executive.join(" ")).toMatch(/No ranked needs/);
+    expect(noProgram).toEqual({ triggered: true, trigger: "goal_unclear" });
+    expect(profileGaps).toEqual(["needs"]);
+  });
+
+  it("doesn't depend on the placeholder needs", () => {
+    expect(declined(["graduate_degree", "deep_expertise", "new_industry_or_city"])).toEqual(
+      declined(["senior_network", "leadership_skills", "deep_expertise"]),
+    );
+  });
+});

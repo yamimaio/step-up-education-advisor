@@ -107,9 +107,11 @@ export function checkOnsiteDays(program: Program, profile: EffectiveProfile): Ch
 
 // The longest stretch is time away from home. A program that needs the student near campus has
 // none: the student commutes or relocates (travel.ts counts no trips for it), and the location
-// check decides. So it passes with a note and never counts as unpublished.
+// check decides. Nor does a campus within commuting distance, which travel.ts costs as no
+// travel. Both pass with a note and never count as unpublished; an unknown distance doesn't.
 export function checkLongestStretch(program: Program, profile: EffectiveProfile): Check {
-  if (needsLocalPresence(program)) {
+  const local = needsLocalPresence(program);
+  if (local || withinCommute(profile, program) === true) {
     return {
       id: "longestStretch",
       status: "pass",
@@ -117,7 +119,9 @@ export function checkLongestStretch(program: Program, profile: EffectiveProfile)
       limit: profile.maxStretchDays,
       unit: "days",
       unknown: false,
-      note: "no time away: you'd attend from near campus",
+      note: local
+        ? "no time away: you'd attend from near campus"
+        : "no time away: the campus is within commuting distance",
     };
   }
   return limitCheck("longestStretch", program.longestStretchDays, profile.maxStretchDays, "days");

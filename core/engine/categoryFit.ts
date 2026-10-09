@@ -67,7 +67,11 @@ export function categoryFit(
       (sum, need, i) => sum + (NEED_WEIGHTS[i] ?? 0) * TYPE_RATINGS[category][need],
       0,
     );
-    why.push(`Needs subtotal ${subtotal}.`);
+    why.push(
+      profile.needs.length > 0
+        ? `Needs subtotal ${subtotal}.`
+        : "No ranked needs: you chose not to say.",
+    );
 
     const records = programs.filter((p) => p.category === category);
     const reachable = records.some((p) => statusById.get(p.id) !== "fail");
@@ -109,8 +113,10 @@ export function categoryFit(
 
   const ranked = rankCategories(scores).map((c) => ({ category: c, score: scores[c] as number }));
 
-  const first = ranked[0];
-  const second = ranked[1];
+  // With no needs (declined) the scores are adjustments only, so no type wins.
+  const hasNeeds = profile.needs.length > 0;
+  const first = hasNeeds ? ranked[0] : undefined;
+  const second = hasNeeds ? ranked[1] : undefined;
   let winner = first?.category ?? null;
   let runnerUp = second?.category ?? null;
   let tie: [Category, Category] | undefined;

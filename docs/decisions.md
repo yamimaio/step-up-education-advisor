@@ -110,6 +110,10 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - Not in this PR: stage 2 scoring (`scenarios.ts`, the lenses, the category bonus and peer fit) stays as it is; #65 replaces it with the need-based ranking.
 - Unchanged from the distance work: `normalize.ts` stays. It no longer has any city handling and only holds the declined-field defaults (`applyDirectionDefaults`, `applyDeclinedDefaults`) that both stages use.
 
+### Round 4 review (PR #22, after the rescale)
+- ★ The longest stretch also passes, with "no time away: the campus is within commuting distance", for any program whose campus is within 80 km of home, not only for programs that need the student near campus. A residency or weekend program on the user's doorstep is attended from home: `travelEstimate` already costs it as no travel, and the two now agree. An unknown distance (`withinCommute` null) still checks the stretch, and on-site days still apply either way. Example: a Boston user who allows 3 days (or "Can't travel", 0) passes a Boston executive program with 5-day residencies. The DQ10 test that fails an unpublished stretch against 0 now uses a far home.
+- ★ Declined `needs`: there is no neutral ranking, so `applyDirectionDefaults` gives an empty list. No type wins, there is no runner-up, tie or deciding need, each type's reasons say "No ranked needs", and stage 1 fires `goal_unclear` (the gap is half of the goal question; any spend is premature). The placeholder needs the schema still requires are never read, so the result doesn't depend on them. `needs` stays in `profileGaps`. `checkContradictions` already ignored declined fields.
+
 ## Structured home location (issue #35)
 
 - `homeCity` was one free-text string, and the engine had to parse spellings like "Cambridge, MA" and "Washington, D.C.". The profile now holds `homeCity` (non-empty), `homeRegion` (string or null) and `homeCountry` (two-letter ISO code, same rule as `country` in the program schema). The model fills them in from the conversation.
