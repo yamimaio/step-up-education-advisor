@@ -39,18 +39,20 @@
       "max": 365
     },
     "ratings": {
-      "network": 4,
-      "depth": 3,
-      "practicality": 3,
-      "costValue": 3
+      "leadership_skills": 5,
+      "deep_expertise": 3,
+      "graduate_degree": 2,
+      "senior_network": 5,
+      "new_industry_or_city": 2
     },
     "ratingNotes": {
-      "network": "Three residential weeks, 14+ live online sessions, a senior-leader target audience, and Professional Education alumni access support 4; network size and activity are not established for 5.",
-      "depth": "Eight months, 42 CEUs, 20+ MIT faculty, and strategy projects support a substantial non-degree program; graduate academic credit and research/thesis requirements are not published.",
-      "practicality": "Low evidence: hybrid delivery, applied projects, and a work-compatibility testimonial support 3; weekly workload, schedule flexibility, and projects on participants' own organizations are not established.",
-      "costValue": "Low evidence: $28,000 covers an eight-month completion-certificate program with eligibility for 42 CEUs; 3 is a provisional midpoint because no comparable tuition benchmarks establish relative value."
+      "leadership_skills": "Leadership is the core: leading strategic change, the human side of technology, and innovation teams.",
+      "deep_expertise": "Several technology strategy modules and strategy projects throughout, without academic credit.",
+      "graduate_degree": "Certificate of completion with 42 CEUs; no stated path to a graduate degree.",
+      "senior_network": "Aimed at C-level and heads of engineering, admitted by application, with three residential weeks at MIT.",
+      "new_industry_or_city": "An MIT Professional Education alumni LinkedIn group; no career services published."
     },
-    "ratingLowEvidence": ["practicality", "costValue"],
+    "ratingLowEvidence": ["deep_expertise", "senior_network", "new_industry_or_city"],
     "figureNotes": {
       "campusLat": "Derived from campusAddress (approximate, from the street address).",
       "campusLon": "Derived from campusAddress (approximate, from the street address)."
