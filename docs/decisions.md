@@ -161,7 +161,7 @@ Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM 
 - The rating prompt lives only in `.claude/skills/rate-program/rating-prompt.md`; Prompt 2 in `docs/perplexity-program-prompts.md` points to it, so the rubric can't drift between two copies.
 - Perplexity still rates, as before (it saves Claude usage). The skill reviews each answer against the rubric and Yami's rulings (`rulings.md`, R1 to R8 from the Oct 9 review), and writes the Reviewed ratings block the converter reads.
 - Each correction Yami makes becomes a ruling and bumps the skill version. The block heading names the skill version and the reviewer ("reviewed by: pending" until Yami approves).
-- Default taken: until the schema has a rating provenance field, the provenance lives only in that heading. A `ratingVerification` field is a later decision.
+- Yami, Oct 9: no rating provenance field in the schema (no `ratingVerification`). Provenance lives only in the block heading: the skill version and the reviewer.
 
 
 ## Step 5
