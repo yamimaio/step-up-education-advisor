@@ -106,6 +106,41 @@ describe("chatReducer", () => {
     expect(next.status).toBe("blocked");
   });
 
+  it("blocks input with no retry on a limit notice, keeping the history as posted", () => {
+    const next = chatReducer(sent, {
+      type: "response",
+      response: { ...ok, notice: { kind: "limit", message: "Message limit reached" } },
+    });
+    expect(next.status).toBe("blocked");
+    expect(next.history).toEqual(sent.history);
+    expect(next.notice?.kind).toBe("limit");
+  });
+
+  it("shows the verdict and template text when a limit notice comes with the confirm", () => {
+    const card: ChatState = {
+      ...initialChatState,
+      history: [textMessage("hello"), ask],
+      confirm: { toolUseId: "t2", direction: personaADirection },
+    };
+    const out = chatReducer(card, {
+      type: "send",
+      message: toolResultMessage("t2", { confirmed: true }),
+    });
+    const next = chatReducer(out, {
+      type: "response",
+      response: {
+        ...ok,
+        direction: result,
+        text: "Template",
+        notice: { kind: "limit", message: "Message limit reached" },
+      },
+    });
+    expect(next.status).toBe("blocked");
+    expect(next.verdict).toEqual({ direction: personaADirection, result });
+    expect(next.fallbackText).toBe("Template");
+    expect(next.history).toEqual(out.history);
+  });
+
   it("shows the verdict and template text after a failed confirm, outside the history", () => {
     const card: ChatState = {
       ...initialChatState,

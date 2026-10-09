@@ -3,6 +3,10 @@ import { blocksOf, type MessageParam } from "./chatTypes";
 // What the user sees of the history: the user's words, the chips they tapped, their answer to
 // the card and the advisor's text. Thinking, tool calls and server-tool results stay hidden.
 
+// The server's wrap-up note near the message cap (docs/chat-api.md, "Message cap"): a text block
+// it adds to a user message. It stays in the history, which is append-only, but is never shown.
+export const WRAP_UP_PREFIX = "[Step Up note]";
+
 export type Turn =
   | { kind: "user"; text: string }
   | { kind: "assistant"; text: string }
@@ -40,7 +44,8 @@ export function toTurns(history: MessageParam[]): Turn[] {
   for (const message of history) {
     for (const block of blocksOf(message)) {
       if (block.type === "text" && typeof block.text === "string") {
-        if (block.text.trim()) turns.push({ kind: message.role, text: block.text });
+        const note = message.role === "user" && block.text.startsWith(WRAP_UP_PREFIX);
+        if (!note && block.text.trim()) turns.push({ kind: message.role, text: block.text });
       } else if (block.type === "tool_use" && typeof block.id === "string") {
         calls.set(block.id, {
           name: String(block.name),

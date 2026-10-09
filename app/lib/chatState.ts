@@ -12,7 +12,7 @@ export type Status =
   | "sending"
   // The last request failed and can be retried unchanged (retryable, unknown, network).
   | "failed"
-  // Nothing more can be sent (auth_or_credit, or a request the server refused).
+  // Nothing more can be sent (auth_or_credit, limit, or a request the server refused).
   | "blocked";
 
 // What was on screen before a send, so a refusal or an empty-input nudge can put it back. A
@@ -144,7 +144,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
             status: "idle",
           };
         }
-        // retryable, unknown, auth_or_credit: the history stays as posted. A failed confirm still
+        // retryable, unknown, auth_or_credit, limit: the history stays as posted. A failed confirm still
         // carries the verdict and the template text, shown but not added to the history.
         return {
           ...state,
@@ -152,7 +152,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
           fallbackText: r.direction && r.text ? r.text : state.fallbackText,
           counter,
           notice: r.notice,
-          status: kind === "auth_or_credit" ? "blocked" : "failed",
+          status: kind === "auth_or_credit" || kind === "limit" ? "blocked" : "failed",
         };
       }
       const history = r.replaceLastUserMessage

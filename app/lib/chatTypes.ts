@@ -29,7 +29,14 @@ export type PendingChips = {
 
 export type PendingConfirm = { toolUseId: string; direction: Direction };
 
-export type NoticeKind = "retryable" | "auth_or_credit" | "refusal" | "unknown" | "empty_input";
+export type NoticeKind =
+  | "retryable"
+  | "auth_or_credit"
+  | "refusal"
+  | "unknown"
+  | "empty_input"
+  // Past the message cap: no model call, input off for good (docs/chat-api.md, "Message cap").
+  | "limit";
 
 export type Notice = { kind: NoticeKind; message: string };
 
