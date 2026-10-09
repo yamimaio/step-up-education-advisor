@@ -41,7 +41,7 @@ Each program record carries `ratings` keyed by the five needs, integers 1 to 5, 
 
 ## 3. Program score and order
 
-- **Score** = 3 × rating on the user's top need + 2 × second + 1 × third, using the program's own ratings, **+ 2 × format fit** (section 3a). Range 8 to 40. The needs part is the same formula as Stage 1, so the explanation reads the same.
+- **Score** = 3 × rating on the user's top need + 2 × second + 1 × third, using the program's own ratings, **+ 2 × format fit + 1 × travel fit** (section 3a). Range 9 to 45. The needs part is the same formula as Stage 1, so the explanation reads the same.
 - **Who is listed:** programs that pass or are near misses, in a category that isn't ruled out. Budget, hours, travel and distance stay filters with near misses, unchanged.
 - **Order:** the confirmed category's programs first (passing before near misses, then by score). Then up to 2 passing programs of the runner-up category under "Also worth a look". No category bonus to tune.
 - **Ties:** higher location fit, then lower known total cost (tuition + travel estimate; unknown last), then id.
@@ -55,13 +55,15 @@ Yami's own case: among executive programs there were options in Buenos Aires, bu
 - **Program format** comes from the existing `format` field, so no new research: `online` → online, `hybrid` → blended, `in_person` → in person.
 - **Format fit, 1 to 5:** exact match 5; a neighbouring format 3 (blended neighbours both online and in person); the opposite format 1 (online vs in person); `no_preference` 3 for every program. Weight 2, so it can lift a blended program above an otherwise equal one without beating a much better fit on needs.
 - **Card line:** "Blended, as you prefer." (or "In person; you prefer online" when it doesn't match).
-- **Replaces `travelComfort`** (appeal / fine / burden): the field, its chip, and the +0.5 / −1 location fit terms are removed. Contradiction R5 is reworded: `formatPreference = online` and `needs[0] = senior_network` ("you want senior peers but prefer fully online; online cohorts rarely build that network"). The hard limits (on-site days, longest stretch, relocate, distance) stay as they are.
+- **Travel fit, 1 to 5, kept separate (Yami: format and travel are different traits).** Someone can have no format preference but love travel, or want on-site study but find travel a burden. `travelComfort` (appeal / fine / burden) stays, with its question and contradiction R5 unchanged. It now scores by whether the program needs trips for this user (on site and beyond commuting distance, so not online and not local): appeal → 5 if it needs trips, 3 if not; burden → 1 if it needs trips, 3 if not; fine → 3 for every program. Weight 1.
+- **Card lines:** "Three trips a year, which you said you enjoy" / "Needs travel, which you said is a burden".
+- **No double counting:** `travelComfort` leaves location fit (the +0.5 / −1 terms are removed), so location fit only carries `locationValues`, as a tie-breaker. The hard limits (on-site days, longest stretch, relocate, distance) stay as they are.
 
 ## 4. What goes away
 
 - The three lenses: `SCENARIO_WEIGHTS`, the `network` / `depth` / `practicality` lists and `CATEGORY_BONUS`.
 - Peer fit as a separate score adjustment (`PEER_FIT`): seniority is now the senior peers rating, so it doesn't count twice. The card still shows the cohort median.
-- Location fit and cost only break ties. `travelComfort` is replaced by `formatPreference` (section 3a).
+- Location fit (now only `locationValues`) and cost only break ties. `travelComfort` moves from location fit to its own travel fit term (section 3a).
 
 ## 5. Order of work
 
