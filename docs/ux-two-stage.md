@@ -36,7 +36,7 @@ In March the category was decided by the career goal, classmates' seniority and 
 **Stage 2: "Show me programs"** (opt-in)
 - Only now asks the practical questions: budget, travel (how often, how long away, airfare range, comfort) and payment.
 - **Location, asked naturally, never parsed by the engine** (revised after Yami's comment, Oct 8): the advisor asks where you live and whether you're willing to travel, in plain conversation. The model turns the answer into structured fields (`homeCity`, `homeCountry` as an ISO code, and approximate `homeLat`/`homeLon` for the city). Each program record carries its campus coordinates. The engine only compares distances: a weekly in-person program passes if it is within commuting distance (default 80 km) or the user would relocate; everything else is judged by the travel answers, so the best options show up wherever they are. This scales to any country and any number of programs, with no city lists, metro tables or spelling rules.
-- Gives: the three shortlists, with near misses. If the budget rules out the whole recommended category, the card says so and points to the runner-up category, rather than quietly changing the verdict.
+- Gives: one list ranked by the user's top three needs (updated Oct 9, see `docs/need-based-ranking.md`), with near misses. If the budget rules out the whole recommended category, the card says so and points to the runner-up category, rather than quietly changing the verdict.
 
 ## Why this is better (and what it costs)
 
@@ -56,5 +56,5 @@ Risk to watch: a few people do need logistics up front ("I can't travel at all",
 
 1. **Reshape #35 and PR #39; close #37 and #38 (spelling bugs that disappear).** Keep the structured home fields from #35 and add `homeLat`/`homeLon` (filled by the model) plus campus coordinates on each program. Delete `places.ts`, `metro.ts` and `METRO_STATES` (`normalize.ts` stays for `applyDeclinedDefaults`); `sameMetro` becomes a distance check. This is less code, not more.
 2. Merge #22 with that change, and stop polishing the engine. Remaining Low findings become issues.
-3. Server and advisor (#25, step 6): two tool pauses, `propose_direction` (then the category verdict) and `propose_search` (then the shortlists).
+3. Server and advisor (#25, step 6): two tool pauses, `propose_direction` (then the category verdict) and `propose_search` (then the ranked list).
 4. Next priority, above everything else: **one real conversation with persona A**, stage 1 only if needed. Day 3's checkpoint is someone using it without instructions, and only a real conversation tells us whether the UX works.

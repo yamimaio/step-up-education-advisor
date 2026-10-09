@@ -55,11 +55,12 @@ PART 1: a JSON object with exactly these fields (null where not published):
 }
 
 PART 2: evidence for ratings (facts with sources, no scores):
-- Network: cohort size, alumni network size or access, in-person time, typical titles of participants.
-- Academic depth: credit hours, research or thesis content, faculty involvement.
-- Practicality: schedule flexibility, applied or capstone projects, online share.
-- Cost value: tuition against duration and credential.
-- Leadership focus: how central leadership is to the curriculum (list the leadership modules or courses).
+- Leadership focus: how central leading people and organizations is to the curriculum (list the leadership modules or courses).
+- Depth: the main field of study, credit hours, capstone, research or thesis content, faculty involvement.
+- Degree path: the credential awarded, academic credit or CEUs, and whether credits officially count toward a graduate degree (quote it).
+- Classmates: cohort size, median or average years of experience, typical titles, in-person time together, alumni access.
+- Career change: career services, recruiting, internships or support for changing industry, role or city.
+- Cost: tuition against duration and credential.
 
 End with a list of anything uncertain or conflicting between official pages.
 ```
@@ -111,34 +112,43 @@ Pay special attention to: the number of courses and how many can be taken online
 
 ## Prompt 2, rating (new thread, thinking model)
 
-Paste everything in the block, then replace the last line with the whole research answer for one program.
+Updated Oct 9 for need-based ranking (`docs/need-based-ranking.md`): the program is rated on the same five needs the user ranks, 1 to 5. Paste everything in the block, then replace the last line with the whole research answer for one program.
+
+**Re-rating a program already researched** (MIT TLP, Wharton EMBA SF, Northwestern MEM, Harvard Extension): no new research. Open a new thread with the same thinking model, paste this prompt, paste the saved `docs/research/<id>.md` at the end, and save the answer over `docs/research/<id>-rating.md`.
 
 ```
-You are rating one US leadership program for a curated dataset that helps senior tech, product and engineering leaders (8+ years of experience, already holding a degree) choose their next educational step.
+You are rating one US leadership program for a curated dataset that helps experienced leaders (8+ years of experience, already holding a degree) choose their next educational step. Users rank what they need most; programs are ranked by how well they serve those needs.
 
-Below is research on the program, taken only from its official pages, with a URL and a verbatim quote for each fact. Use ONLY these facts. Do not search the web and do not add facts from memory. If a fact you need is missing, say so and rate from what is there, marking that rating "low evidence".
+Below is research on the program, taken only from its official pages, with a URL and a verbatim quote for each fact. Use ONLY these facts. Do not search the web and do not add facts from memory. If a fact you need is missing, rate from what is there and list that need under lowEvidence.
 
-Rate the program 1 to 5 on four ratings, integers only, against this rubric:
+Rate the program 1 to 5, integers only, on these five needs. Start from the default for the program's category in this table, and move a rating only when the facts justify it:
 
-Network (cohort and alumni access, in-person time):
-  1 = self-paced or no cohort; 2 = online cohort, little interaction; 3 = live cohort, mostly online, or a short in-person stint;
-  4 = several in-person residencies with a senior cohort; 5 = sustained in-person time with a senior cohort plus a large, active alumni network.
-Academic depth (credit hours, research or thesis content, faculty):
-  1 = a few hours on one skill; 2 = a short course or non-credit program of a few weeks; 3 = a substantial non-degree program or a credit-bearing certificate;
-  4 = a master's-level degree with applied focus; 5 = a full degree with research or a thesis and core faculty.
-Practicality (schedule fit for someone working full time, applied projects):
-  1 = needs a full-time break and offers no applied work; 3 = workable with effort, some applied work;
-  5 = designed for working leaders, flexible schedule, projects on the participant's own organization.
-Cost value (tuition against duration and credential; ignore travel):
-  1 = high price for a short program or weak credential; 3 = in line with similar programs of its type;
-  5 = low price for its length and credential.
+  category              leadership  deep_expertise  graduate_degree  senior_network  new_industry_or_city
+  mba                       5             3                5                1                 5
+  emba                      5             3                5                5                 3
+  specialized_masters       3             5                5                1                 3
+  executive                 5             3                1                5                 3
+  certificate               3             3                3                1                 1
+  short_course              3             3                1                1                 1
 
-For each rating, give one line saying why, citing the facts it rests on.
+Rubric:
+leadership_skills (how central leading people and organizations is to the curriculum):
+  1 = little or no leadership content; 3 = leadership is one strand among several; 5 = leadership is the core, taught for experienced leaders (name the modules).
+deep_expertise (depth in one field, such as technology strategy, AI in organizations or engineering management):
+  1 = a broad overview; 3 = several courses in one field; 5 = sustained, credit-bearing depth in one field with a capstone or thesis.
+graduate_degree (factual):
+  1 = no academic credit; 2 = academic credit or CEUs with no stated path to a degree; 3 = credits that officially count toward a graduate degree (quote it); 5 = awards a graduate degree (master's or MBA).
+senior_network (how senior the classmates are, and time together):
+  1 = cohort median under 5 years of experience, or no cohort; 2 = median 5 to 9 years; 3 = median 10 to 14 years, or mostly managers; 4 = median 15 to 19 years, or mostly directors and VPs; 5 = median 20+ years, or mostly C-level and VPs, with sustained in-person time.
+new_industry_or_city (support for changing industry, role or city):
+  1 = designed for staying in the current role, no career services; 3 = some career services or a network reaching new industries; 5 = structured career switching: recruiting, internships or dedicated career services for switchers.
+
+For each need, give one line citing the facts it rests on. When a rating differs from the category default, start the line with "default X → Y because".
 
 Return exactly:
-"ratings": { "network": n, "depth": n, "practicality": n, "costValue": n },
-"ratingNotes": { "network": "...", "depth": "...", "practicality": "...", "costValue": "..." },
-"lowEvidence": [ list of ratings marked low evidence, or empty ]
+"ratings": { "leadership_skills": n, "deep_expertise": n, "graduate_degree": n, "senior_network": n, "new_industry_or_city": n },
+"ratingNotes": { "leadership_skills": "...", "deep_expertise": "...", "graduate_degree": "...", "senior_network": "...", "new_industry_or_city": "..." },
+"lowEvidence": [ list of needs rated on thin evidence, or empty ]
 
 Research:
 <paste the whole research answer here>
