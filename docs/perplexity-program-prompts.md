@@ -51,6 +51,7 @@ PART 1: a JSON object with exactly these fields (null where not published):
   "lodgingPerNightUsd": number,         // GSA per diem lodging rate for the program city, current fiscal year
   "nextStartDate": string,
   "sources": [ { "field": string, "url": string, "quote": string, "checkedOn": "YYYY-MM-DD" } ]
+  // For an in-person or hybrid program, include one source with field "campusAddress": the street address of the campus where classes meet, quoted verbatim from the school's official page.
 }
 
 PART 2: evidence for ratings (facts with sources, no scores):
