@@ -149,4 +149,60 @@ describe("chatReducer", () => {
     });
     expect(next.counter).toEqual({ remaining: 9 });
   });
+
+  it("takes back a failed attempt's verdict when the retried confirm is refused", () => {
+    const card: ChatState = {
+      ...initialChatState,
+      history: [textMessage("hello"), ask],
+      confirm: { toolUseId: "t2", direction: personaADirection },
+    };
+    const out = chatReducer(card, {
+      type: "send",
+      message: toolResultMessage("t2", { confirmed: true }),
+    });
+    const failed = chatReducer(out, {
+      type: "response",
+      response: {
+        ...ok,
+        direction: result,
+        text: "T",
+        notice: { kind: "retryable", message: "x" },
+      },
+    });
+    expect(failed.verdict).not.toBeNull();
+    const refused = chatReducer(chatReducer(failed, { type: "retry" }), {
+      type: "response",
+      response: { ...ok, notice: { kind: "refusal", message: "No" } },
+    });
+    expect(refused.confirm?.toolUseId).toBe("t2");
+    expect(refused.verdict).toBeNull();
+    expect(refused.fallbackText).toBeNull();
+  });
+
+  it("gives a refused correction back to the card", () => {
+    const card: ChatState = {
+      ...initialChatState,
+      history: [textMessage("hello"), ask],
+      confirm: { toolUseId: "t2", direction: personaADirection },
+    };
+    const words = "Up to 2 years is fine";
+    const out = chatReducer(card, {
+      type: "send",
+      message: toolResultMessage("t2", { confirmed: false, corrections: words }),
+      correction: words,
+    });
+    expect(out.correction).toBeNull();
+    const refused = chatReducer(out, {
+      type: "response",
+      response: { ...ok, notice: { kind: "refusal", message: "No" } },
+    });
+    expect(refused.confirm?.toolUseId).toBe("t2");
+    expect(refused.correction).toBe(words);
+    expect(refused.draft).toBe("");
+    // The next send clears it.
+    expect(
+      chatReducer(refused, { type: "send", message: toolResultMessage("t2", { confirmed: true }) })
+        .correction,
+    ).toBeNull();
+  });
 });

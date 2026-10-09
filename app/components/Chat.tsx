@@ -29,10 +29,29 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
   const confirmedAt = turns.findLastIndex((t) => t.kind === "confirm" && t.confirmed);
   const verdictAt = state.verdict ? (confirmedAt >= 0 ? confirmedAt : turns.length - 1) : -2;
   const endRef = useRef<HTMLDivElement>(null);
+  const pendingRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const retryRef = useRef<HTMLButtonElement>(null);
+  const lastStatus = useRef(state.status);
 
   useEffect(() => {
     endRef.current?.scrollIntoView?.({ block: "end" });
   }, [turns.length, state.chips, state.confirm, state.notice]);
+
+  // While sending, the input is disabled and the chips or card unmount, so focus drops to the
+  // page. When the answer arrives, put it on what comes next: the first chip, the card's heading,
+  // Retry, or the input box.
+  useEffect(() => {
+    const was = lastStatus.current;
+    lastStatus.current = state.status;
+    if (was !== "sending" || state.status === "sending") return;
+    const next =
+      state.status === "failed"
+        ? retryRef.current
+        : (pendingRef.current?.querySelector<HTMLElement>("button, h2") ??
+          (state.status === "idle" ? inputRef.current : null));
+    next?.focus();
+  }, [state.status]);
 
   const verdict = state.verdict && (
     <li>
@@ -45,43 +64,49 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
 
   return (
     <div className="flex flex-col gap-4">
-      <ol aria-label="Conversation" className="flex flex-col gap-3">
-        <Message turn={{ kind: "assistant", text: GREETING }} />
-        {verdictAt === -1 && verdict}
-        {turns.map((turn, i) => (
-          <MessageWithVerdict key={i} turn={turn} after={i === verdictAt ? verdict : null} />
-        ))}
-        {fallback}
-        {state.status === "sending" && (
-          <li className="text-sm text-ink/60" role="status">
-            Step Up is thinking…
-          </li>
-        )}
-      </ol>
+      {/* A log region, so screen readers announce each new reply as it is added. */}
+      <div role="log" aria-label="Conversation">
+        <ol className="flex flex-col gap-3">
+          <Message turn={{ kind: "assistant", text: GREETING }} />
+          {verdictAt === -1 && verdict}
+          {turns.map((turn, i) => (
+            <MessageWithVerdict key={i} turn={turn} after={i === verdictAt ? verdict : null} />
+          ))}
+          {fallback}
+        </ol>
+      </div>
+      {/* Always mounted, so the change of text is announced. */}
+      <p role="status" className="text-sm text-ink/60">
+        {state.status === "sending" ? "Step Up is thinking…" : ""}
+      </p>
 
-      {state.chips && (
-        <ChipRow
-          key={state.chips.toolUseId}
-          chips={state.chips}
-          disabled={busy}
-          onSend={on.onChips}
-        />
-      )}
-      {state.confirm && (
-        <DirectionCard
-          key={state.confirm.toolUseId}
-          direction={state.confirm.direction}
-          disabled={busy}
-          onConfirm={on.onConfirm}
-          onCorrect={on.onCorrect}
-        />
-      )}
+      <div ref={pendingRef}>
+        {state.chips && (
+          <ChipRow
+            key={state.chips.toolUseId}
+            chips={state.chips}
+            disabled={busy}
+            onSend={on.onChips}
+          />
+        )}
+        {state.confirm && (
+          <DirectionCard
+            key={state.confirm.toolUseId}
+            direction={state.confirm.direction}
+            correction={state.correction}
+            disabled={busy}
+            onConfirm={on.onConfirm}
+            onCorrect={on.onCorrect}
+          />
+        )}
+      </div>
 
       {state.notice && (
         <div role="alert" className="rounded border border-amber-600/40 bg-amber-50 p-3 text-sm">
           <p>{state.notice.message}</p>
           {state.status === "failed" && (
             <button
+              ref={retryRef}
               type="button"
               onClick={on.onRetry}
               className="mt-2 rounded bg-teal px-3 py-1 text-paper"
@@ -106,6 +131,7 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
         </label>
         <textarea
           id="chat-input"
+          ref={inputRef}
           value={state.draft}
           disabled={busy}
           maxLength={4000}
@@ -113,7 +139,8 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
           placeholder={state.chips ? "Tap a chip, or type your answer" : "Type your message"}
           onChange={(e) => on.onDraft(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            // Enter that commits an IME composition (Japanese, Chinese, Korean) doesn't send.
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
               e.preventDefault();
               e.currentTarget.form?.requestSubmit();
             }

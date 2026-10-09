@@ -56,4 +56,19 @@ describe("DirectionCard", () => {
     expect(onCorrect).toHaveBeenCalledWith("Up to 2 years is fine");
     expect(onConfirm).not.toHaveBeenCalled();
   });
+
+  it("opens with a refused correction filled in, ready to rephrase", () => {
+    const onCorrect = vi.fn();
+    render(
+      <DirectionCard
+        direction={personaADirection}
+        correction="Up to 2 years is fine"
+        disabled={false}
+        onConfirm={() => {}}
+        onCorrect={onCorrect}
+      />,
+    );
+    const box = screen.getByLabelText("What should change?") as HTMLTextAreaElement;
+    expect(box.value).toBe("Up to 2 years is fine");
+  });
 });

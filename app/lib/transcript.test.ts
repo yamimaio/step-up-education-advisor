@@ -3,7 +3,7 @@ import { toEngineDirection } from "@core/advisor/tools";
 import { recommendCategory } from "@core/engine/direction";
 import { personaADirection } from "../../tests/fixtures/directions";
 import type { MessageParam } from "./chatTypes";
-import { buildTranscript } from "./transcript";
+import { buildTranscript, localDate } from "./transcript";
 
 const history: MessageParam[] = [
   { role: "user", content: [{ type: "text", text: "I lead engineering teams." }] },
@@ -101,5 +101,23 @@ describe("buildTranscript", () => {
       date: new Date(),
     });
     expect(withFallback).toContain("> Template explanation");
+  });
+
+  it("writes no pick under a not-yet verdict", () => {
+    const unclear = { ...personaADirection, goalClarity: "unclear" as const };
+    const notYet = buildTranscript({
+      history,
+      verdict: { direction: unclear, result: recommendCategory(toEngineDirection(unclear), []) },
+      fallbackText: null,
+      date: new Date(),
+    });
+    expect(notYet).toContain("Not yet.");
+    expect(notYet).not.toContain("Best next step");
+    expect(notYet).not.toContain("Runner-up");
+  });
+
+  it("dates the file with the user's local date, not the UTC one", () => {
+    expect(localDate(new Date(2026, 9, 9, 23, 30))).toBe("2026-10-09");
+    expect(localDate(new Date(2026, 0, 2, 0, 5))).toBe("2026-01-02");
   });
 });

@@ -50,14 +50,21 @@ describe("ChipRow", () => {
     const user = userEvent.setup();
     render(<ChipRow chips={needs} disabled={false} onSend={onSend} />);
     const send = () => screen.getByRole("button", { name: /^Send/ }) as HTMLButtonElement;
-    await user.click(screen.getByRole("button", { name: "A senior network" }));
-    await user.click(screen.getByRole("button", { name: "Leadership skills" }));
+    const chip = (label: string) => screen.getByRole("button", { name: new RegExp(`^${label}`) });
+    await user.click(chip("A senior network"));
+    await user.click(chip("Leadership skills"));
     expect(send().disabled).toBe(true);
     // A second tap removes a choice.
-    await user.click(screen.getByRole("button", { name: "Leadership skills" }));
-    await user.click(screen.getByRole("button", { name: "Leadership skills" }));
-    await user.click(screen.getByRole("button", { name: "Deep expertise in a field" }));
+    await user.click(chip("Leadership skills"));
+    await user.click(chip("Leadership skills"));
+    await user.click(chip("Deep expertise in a field"));
     expect(onSend).not.toHaveBeenCalled();
+    // The rank is part of each picked chip's accessible name.
+    expect(screen.getByRole("button", { name: "A senior network, ranked 1" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Leadership skills, ranked 2" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Deep expertise in a field, ranked 3" }),
+    ).toBeTruthy();
     await user.click(send());
     expect(onSend).toHaveBeenCalledWith([
       "A senior network",

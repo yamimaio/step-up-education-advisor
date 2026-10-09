@@ -6,27 +6,30 @@ import { directionLines } from "@app/lib/labels";
 
 // The stage 1 confirm card. Each line comes from the propose_direction input through the chip
 // labels; "Looks right" confirms, "Change something" asks what to change in the user's words.
+// `correction` is a refused correction coming back: the card opens with it, ready to rephrase.
 export function DirectionCard({
   direction,
+  correction = null,
   disabled,
   onConfirm,
   onCorrect,
 }: {
   direction: Direction;
+  correction?: string | null;
   disabled: boolean;
   onConfirm: () => void;
   onCorrect: (corrections: string) => void;
 }) {
   const headingId = useId();
-  const [editing, setEditing] = useState(false);
-  const [corrections, setCorrections] = useState("");
+  const [editing, setEditing] = useState(correction !== null);
+  const [corrections, setCorrections] = useState(correction ?? "");
 
   return (
     <section
       aria-labelledby={headingId}
       className="rounded-lg border border-teal/40 bg-white/70 p-4 shadow-sm"
     >
-      <h2 id={headingId} className="mb-3 font-semibold text-teal">
+      <h2 id={headingId} tabIndex={-1} className="mb-3 font-semibold text-teal outline-none">
         Here&apos;s what I understood
       </h2>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">

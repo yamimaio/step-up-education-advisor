@@ -1,6 +1,6 @@
 "use client";
 
-import { buildTranscript, type TranscriptInput } from "@app/lib/transcript";
+import { buildTranscript, localDate, type TranscriptInput } from "@app/lib/transcript";
 
 // Saves the transcript as a Markdown file through a Blob and an object URL. Nothing is sent to
 // the server, so it works after any failure, including when input is disabled.
@@ -17,7 +17,7 @@ export function DownloadTranscript({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `step-up-transcript-${date.toISOString().slice(0, 10)}.md`;
+    a.download = `step-up-transcript-${localDate(date)}.md`;
     document.body.append(a);
     a.click();
     a.remove();

@@ -45,6 +45,8 @@ export function ChipRow({
             >
               {order >= 0 && <span aria-hidden="true">{order + 1}. </span>}
               {label}
+              {/* The rank is part of the name, so a screen reader hears the order picked. */}
+              {order >= 0 && <span className="sr-only">, ranked {order + 1}</span>}
             </button>
           );
         })}

@@ -15,6 +15,12 @@ export type TranscriptInput = {
   date: Date;
 };
 
+// The user's local date as YYYY-MM-DD (toISOString would give the UTC date, a day off at night).
+export function localDate(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 const quote = (text: string) =>
   text
     .split("\n")
@@ -22,7 +28,7 @@ const quote = (text: string) =>
     .join("\n");
 
 export function buildTranscript({ history, verdict, fallbackText, date }: TranscriptInput): string {
-  const out: string[] = [`# Step Up transcript`, "", `Saved ${date.toISOString().slice(0, 10)}.`];
+  const out: string[] = [`# Step Up transcript`, "", `Saved ${localDate(date)}.`];
 
   const turns = toTurns(history);
   out.push("", "## Conversation", "");

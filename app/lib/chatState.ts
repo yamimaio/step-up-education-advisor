@@ -15,8 +15,17 @@ export type Status =
   // Nothing more can be sent (auth_or_credit, or a request the server refused).
   | "blocked";
 
-// What was on screen before a send, so a refusal or an empty-input nudge can put it back.
-type Before = { chips: PendingChips | null; confirm: PendingConfirm | null; draft: string };
+// What was on screen before a send, so a refusal or an empty-input nudge can put it back. A
+// retried confirm that is refused also takes back the verdict its failed attempt showed.
+type Before = {
+  chips: PendingChips | null;
+  confirm: PendingConfirm | null;
+  draft: string;
+  // The words sent from the card's "Change something" box, given back on a refusal.
+  correction: string | null;
+  verdict: Verdict | null;
+  fallbackText: string | null;
+};
 
 export type Verdict = { direction: Direction; result: DirectionResult };
 
@@ -31,6 +40,8 @@ export type ChatState = {
   notice: Notice | null;
   status: Status;
   draft: string;
+  // A refused correction, put back in the card's "Change something" box.
+  correction: string | null;
   before: Before | null;
 };
 
@@ -44,12 +55,13 @@ export const initialChatState: ChatState = {
   notice: null,
   status: "idle",
   draft: "",
+  correction: null,
   before: null,
 };
 
 export type ChatAction =
   | { type: "draft"; text: string }
-  | { type: "send"; message: MessageParam }
+  | { type: "send"; message: MessageParam; correction?: string }
   | { type: "retry" }
   | { type: "response"; response: ChatResponse }
   // The request never got a ChatResponse: a network error (retry) or a 400 (no retry helps).
@@ -75,7 +87,15 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
       return {
         ...state,
         history: [...state.history, action.message],
-        before: { chips: state.chips, confirm: state.confirm, draft: state.draft },
+        before: {
+          chips: state.chips,
+          confirm: state.confirm,
+          draft: state.draft,
+          correction: action.correction ?? null,
+          verdict: state.verdict,
+          fallbackText: state.fallbackText,
+        },
+        correction: null,
         chips: null,
         confirm: null,
         draft: "",
@@ -101,13 +121,23 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         if (kind === "refusal" || kind === "empty_input") {
           // Drop the message just sent and go back to the state before it. The nudge clears
           // the input; a refusal gives the user their words back to rephrase.
-          const before = state.before ?? { chips: null, confirm: null, draft: "" };
+          const before: Before = state.before ?? {
+            chips: null,
+            confirm: null,
+            draft: "",
+            correction: null,
+            verdict: state.verdict,
+            fallbackText: state.fallbackText,
+          };
           return {
             ...state,
             history: state.history.slice(0, -1),
             chips: before.chips,
             confirm: before.confirm,
             draft: kind === "refusal" ? before.draft : "",
+            correction: kind === "refusal" ? before.correction : null,
+            verdict: before.verdict,
+            fallbackText: before.fallbackText,
             before: null,
             counter,
             notice: r.notice,

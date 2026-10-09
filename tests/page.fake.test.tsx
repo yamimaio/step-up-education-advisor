@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BadRequest, fakeChat } from "@app/api/chat/fake";
@@ -101,5 +101,29 @@ describe("the Stage 1 page with the fake route", () => {
     render(<Home />);
     await user.type(screen.getByLabelText("Your message"), "   {Enter}");
     expect(requests).toHaveLength(0);
+  });
+
+  it("doesn't send on the Enter that commits an IME composition", () => {
+    render(<Home />);
+    const input = screen.getByLabelText("Your message");
+    fireEvent.change(input, { target: { value: "\u65e5\u672c" } });
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    expect(requests).toHaveLength(0);
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(requests).toHaveLength(1);
+  });
+
+  it("announces replies in a log and moves focus to the next chips", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+    const log = screen.getByRole("log", { name: "Conversation" });
+    await user.type(screen.getByLabelText("Your message"), "Hello{Enter}");
+    const chip = await screen.findByRole("button", { name: "Step up to a bigger leadership role" });
+    expect(log.textContent).toContain("Which of these is closer to what you want next?");
+    await waitFor(() => expect(document.activeElement).toBe(chip));
+    // After a typed answer with no chips, focus goes back to the input box.
+    await user.click(chip);
+    await screen.findByText("What does that look like for you, in a sentence or two?");
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText("Your message")));
   });
 });

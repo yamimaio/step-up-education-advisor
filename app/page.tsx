@@ -16,9 +16,10 @@ export default function Home() {
 
   const post = async (messages: MessageParam[]) => dispatch(await postChat(messages));
 
-  const send = (message: MessageParam) => {
+  // `correction`: words from the card's own box, given back to it if the server refuses them.
+  const send = (message: MessageParam, correction?: string) => {
     if (state.status !== "idle") return;
-    dispatch({ type: "send", message });
+    dispatch({ type: "send", message, correction });
     void post([...state.history, message]);
   };
 
@@ -59,7 +60,10 @@ export default function Home() {
         }}
         onCorrect={(corrections) => {
           if (state.confirm) {
-            send(toolResultMessage(state.confirm.toolUseId, { confirmed: false, corrections }));
+            send(
+              toolResultMessage(state.confirm.toolUseId, { confirmed: false, corrections }),
+              corrections,
+            );
           }
         }}
         onRetry={() => {

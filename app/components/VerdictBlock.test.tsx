@@ -58,4 +58,17 @@ describe("VerdictBlock", () => {
     expect(text).toContain("Not yet.");
     expect(text).toContain("Not answered: What's missing");
   });
+
+  it("names no type to pick when not yet fires but the engine still ranks a winner", () => {
+    // Persona B's case: the goal stays unclear, so goal_unclear fires over a ranked winner.
+    const verdict = verdictFor({ ...personaADirection, goalClarity: "unclear" });
+    expect(verdict.result.noProgram).toEqual({ triggered: true, trigger: "goal_unclear" });
+    expect(verdict.result.category.winner).toBe("executive");
+    render(<VerdictBlock verdict={verdict} />);
+    const text = block();
+    expect(text).toContain("Not yet. Your goal isn't clear enough");
+    expect(text).not.toContain("Runner-up");
+    expect(text).not.toContain("Deciding needs");
+    expect(screen.queryByText("Executive program", { selector: ".text-2xl" })).toBeNull();
+  });
 });
