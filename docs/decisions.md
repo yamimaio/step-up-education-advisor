@@ -208,3 +208,15 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 ## Node base image from the ECR Public mirror (issue #107)
 
 `Dockerfile` and `Dockerfile.dev` pull `public.ecr.aws/docker/library/node:24-alpine`, Amazon ECR Public's copy of the official Docker Hub `node` image, instead of `node:24-alpine` from Docker Hub. CI pulls without logging in, and Docker Hub's anonymous limit (100 pulls per 6 hours per IP) failed the `docker` job on shared GitHub runners with `429 Too Many Requests`. ECR Public's anonymous limit is 1 pull per second, so a burst of PRs can fail at worst for seconds, not hours. Logging in to Docker Hub from CI would also work but needs a token stored as a repository secret.
+
+## Step 7 (Stage 1 page, issue #9)
+
+- Stage 1 only: chat, chips, the "Here's what I understood" card, the verdict block and Download transcript. `ProgramCard`, the shortlists and `DataLimitsFooter` come with stage 2.
+- Until step 6 merges, `app/api/chat/route.ts` serves a scripted Stage 1 interview (`app/api/chat/fake.ts`) in the `docs/chat-api.md` shapes: fixed advisor lines, chip values from `CHIPS`, label rewrites in `replaceLastUserMessage`, a `check_contradictions` round, and the verdict from the real `recommendCategory`. It makes no model call. Step 6 replaces both files; whichever PR merges second resolves that one conflict. `tests/page.fake.test.tsx` drives the page through it with a mocked `fetch`.
+- The page can't import `server/` or the Anthropic SDK, so the contract types live in `app/lib/chatTypes.ts`, with message blocks typed loosely and passed back unchanged.
+- Typing while chips are pending sends a `ChipAnswer` with `typed` and no `chosen`; typing while the card is pending sends `{ confirmed: false, corrections }`.
+- A multi-select (needs, pick 3) numbers the taps in order; a second tap removes one, and a Send button is enabled once exactly `pick` are chosen.
+- The verdict block shows the winner, the runner-up (or the tie), the deciding needs, the resolved tensions or the "not yet" message, the declined fields, and every type's score or "Ruled out" with the engine's reasons. The "not yet" wording per trigger is fixed page text, not model text. Review round 1: when "not yet" fires, the block and the transcript name no winner, runner-up, tie or deciding needs, even though the engine still ranks a winner; the score table stays.
+- A request that never gets a `ChatResponse` is handled on the page: a network error or 5xx shows a Retry (same as `retryable`); a 4xx disables input (posting the same history would be refused again). Download transcript keeps working in both.
+- The page shows a fixed greeting that is not part of the history, since the history must start with the user's message.
+- Contract additions from step 6 (PR #100, `docs/chat-api.md` "Message cap"): a `limit` notice is handled like `auth_or_credit` (history kept, verdict and template text taken from the response when it carries `direction`, input off, no Retry); the wrap-up note, a user text block starting with `[Step Up note]` (`WRAP_UP_PREFIX`), stays in the history but `toTurns` skips it, so neither the chat nor the transcript shows it.
