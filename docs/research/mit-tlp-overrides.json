@@ -11,7 +11,7 @@
   "figureNotes": {
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
     "campusLon": "Derived from campusAddress (approximate, from the street address).",
-    "cohortMedianExperienceYears": "Median from the brochure's experience breakdown (July 2026): half of past participants have 20+ years. The brochure's stated average is 19.",
+    "cohortMedianExperienceYears": "Median from the brochure's experience breakdown (July 2026): half of past participants have 20+ years.",
     "onsiteDaysPerYear": "Three Monday-to-Friday weeks on campus in the 2026-27 schedule, which MIT says is subject to change; travel days not counted."
   },
   "extraSources": [
@@ -21,18 +21,6 @@
       "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
       "checkedOn": "2026-10-07",
       "kind": "official_page"
-    },
-    {
-      "field": "cohortMedianExperienceYears",
-      "quote": "With an average of 19 years of professional experience and representation from 20+ industries, participants in this program contribute to a high-touch peer network.",
-      "checkedOn": "2026-10-09",
-      "kind": "school_correspondence"
-    },
-    {
-      "field": "workCompatible",
-      "quote": "Through advanced education programs led and taught by MIT professors and lecturers, it offers continuing education and lifelong learning opportunities for working professionals at all levels.",
-      "checkedOn": "2026-10-09",
-      "kind": "school_correspondence"
     },
     {
       "field": "onsiteDaysPerYear",
@@ -66,5 +54,10 @@
   "cohortMedianExperienceYears": 20,
   "cohortExperienceBasis": "median",
   "onsiteDaysPerYear": 15,
-  "longestStretchDays": 5
+  "longestStretchDays": 5,
+  "replaceSources": [
+    "onsiteDaysPerYear",
+    "longestStretchDays",
+    "workCompatible"
+  ]
 }

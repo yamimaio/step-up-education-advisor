@@ -56,7 +56,7 @@
     "figureNotes": {
       "campusLat": "Derived from campusAddress (approximate, from the street address).",
       "campusLon": "Derived from campusAddress (approximate, from the street address).",
-      "cohortMedianExperienceYears": "Median from the brochure's experience breakdown (July 2026): half of past participants have 20+ years. The brochure's stated average is 19.",
+      "cohortMedianExperienceYears": "Median from the brochure's experience breakdown (July 2026): half of past participants have 20+ years.",
       "onsiteDaysPerYear": "Three Monday-to-Friday weeks on campus in the 2026-27 schedule, which MIT says is subject to change; travel days not counted."
     },
     "sources": [
@@ -110,27 +110,6 @@
         "kind": "official_page"
       },
       {
-        "field": "onsiteDaysPerYear",
-        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
-        "quote": "3 residential weeks",
-        "checkedOn": "2026-10-07",
-        "kind": "official_page"
-      },
-      {
-        "field": "longestStretchDays",
-        "url": "https://professional-education-gl.mit.edu/technology-leadership-program-mit",
-        "quote": "3 residential weeks",
-        "checkedOn": "2026-10-07",
-        "kind": "official_page"
-      },
-      {
-        "field": "workCompatible",
-        "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
-        "quote": "I also was looking for a program which was an extended program and a hybrid ... as well as I wouldn't have to stop my work or you could accommodate according to my schedule.",
-        "checkedOn": "2026-10-07",
-        "kind": "official_page"
-      },
-      {
         "field": "city",
         "url": "https://professional.mit.edu/course-catalog/technology-leadership-program",
         "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
@@ -178,18 +157,6 @@
         "quote": "MIT Professional Education 700 Technology Square Building NE48-200 Cambridge, MA 02139 USA",
         "checkedOn": "2026-10-07",
         "kind": "official_page"
-      },
-      {
-        "field": "cohortMedianExperienceYears",
-        "quote": "With an average of 19 years of professional experience and representation from 20+ industries, participants in this program contribute to a high-touch peer network.",
-        "checkedOn": "2026-10-09",
-        "kind": "school_correspondence"
-      },
-      {
-        "field": "workCompatible",
-        "quote": "Through advanced education programs led and taught by MIT professors and lecturers, it offers continuing education and lifelong learning opportunities for working professionals at all levels.",
-        "checkedOn": "2026-10-09",
-        "kind": "school_correspondence"
       },
       {
         "field": "onsiteDaysPerYear",
