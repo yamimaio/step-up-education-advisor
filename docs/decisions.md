@@ -132,3 +132,14 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - Commuting distance is 80 km by default, in `core/engine/constants.ts` (#22 adds it). `metro` stays in the program schema for now; #22 stops using it. Dropping the field is a later choice.
 - The step 4 records on the open PRs need `campusAddress`, `campusLat`, `campusLon`, an official-page `campusAddress` source and `figureNotes` for both coordinates once this merges; the values are in each PR's notes.
 - `homeLat` and `homeLon` are declined together: one `null` and one number is an error, so a half pair never reaches the engine.
+
+## Need-based ranking and one 1–5 scale (Oct 9, docs/need-based-ranking.md)
+
+- Approved by Yami for this week: Stage 2 ranks programs by the user's own needs, not by three fixed lenses. Every rating in the product is 1 to 5 ("keep everything consistent").
+- Default taken, not yet contested: rank inside the confirmed category, with up to 2 runner-up programs under "Also worth a look", instead of a category bonus.
+- Senior peers is computed from `cohortMedianExperienceYears` when published (bands under 5, 5–9, 10–14, 15–19, 20+ → 1 to 5); the prompt's value is used only when the median is null. This replaces the separate peer fit adjustment.
+- Ties: location fit, then lower known total cost, then id. Cost value is no longer a rating.
+- The rating prompt starts from the category default and records every change as "default X → Y because …", so each override has its evidence.
+- Yami confirmed both defaults on Oct 9: the 1 to 5 scale everywhere, and ranking inside the confirmed category.
+- Format preference (Oct 9): new `formatPreference`; program format is read from `format` (`hybrid` = blended). Format fit 5 / 3 / 1, no preference 3, weight 2.
+- Travel comfort stays (Yami, Oct 9: format and travel are different traits) and scores 1 × travel fit: appeal 5 / burden 1 when the program needs trips for this user, 3 otherwise; fine 3. It leaves location fit. R5 is unchanged.
