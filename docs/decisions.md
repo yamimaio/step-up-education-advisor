@@ -144,6 +144,52 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - Format preference (Oct 9): new `formatPreference`; program format is read from `format` (`hybrid` = blended). Format fit 5 / 3 / 1, no preference 3, weight 2.
 - Travel comfort stays (Yami, Oct 9: format and travel are different traits) and scores 1 × travel fit: appeal 5 / burden 1 when the program needs trips for this user, 3 otherwise; fine 3. It leaves location fit. R5 is unchanged.
 
+## Rating rules from the review of the first 4 ratings (issue #87, Oct 9)
+
+Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM and Harvard Extension (PRs #27, #29, #31, #33). Rules added to Prompt 2 and `docs/need-based-ranking.md`:
+
+- Senior peers and career change: a 4 or 5 needs facts that meet that level. With no facts on the need, the rating is the category default or 3, whichever is lower. Leadership and depth keep the category default unless facts move them.
+- Yami: a published target audience counts as the cohort when admission is by application. MIT TLP targets C-level leaders and admits by application, so it keeps senior peers 5 (Yami's own cohort averages about 22 years).
+- The most recent published class profile counts for cohort facts in both prompts, matching B1 (Wharton's Class of 2028, average 13-14 years → 3).
+- Career change: 3 needs career services open to these students, quoted; a network alone is 2.
+- Every rubric level 1 to 5 is defined. Degree gains a 4: all credits officially count toward a named graduate degree.
+- The rating answer is one valid JSON block. `ratingNotes` are card-ready (at most 20 words, no URLs); the evidence goes in a `reasoning` field that stays in the rating file.
+- The 4 rating files keep Perplexity's answer as provenance and add a "Reviewed ratings" block with the values the records use.
+
+## Rating skill, version 1 (issue #89, Oct 9)
+
+- The rating prompt lives only in `.claude/skills/rate-program/rating-prompt.md`; Prompt 2 in `docs/perplexity-program-prompts.md` points to it, so the rubric can't drift between two copies.
+- Perplexity still rates, as before (it saves Claude usage). The skill reviews each answer against the rubric and Yami's rulings (`rulings.md`, R1 to R8 from the Oct 9 review), and writes the Reviewed ratings block the converter reads.
+- Each correction Yami makes becomes a ruling and bumps the skill version. The block heading names the skill version and the reviewer ("reviewed by: pending" until Yami approves).
+- Yami, Oct 9: no rating provenance field in the schema (no `ratingVerification`). Provenance lives only in the block heading: the skill version and the reviewer.
+
+
+## Step 5
+
+- The "17 fields" are the intake table's rows, one entry each, plus the airfare question as its own entry (`core/advisor/fields.ts`). Entries that fill two profile fields (tuition and payment, time, on-site, home) are one entry.
+- `chips.ts` adds chip sets the plan's table doesn't list but the profile needs: `degreeLevel`, `careerGoalKind`, `needs`, `paymentPlan`, `relocate`, `locationValues` and `currentRole` with an Executive chip (the schema has it). The plan didn't fix the upper bounds for "Over $10k" (stored as 50,000) and "Over $80k" is 250,000 as listed.
+- `needs` and `locationValues` are multi-select chip sets (`pick` 3 and 2 in the checklist); a tap sends one value and the page collects them in order.
+- Experience under 8 years: the advisor says Step Up is built for 8 or more and offers to continue; it doesn't refuse. (The plan says "gate at 8" without saying what happens.)
+- `goalClarity` is "unclear" only after two follow-up questions, as the plan says; it is a model-set field, not a chip.
+- Persona expectations name the category, not exact scores (R8). Those for B to F are hand-computed from the matrix and the draft records; the engine wasn't run on them, because PR 3 wasn't merged when this was written. Step 7's run is the check.
+- Tool names live in `core/advisor/tools.ts` so the server (step 6) and `advisor.md` share one list.
+
+### Stage 1 of the two-stage flow (docs/ux-two-stage.md)
+
+- The checklist keeps its 17 entries, each tagged `stage: 1 | 2`. Stage 1 is the six entries that decide the category or that the user asked for there: goal, the gap (needs), classmates, time (length and hours), keep working, degree requirement.
+- Background (years of experience, degree, role, years leading) is in neither stage list of the request. Default: it moves to stage 2, asked only if the user hasn't said it, and isn't asked in stage 1. The fewer-than-8-years note applies when the user says so.
+- `propose_direction` takes `DirectionSchema`: the engine's stage 1 fields plus `peerPreference` (shown on the card, used by stage 2 scoring) and `resolvedTensions`. The server drops those two before `recommendCategory`. Each field reuses its `ProfileSchema` rule; `declined` may name only stage 1 fields.
+- `ask_choice` accepts only the stage 1 chip sets. `search_programs` leaves the stage 1 tools: stage 1 names no programs. It can come back with stage 2.
+- `propose_search` is a stub (no input schema) and is never sent to the model until stage 2 is wired. If the user says yes to "Want to see programs that fit?", the advisor says programs come next.
+- Stage 1 doesn't state typical costs for the category: `DirectionResult` carries no price ranges, and facts come from tool results only. The verdict describes the step in words, without figures.
+- Persona verdicts are hand-computed on the 1 to 5 table from PR #22. Two expectations changed: C's stage 1 verdict is now an executive program (the budget no longer rules it out; stage 2 shows it out of reach and points to the certificate), and C raises R4 (deep expertise with under 5 hours), which the old file missed. E's R1 tension moves to stage 2, because on-site days are a stage 2 answer.
+- Review round 1: a declined stage 1 field holds `null` in `propose_direction`, paired with `declined` like the home fields; `toEngineDirection` fills the placeholders the engine requires and ignores (`DECLINED_PLACEHOLDERS`), so the model never invents an answer and the chip-tap check exempts declined fields.
+- Review round 1: the page sends chip labels only; the server resolves values through `CHIPS[field]` and returns the rewritten tool result in `replaceLastUserMessage`, which replaces the page's last message (one tool result per `tool_use_id`). Model calls set `disable_parallel_tool_use`, and a turn with several tool calls is answered with `is_error` and retried. This replaces "a tap sends one value" above.
+- Review round 2: a failed model call returns `replaceLastUserMessage: null` and no messages, so the page's last message stays in its raw form and a retry posts the same history; a rewritten result is refused as the last message. Declining `needs` is not neutral (the engine then says "not yet", `goal_unclear`, on #22): the advisor warns and offers the chips again first, and the "not yet" explanation names the missing gap.
+- Review round 3: persona E's stage 1 verdict is the executive MBA (28 over executive program 26): the only EMBA record publishes no duration, so length is a near miss and the type is not ruled out. `docs/chat-api.md` gives each `notice.kind` its next step: retry for `retryable` and `unknown`, drop the last message and restore the previous state for `refusal`, input off for `auth_or_credit`, and a new `empty_input` kind for the whitespace nudge, whose message the page drops.
+- `formatPreference` is in the stage 2 section of `advisor.md` as pending: the profile field comes with #65, and its chip set, checklist entry and persona answers go with it.
+- `docs/chat-api.md` returns separate `chips`, `confirm` and `direction` fields instead of build-steps' single `ui` union, so a turn can carry the assistant's text and the verdict together.
+
 ## Need-based ranking build (issue #65)
 
 Defaults taken where `docs/need-based-ranking.md` is silent:
@@ -157,3 +203,4 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 - **Card lines.** Format fit and travel fit carry `text: null` when there is nothing to say (no preference, travel fine, or no trips). The travel line gives the yearly trip count for a program longer than a year ("6 trips a year"), and the whole count for one of a year or less ("3 trips to campus"); `TravelEstimate` carries `tripsPerYear` for it. The why line words every position ("Ranked ninth", "Ranked twenty-first"); digits only from 100 on.
 - **Declined `formatPreference`** becomes `no_preference`. `peerPreference` is still asked but no longer scores; the card's peer line only compares experience.
 - **Converter.** Anchors on the last `"ratings": {` (fixes #16). It reads clean JSON only: a `lowEvidence` list that Perplexity's markdown shows between `$$ … $$` is rejected, and the rating file is fixed to `[ … ]` instead.
+- **Format preference in the advisor** (from the #25 review, done when #65 merged after it): a `formatPreference` chip set (Online, Blended, In person, No preference) and a stage 2 checklist entry right after `travelComfort`, so the checklist has 18 entries. `advisor.md` no longer marks it pending. Persona answers, inferred from each persona file since none states a format: A `Blended` (Yami's own case, spec 3a), B `No preference`, C `Online` (travel is a burden, time is tight), D `In person` (senior peers in a hub), E `Online` (no time on site), F `In person` (would relocate).

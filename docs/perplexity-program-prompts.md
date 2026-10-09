@@ -19,7 +19,7 @@ You are researching one US university program for a curated dataset. Accuracy ma
 Rules:
 1. Use ONLY the program's or university's official web pages (its own domain). Never use rankings, aggregators, news, forums, Wikipedia or third-party course sites. The one exception is the GSA per diem site (gsa.gov) for the lodging rate.
 2. For every fact, give: the value, the exact URL it came from, and a short verbatim quote from that page that shows it.
-3. If an official page does not state a fact, write null and say "not published". Do not estimate, infer, average or round. A fact from a page about a different year or intake counts as not published unless the page says it still applies.
+3. If an official page does not state a fact, write null and say "not published". Do not estimate, infer, average or round. A fact from a page about a different year or intake counts as not published unless the page says it still applies. Exception: for cohort facts (experience, titles, class size), use the most recent published class profile even when it describes an earlier class, and say which class.
 4. Use the most recent intake or cohort the official pages describe, and say which one.
 5. Money in US dollars as published. Say whether tuition includes fees, materials, lodging or meals.
 
@@ -114,42 +114,8 @@ Pay special attention to: the number of courses and how many can be taken online
 
 Updated Oct 9 for need-based ranking (`docs/need-based-ranking.md`): the program is rated on the same five needs the user ranks, 1 to 5. Paste everything in the block, then replace the last line with the whole research answer for one program.
 
-**Re-rating a program already researched** (MIT TLP, Wharton EMBA SF, Northwestern MEM, Harvard Extension): no new research. Open a new thread with the same thinking model, paste this prompt, paste the saved `docs/research/<id>.md` at the end, and save the answer over `docs/research/<id>-rating.md`.
+Updated again Oct 9 after Yami's review of the first 4 ratings (issue #87): evidence rules for senior peers and career change, the latest class profile counts, every rubric level defined, and one valid JSON answer with short card-ready notes. The reviewed values sit at the end of each `docs/research/<id>-rating.md`, under "Reviewed ratings".
 
-```
-You are rating one US leadership program for a curated dataset that helps experienced leaders (8+ years of experience, already holding a degree) choose their next educational step. Users rank what they need most; programs are ranked by how well they serve those needs.
+**The prompt now lives in the rating skill** (issue #89): `.claude/skills/rate-program/rating-prompt.md` is the only copy. Paste its block into Perplexity. Then review the answer in Claude Code with the `rate-program` skill, which applies Yami's rulings and writes the Reviewed ratings block.
 
-Below is research on the program, taken only from its official pages, with a URL and a verbatim quote for each fact. Use ONLY these facts. Do not search the web and do not add facts from memory. If a fact you need is missing, rate from what is there and list that need under lowEvidence.
-
-Rate the program 1 to 5, integers only, on these five needs. Start from the default for the program's category in this table, and move a rating only when the facts justify it:
-
-  category              leadership  deep_expertise  graduate_degree  senior_network  new_industry_or_city
-  mba                       5             3                5                1                 5
-  emba                      5             3                5                5                 3
-  specialized_masters       3             5                5                1                 3
-  executive                 5             3                1                5                 3
-  certificate               3             3                3                1                 1
-  short_course              3             3                1                1                 1
-
-Rubric:
-leadership_skills (how central leading people and organizations is to the curriculum):
-  1 = little or no leadership content; 3 = leadership is one strand among several; 5 = leadership is the core, taught for experienced leaders (name the modules).
-deep_expertise (depth in one field, such as technology strategy, AI in organizations or engineering management):
-  1 = a broad overview; 3 = several courses in one field; 5 = sustained, credit-bearing depth in one field with a capstone or thesis.
-graduate_degree (factual):
-  1 = no academic credit; 2 = academic credit or CEUs with no stated path to a degree; 3 = credits that officially count toward a graduate degree (quote it); 5 = awards a graduate degree (master's or MBA).
-senior_network (how senior the classmates are, and time together):
-  1 = cohort median under 5 years of experience, or no cohort; 2 = median 5 to 9 years; 3 = median 10 to 14 years, or mostly managers; 4 = median 15 to 19 years, or mostly directors and VPs; 5 = median 20+ years, or mostly C-level and VPs, with sustained in-person time.
-new_industry_or_city (support for changing industry, role or city):
-  1 = designed for staying in the current role, no career services; 3 = some career services or a network reaching new industries; 5 = structured career switching: recruiting, internships or dedicated career services for switchers.
-
-For each need, give one line citing the facts it rests on. When a rating differs from the category default, start the line with "default X → Y because".
-
-Return exactly:
-"ratings": { "leadership_skills": n, "deep_expertise": n, "graduate_degree": n, "senior_network": n, "new_industry_or_city": n },
-"ratingNotes": { "leadership_skills": "...", "deep_expertise": "...", "graduate_degree": "...", "senior_network": "...", "new_industry_or_city": "..." },
-"lowEvidence": [ list of needs rated on thin evidence, or empty ]
-
-Research:
-<paste the whole research answer here>
-```
+**Re-rating a program already researched** (MIT TLP, Wharton EMBA SF, Northwestern MEM, Harvard Extension): no new research. Open a new thread with the same thinking model, paste the prompt, paste the saved `docs/research/<id>.md` at the end, and save the answer over `docs/research/<id>-rating.md`. Then review it with the skill.
