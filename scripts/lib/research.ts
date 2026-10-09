@@ -140,6 +140,16 @@ const SOURCE_FIELD_MAP: Record<string, string> = {
 const normalizeSourceField = (field: string) =>
   SOURCE_FIELD_MAP[field] ?? (field.startsWith("paymentOptions.") ? "paymentOptions" : field);
 
+// Facts the research got wrong or left out that later school material settles (a brochure, the
+// published schedule). Each one needs its own entry in extraSources.
+const SOURCED_OVERRIDE_KEYS = [
+  "workCompatible",
+  "cohortMedianExperienceYears",
+  "onsiteDaysPerYear",
+  "longestStretchDays",
+  "hoursPerWeek",
+] as const;
+
 // The only keys an overrides file may set: facts the research JSON doesn't produce, plus hand
 // fixes for ones it gets wrong. Never id, sources, ratings or verification.
 const OVERRIDE_KEYS = [
@@ -160,6 +170,7 @@ const OVERRIDE_KEYS = [
   "lodgingIncluded",
   "lodgingPerNightUsd",
   "cohortExperienceBasis",
+  ...SOURCED_OVERRIDE_KEYS,
   "figureNotes",
   "extraSources",
 ] as const;
@@ -268,6 +279,14 @@ export function convertResearch(input: {
     );
   }
   const { extraSources = [], ...overrides } = input.overrides as Overrides;
+  const unsourced = SOURCED_OVERRIDE_KEYS.filter(
+    (k) => k in overrides && !extraSources.some((s) => s.field === k),
+  );
+  if (unsourced.length > 0) {
+    throw new Error(
+      `The overrides file for ${id} sets ${unsourced.join(", ")} without a matching extraSources entry.`,
+    );
+  }
 
   for (const key of Object.keys(raw)) {
     if (!PROGRAM_KEYS_FROM_RESEARCH.has(key))
