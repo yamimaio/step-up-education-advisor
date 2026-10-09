@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { personaAProfile } from "../../tests/fixtures/profiles";
+import { ProfileSchema } from "../schema/profile";
 import { CHIP_TARGET } from "./chips";
 import { STAGE_1_CHECKLIST } from "./fields";
 import {
   ADVISOR_TOOL_NAMES,
   ADVISOR_TOOLS,
+  DECLINED_PLACEHOLDERS,
   AskChoiceInput,
   CheckContradictionsInput,
   DIRECTION_DECLINABLE,
@@ -13,6 +15,7 @@ import {
   ProposeDirectionInput,
   STAGE_1_CHIP_FIELDS,
   STAGE_1_TOOL_NAMES,
+  toEngineDirection,
   type Direction,
 } from "./tools";
 
@@ -112,5 +115,47 @@ describe("propose_direction carries the stage 1 answers and nothing else", () =>
     expect(
       CheckContradictionsInput.safeParse({ profile: { needs: ["senior_network"] } }).success,
     ).toBe(true);
+  });
+});
+
+describe("A declined stage 1 field holds null, never an invented answer", () => {
+  const parse = (d: object) => ProposeDirectionInput.safeParse({ direction: d }).success;
+
+  it("accepts every declinable field as null when declined", () => {
+    for (const field of DIRECTION_DECLINABLE) {
+      expect(parse({ ...direction, [field]: null, declined: [field] }), field).toBe(true);
+    }
+  });
+
+  it("refuses a value in a declined field, and null without declined", () => {
+    expect(parse({ ...direction, declined: ["hoursPerWeek"] })).toBe(false);
+    expect(parse({ ...direction, hoursPerWeek: null })).toBe(false);
+  });
+
+  it("gives the engine its placeholders and drops the fields it doesn't take", () => {
+    const declined: Direction = {
+      ...direction,
+      needs: null,
+      hoursPerWeek: null,
+      declined: ["needs", "hoursPerWeek"],
+    };
+    const engine = toEngineDirection(declined);
+    expect(engine.needs).toEqual(DECLINED_PLACEHOLDERS.needs);
+    expect(engine.hoursPerWeek).toEqual(DECLINED_PLACEHOLDERS.hoursPerWeek);
+    expect(engine.declined).toEqual(["needs", "hoursPerWeek"]);
+    expect(engine).not.toHaveProperty("peerPreference");
+    expect(engine).not.toHaveProperty("resolvedTensions");
+    // Every field is a valid ProfileSchema value, as the engine's DirectionProfile requires.
+    for (const [k, v] of Object.entries(engine)) {
+      const schema = ProfileSchema.shape[k as keyof typeof ProfileSchema.shape];
+      expect(schema.safeParse(v).success, k).toBe(true);
+    }
+  });
+
+  it("passes answered fields through unchanged", () => {
+    const engine = toEngineDirection(direction);
+    expect(engine.needs).toEqual(direction.needs);
+    expect(engine.hoursPerWeek).toEqual(direction.hoursPerWeek);
+    expect(engine.careerGoal).toEqual(direction.careerGoal);
   });
 });

@@ -103,8 +103,13 @@ describe.each(IDS)("Persona %s", (id) => {
     expect(ProfileSchema.safeParse(profileFrom(text, table)).success).toBe(true);
   });
 
-  it("states the expected goalClarity and a verdict", () => {
-    expect(text).toMatch(/`goalClarity`: (clear|unclear)/);
+  it("states the expected goalClarity and a stage 1 verdict", () => {
+    const stage1 = section(section(text, "##", "Expected verdict"), "###", "Stage 1");
+    expect(stage1).toMatch(/`goalClarity`: (clear|unclear)/);
+    // A category the engine can name, or the "not yet" answer.
+    expect(stage1).toMatch(
+      /^- (Category: (full-time MBA|executive MBA|specialized master's|executive program|graduate certificate|short course)\b|"No program yet")/m,
+    );
   });
 });
 
