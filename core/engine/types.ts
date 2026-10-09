@@ -46,6 +46,7 @@ export type EffectiveProfile = Omit<
   maxProgramMonths: number | null;
   maxOnsiteDays: number | null;
   maxStretchDays: number | null;
+  // For the card only: the engine compares homeLat and homeLon, never the city name.
   homeCity: string | null;
   degreeRequired: Profile["degreeRequired"] | null;
   // Declined: no experience-based points or text; no location rule-out.
@@ -54,7 +55,7 @@ export type EffectiveProfile = Omit<
 };
 
 export interface TravelEstimate {
-  // none: no trips needed (online, same metro, no on-site time). unknown: a figure is missing.
+  // none: no trips needed (online, within commuting distance, no on-site time). unknown: a figure is missing.
   kind: "none" | "estimate" | "unknown";
   totalUsd: number | null;
   trips: number | null;

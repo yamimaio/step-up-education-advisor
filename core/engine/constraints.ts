@@ -1,6 +1,6 @@
 import type { Program } from "../schema/program";
 import { HOURS_NEAR_PCT, HOURS_PASS_PCT, NEAR_MISS_PCT } from "./constants";
-import { needsLocalPresence, sameMetro } from "./metro";
+import { needsLocalPresence, withinCommute } from "./distance";
 import type { Check, CheckId, CheckStatus, EffectiveProfile, TravelEstimate } from "./types";
 
 // Compare after rounding to six decimals, so 8.05 against 7 is exactly 15% over and a float
@@ -133,23 +133,33 @@ export function checkWorkCompatible(program: Program, profile: EffectiveProfile)
   };
 }
 
-// Programs that need the home metro pass for a local user or one who would relocate. A user
-// who declined the relocation question is not ruled out; the card says it may need a move.
+// A program that needs the student near campus passes within commuting distance or for a user who
+// would relocate (or didn't say; the card notes the move). Only a user who won't relocate makes
+// the distance decide: farther fails, and a missing coordinate on either side is a near miss,
+// never a silent pass.
 export function checkLocation(program: Program, profile: EffectiveProfile): Check {
-  const local = sameMetro(profile.homeCity, program);
+  const near = withinCommute(profile, program);
   const needsLocal = needsLocalPresence(program);
-  const ok = !needsLocal || local || profile.relocate !== false;
+  const mustBeNear = needsLocal && profile.relocate === false;
+  const status: CheckStatus =
+    !mustBeNear || near === true ? "pass" : near === false ? "fail" : "near_miss";
   const check: Check = {
     id: "location",
-    status: ok ? "pass" : "fail",
+    status,
     value: program.city,
     limit: profile.homeCity,
     unit: "",
-    unknown: false,
+    // Only a program's missing coordinates are a data gap; a missing home is the user's gap.
+    unknown:
+      mustBeNear && near === null && (program.campusLat === null || program.campusLon === null),
   };
-  if (needsLocal && !local && profile.relocate === true) check.note = "requires relocating";
-  if (needsLocal && !local && profile.relocate === null) check.note = "may require relocating";
-  if (needsLocal && !ok) check.note = "requires living near campus";
+  if (needsLocal && near !== true) {
+    if (status === "fail") check.note = "requires living near campus";
+    else if (status === "near_miss")
+      check.note = "can't tell if the campus is within commuting distance";
+    else if (profile.relocate === true && near === false) check.note = "requires relocating";
+    else check.note = "may require relocating";
+  }
   return check;
 }
 

@@ -21,7 +21,11 @@ export function applyDeclinedDefaults(profile: Profile): {
     maxProgramMonths: out("maxProgramMonths") ? null : profile.maxProgramMonths,
     maxOnsiteDays: out("maxOnsiteDays") ? null : profile.maxOnsiteDays,
     maxStretchDays: out("maxStretchDays") ? null : profile.maxStretchDays,
-    homeCity: out("homeCity") ? null : profile.homeCity,
+    // The city is for display. Where the user lives is decided by the coordinates, which are
+    // declined together; without them the engine treats the location as unknown.
+    homeCity: out("homeCity") || profile.homeCity === "" ? null : profile.homeCity,
+    homeLat: out("homeLat") || out("homeLon") ? null : profile.homeLat,
+    homeLon: out("homeLat") || out("homeLon") ? null : profile.homeLon,
     degreeRequired: out("degreeRequired") ? null : profile.degreeRequired,
     peerPreference: out("peerPreference") ? "doesnt_matter" : profile.peerPreference,
     travelComfort: out("travelComfort") ? "fine" : profile.travelComfort,

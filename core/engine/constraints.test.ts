@@ -14,7 +14,15 @@ import {
 import { evaluate } from "./evaluate";
 import { travelEstimate } from "./travel";
 import { fixture } from "../../tests/fixtures/dataset";
-import { makeProfile } from "../../tests/fixtures/profiles";
+import {
+  BUENOS_AIRES,
+  CAMBRIDGE_MA,
+  CHICAGO,
+  NO_HOME,
+  NO_HOME_DECLINED,
+  makeProfile,
+} from "../../tests/fixtures/profiles";
+import type { Program } from "../schema/program";
 import type { Profile } from "../schema/profile";
 
 const eff = (o: Partial<Profile> = {}) => applyDeclinedDefaults(makeProfile(o)).profile;
@@ -118,7 +126,7 @@ describe("Hours are looser than other limits", () => {
 describe("Travel cost is checked against the travel budget when one is set", () => {
   const program = fixture("fake-executive");
   const profile = (travelBudgetUsd: number | null, o: Partial<Profile> = {}) =>
-    eff({ homeCity: "Buenos Aires", airfareRange: "1000_1500", travelBudgetUsd, ...o });
+    eff({ ...BUENOS_AIRES, airfareRange: "1000_1500", travelBudgetUsd, ...o });
 
   it("passes, near-misses and fails around 9,225", () => {
     const status = (budget: number) => {
@@ -161,31 +169,83 @@ describe("Work-compatible when the user keeps working", () => {
   });
 });
 
-describe("Location needs the home metro only for full-time in-person and commuting programs", () => {
-  it("fails a full-time in-person program unless local or relocating", () => {
+describe("Location needs a campus within commuting distance only for full-time in-person and commuting programs", () => {
+  it("fails a full-time in-person program unless within 80 km or relocating", () => {
     const mba = fixture("fake-mba");
-    expect(checkLocation(mba, eff({ homeCity: "Buenos Aires" })).status).toBe("fail");
-    expect(checkLocation(mba, eff({ homeCity: "Cambridge, MA" })).status).toBe("pass");
-    expect(checkLocation(mba, eff({ homeCity: "Buenos Aires", relocate: true })).status).toBe(
-      "pass",
-    );
+    expect(checkLocation(mba, eff(BUENOS_AIRES)).status).toBe("fail");
+    expect(checkLocation(mba, eff(CAMBRIDGE_MA)).status).toBe("pass");
+    expect(checkLocation(mba, eff({ ...BUENOS_AIRES, relocate: true })).status).toBe("pass");
   });
 
-  it("fails evening attendance outside the metro", () => {
+  it("fails evening attendance beyond commuting distance", () => {
     const masters = fixture("fake-specialized-masters");
-    expect(checkLocation(masters, eff({ homeCity: "Buenos Aires" })).status).toBe("fail");
-    expect(checkLocation(masters, eff({ homeCity: "Boston" })).status).toBe("pass");
+    expect(checkLocation(masters, eff(BUENOS_AIRES)).status).toBe("fail");
+    expect(checkLocation(masters, eff(CHICAGO)).status).toBe("fail");
+    expect(checkLocation(masters, eff(CAMBRIDGE_MA)).status).toBe("pass");
   });
 
   it("leaves blended, weekend and online programs to the travel checks", () => {
-    const away = eff({ homeCity: "Buenos Aires" });
+    const away = eff(BUENOS_AIRES);
     expect(checkLocation(fixture("fake-executive"), away).status).toBe("pass");
     expect(checkLocation(fixture("fake-emba"), away).status).toBe("pass");
     expect(checkLocation(fixture("fake-certificate"), away).status).toBe("pass");
   });
+});
 
-  it("fails a declined home city for programs that need you local", () => {
-    expect(checkLocation(fixture("fake-mba"), eff({ declined: ["homeCity"] })).status).toBe("fail");
+describe("An unknown location is a near miss when it decides the check, never a silent pass", () => {
+  const unknownHome = (o: Partial<Profile> = {}) =>
+    eff({ ...NO_HOME, declined: NO_HOME_DECLINED, relocate: false, ...o });
+
+  it("near-misses a program that needs you local when your coordinates are declined", () => {
+    const check = checkLocation(fixture("fake-mba"), unknownHome());
+    expect(check.status).toBe("near_miss");
+    expect(check.note).toMatch(/can't tell/);
+    expect(checkLocation(fixture("fake-specialized-masters"), unknownHome()).status).toBe(
+      "near_miss",
+    );
+  });
+
+  it("counts a missing home as the user's gap, not the program's", () => {
+    expect(checkLocation(fixture("fake-mba"), unknownHome()).unknown).toBe(false);
+  });
+
+  it("near-misses a program with no campus coordinates, and counts that as unknown", () => {
+    const noCampus: Program = { ...fixture("fake-mba"), campusLat: null, campusLon: null };
+    expect(checkLocation(noCampus, eff(CAMBRIDGE_MA))).toMatchObject({
+      status: "near_miss",
+      unknown: true,
+    });
+    const half: Program = { ...fixture("fake-mba"), campusLon: null };
+    expect(checkLocation(half, eff(CAMBRIDGE_MA)).status).toBe("near_miss");
+  });
+
+  it("uses the declined pair as a whole: one declined coordinate leaves the home unknown", () => {
+    const profile = eff({ ...CAMBRIDGE_MA, relocate: false, declined: ["homeLat"] });
+    expect(profile).toMatchObject({ homeLat: null, homeLon: null });
+    expect(checkLocation(fixture("fake-mba"), profile).status).toBe("near_miss");
+  });
+
+  it("does not decide a program that never needed you local, or a user who would relocate", () => {
+    expect(checkLocation(fixture("fake-executive"), unknownHome()).status).toBe("pass");
+    expect(checkLocation(fixture("fake-certificate"), unknownHome()).status).toBe("pass");
+    expect(checkLocation(fixture("fake-mba"), unknownHome({ relocate: true }))).toMatchObject({
+      status: "pass",
+      note: "may require relocating",
+    });
+  });
+
+  it("still fails a known-far campus for a user who won't relocate", () => {
+    const check = checkLocation(fixture("fake-mba"), eff(CHICAGO));
+    expect(check).toMatchObject({ status: "fail", unknown: false });
+    expect(check.note).toBe("requires living near campus");
+  });
+
+  it("makes the program a near miss overall, not a pass", () => {
+    const profile = unknownHome({ maxProgramMonths: 24, tuitionBudgetUsd: 250000 });
+    const mba = fixture("fake-mba");
+    const { status, checks } = checkConstraints(mba, profile, travelEstimate(mba, profile));
+    expect(checks.find((c) => c.id === "location")?.status).toBe("near_miss");
+    expect(status).not.toBe("pass");
   });
 });
 
@@ -226,7 +286,7 @@ describe("An unpublished figure against a limit of 0 fails (DQ10)", () => {
 });
 
 describe("The travel budget with airfare unknown", () => {
-  const away = { homeCity: "Buenos Aires" };
+  const away = BUENOS_AIRES;
 
   it("never passes on a lodging-only total", () => {
     const profile = eff({ ...away, airfareRange: "unknown", travelBudgetUsd: 2000 });
@@ -283,7 +343,7 @@ describe("Card notes read correctly", () => {
 
 describe("A declined relocation answer is not a rule-out", () => {
   it("passes a full-time program elsewhere, with a note", () => {
-    const profile = eff({ homeCity: "Buenos Aires", relocate: true, declined: ["relocate"] });
+    const profile = eff({ ...BUENOS_AIRES, relocate: true, declined: ["relocate"] });
     expect(profile.relocate).toBeNull();
     expect(checkLocation(fixture("fake-mba"), profile)).toMatchObject({
       status: "pass",
@@ -295,7 +355,7 @@ describe("A declined relocation answer is not a rule-out", () => {
 describe("Airfare unknown is the user's gap, not the program's", () => {
   it("keeps a fully published, verified record at high confidence", () => {
     const result = evaluate(
-      makeProfile({ homeCity: "Chicago", travelBudgetUsd: 50000, airfareRange: "unknown" }),
+      makeProfile({ ...CHICAGO, travelBudgetUsd: 50000, airfareRange: "unknown" }),
       [fixture("fake-executive")],
       new Date("2026-10-08T00:00:00Z"),
     );

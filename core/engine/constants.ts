@@ -129,48 +129,9 @@ export const CONFIDENCE_WINDOW_DAYS = 60;
 export const WEEKEND_TRIPS_PER_YEAR = 26;
 export const WEEKEND_NIGHTS_PER_TRIP = 2;
 
-// Normalised city name (see normalizeCity) to a metro key. Programs may carry their own
-// `metro` key; either is looked up here. Extend as the dataset grows.
-export const METROS: Record<string, string> = {
-  boston: "boston",
-  nyc: "new_york",
-  sf: "sf_bay_area",
-  la: "los_angeles",
-  dc: "washington_dc",
-  "d c": "washington_dc",
-  philly: "philadelphia",
-  "san francisco": "sf_bay_area",
-  oakland: "sf_bay_area",
-  berkeley: "sf_bay_area",
-  "palo alto": "sf_bay_area",
-  stanford: "sf_bay_area",
-  "mountain view": "sf_bay_area",
-  "sf bay area": "sf_bay_area",
-  "new york": "new_york",
-  "new york city": "new_york",
-  manhattan: "new_york",
-  brooklyn: "new_york",
-  chicago: "chicago",
-  evanston: "chicago",
-  "washington dc": "washington_dc",
-  "washington d c": "washington_dc",
-  "cambridge ma": "boston",
-  "san jose ca": "sf_bay_area",
-  "arlington va": "washington_dc",
-  philadelphia: "philadelphia",
-  "new haven": "new_haven",
-  "los angeles": "los_angeles",
-};
-
-// Names shared by several well-known cities. A home city written as just one of these is
-// not matched to a metro (the profile has no state or country); "Cambridge, MA" and
-// "San Jose, CA" are, through the qualified entries in METROS.
-export const AMBIGUOUS_HOME_CITIES: readonly string[] = [
-  "cambridge",
-  "arlington",
-  "washington",
-  "san jose",
-];
+// A campus this close (great-circle km) to the home counts as local: no airfare or lodging, and a
+// full-time or commuting program is reachable without relocating.
+export const COMMUTE_KM = 80;
 
 // Plain words for the card (confidence reasons name checks by these).
 export const CHECK_LABELS = {
@@ -183,23 +144,3 @@ export const CHECK_LABELS = {
   workCompatible: "work compatibility",
   location: "location",
 } as const;
-
-// Program records are curated, so their bare city names are trusted where a user's are not.
-export const PROGRAM_CITY_METROS: Record<string, string> = {
-  cambridge: "boston",
-  "san jose": "sf_bay_area",
-  washington: "washington_dc",
-};
-
-// States each metro key covers, so a user's written state can rule out a same-named city
-// elsewhere ("Manhattan, KS" is not Manhattan, New York).
-export const METRO_STATES: Record<string, readonly string[]> = {
-  boston: ["ma", "nh"],
-  sf_bay_area: ["ca"],
-  new_york: ["ny", "nj", "ct"],
-  chicago: ["il", "in", "wi"],
-  washington_dc: ["dc", "va", "md"],
-  philadelphia: ["pa", "nj", "de"],
-  new_haven: ["ct"],
-  los_angeles: ["ca"],
-};

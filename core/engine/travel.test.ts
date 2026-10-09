@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { travelEstimate } from "./travel";
 import { fixture } from "../../tests/fixtures/dataset";
+import { BUENOS_AIRES, CAMBRIDGE_MA, NO_HOME } from "../../tests/fixtures/profiles";
 
-const buenosAires = { homeCity: "Buenos Aires", airfareRange: "1000_1500" as const };
+const buenosAires = { ...BUENOS_AIRES, airfareRange: "1000_1500" as const };
 
 describe("Travel estimate (D8 and the section 11 follow-ups)", () => {
   it("is trips x (airfare midpoint + nights x top lodging rate)", () => {
@@ -36,10 +37,8 @@ describe("Travel estimate (D8 and the section 11 follow-ups)", () => {
     expect(t.notes.join(" ")).toMatch(/estimated/);
   });
 
-  it("is zero in the home metro, for online programs and with no on-site time", () => {
-    expect(travelEstimate(fixture(), { ...buenosAires, homeCity: "Cambridge, MA" }).totalUsd).toBe(
-      0,
-    );
+  it("is zero within commuting distance, for online programs and with no on-site time", () => {
+    expect(travelEstimate(fixture(), { ...buenosAires, ...CAMBRIDGE_MA }).totalUsd).toBe(0);
     expect(travelEstimate(fixture("fake-certificate"), buenosAires).totalUsd).toBe(0);
   });
 
@@ -53,6 +52,28 @@ describe("Travel estimate (D8 and the section 11 follow-ups)", () => {
     expect(travelEstimate(noCounts, buenosAires).kind).toBe("unknown");
     const noLength = fixture("fake-executive", { durationMonths: null });
     expect(travelEstimate(noLength, buenosAires).kind).toBe("unknown");
+  });
+});
+
+describe("Travel estimate: an unknown location is never treated as local", () => {
+  const unknownHome = { ...NO_HOME, airfareRange: "1000_1500" as const };
+
+  it("costs the trips and says the location is unknown when the home is declined", () => {
+    const t = travelEstimate(fixture("fake-executive"), unknownHome);
+    expect(t).toMatchObject({ kind: "estimate", totalUsd: 9225 });
+    expect(t.notes.join(" ")).toMatch(/location is unknown/);
+  });
+
+  it("does the same when the campus has no coordinates", () => {
+    const noCampus = { ...fixture("fake-executive"), campusLat: null, campusLon: null };
+    const t = travelEstimate(noCampus, { ...CAMBRIDGE_MA, airfareRange: "1000_1500" });
+    expect(t.totalUsd).toBe(9225);
+    expect(t.notes.join(" ")).toMatch(/location is unknown/);
+  });
+
+  it("still lets a user who would relocate skip recurring travel", () => {
+    const t = travelEstimate(fixture("fake-mba"), { ...unknownHome, relocate: true });
+    expect(t).toMatchObject({ kind: "none", totalUsd: 0 });
   });
 });
 

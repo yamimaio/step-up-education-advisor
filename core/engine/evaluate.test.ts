@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evaluate } from "./evaluate";
 import { fixtureDataset } from "../../tests/fixtures/dataset";
-import { makeProfile, workedExampleProfile } from "../../tests/fixtures/profiles";
+import { CAMBRIDGE_MA, makeProfile, workedExampleProfile } from "../../tests/fixtures/profiles";
 
 const today = new Date("2026-10-08T00:00:00Z");
 
@@ -23,6 +23,13 @@ describe("Category fit on the fixtures", () => {
       /no program of this type is within your limits/,
     );
     expect(noProgram.triggered).toBe(false);
+  });
+
+  it("gives the same result for a user in Cambridge as for one in Boston", () => {
+    const boston = evaluate(workedExampleProfile, fixtureDataset(), today);
+    const cambridge = evaluate(makeProfile(CAMBRIDGE_MA), fixtureDataset(), today);
+    expect(cambridge.category).toEqual(boston.category);
+    expect(cambridge.programs.map((p) => p.status)).toEqual(boston.programs.map((p) => p.status));
   });
 
   it("rules EMBA and the MBA out on length", () => {

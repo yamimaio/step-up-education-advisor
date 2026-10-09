@@ -1,6 +1,6 @@
 import type { Program } from "../schema/program";
 import { AIRFARE_MIDPOINTS, WEEKEND_NIGHTS_PER_TRIP, WEEKEND_TRIPS_PER_YEAR } from "./constants";
-import { needsLocalPresence, sameMetro } from "./metro";
+import { needsLocalPresence, withinCommute } from "./distance";
 import type { EffectiveProfile, TravelEstimate } from "./types";
 
 const base: TravelEstimate = {
@@ -30,14 +30,20 @@ const cents = (n: number) => Math.round(n * 100) / 100;
 // It is an estimate and the card says so; nothing here is searched.
 export function travelEstimate(
   program: Program,
-  profile: Pick<EffectiveProfile, "homeCity" | "airfareRange"> & { relocate?: boolean | null },
+  profile: Pick<EffectiveProfile, "homeLat" | "homeLon" | "airfareRange"> & {
+    relocate?: boolean | null;
+  },
 ): TravelEstimate {
   if (program.format === "online" || program.onsiteDaysPerYear === 0) {
     return { ...base, notes: ["No on-site time."] };
   }
-  const local = sameMetro(profile.homeCity, program);
+  // null: a coordinate is missing. The user is then treated as away, never as local.
+  const local = withinCommute(profile, program);
   if (local) {
-    return { ...base, notes: ["The program is in your metro area, so no airfare or lodging."] };
+    return {
+      ...base,
+      notes: ["The campus is within commuting distance, so no airfare or lodging."],
+    };
   }
   // A user who would move (or hasn't said they wouldn't) to attend a program that needs them
   // local is not commuting from home.
@@ -61,6 +67,9 @@ export function travelEstimate(
   let nights: number;
   let tripsEstimated = false;
   const notes: string[] = [];
+  if (local === null) {
+    notes.push("Your home or the campus location is unknown, so this assumes you travel.");
+  }
   if (count && days !== null) {
     trips = (program.residencyCount as number) * years;
     nights = days / (program.residencyCount as number);

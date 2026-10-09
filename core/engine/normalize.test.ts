@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { applyDeclinedDefaults } from "./normalize";
-import { makeProfile } from "../../tests/fixtures/profiles";
+import {
+  CAMBRIDGE_MA,
+  NO_HOME,
+  NO_HOME_DECLINED,
+  makeProfile,
+} from "../../tests/fixtures/profiles";
 
 describe("Declined fields get neutral defaults and appear in profileGaps", () => {
   it("turns a declined tuition budget into no limit and lists the gap", () => {
@@ -48,6 +53,28 @@ describe("Declined fields get neutral defaults and appear in profileGaps", () =>
     expect(applyDeclinedDefaults(makeProfile({ airfareRange: "500_1000" })).profileGaps).toEqual(
       [],
     );
+  });
+});
+
+describe("A declined home location", () => {
+  it("leaves no coordinates and no city for the engine to use", () => {
+    const { profile, profileGaps } = applyDeclinedDefaults(
+      makeProfile({ ...NO_HOME, declined: NO_HOME_DECLINED }),
+    );
+    expect(profile).toMatchObject({ homeCity: null, homeLat: null, homeLon: null });
+    expect(profileGaps).toEqual([...NO_HOME_DECLINED, "airfareRange"]);
+  });
+
+  it("keeps the coordinates when only the city is declined, and drops both when one is", () => {
+    const city = applyDeclinedDefaults(makeProfile({ ...CAMBRIDGE_MA, declined: ["homeCity"] }));
+    expect(city.profile).toMatchObject({ homeCity: null, homeLat: 42.3736, homeLon: -71.1097 });
+    const lon = applyDeclinedDefaults(makeProfile({ ...CAMBRIDGE_MA, declined: ["homeLon"] }));
+    expect(lon.profile).toMatchObject({ homeLat: null, homeLon: null });
+  });
+
+  it("passes the user's coordinates through untouched when nothing is declined", () => {
+    const { profile } = applyDeclinedDefaults(makeProfile(CAMBRIDGE_MA));
+    expect(profile).toMatchObject({ homeCity: "Cambridge", homeLat: 42.3736, homeLon: -71.1097 });
   });
 });
 
