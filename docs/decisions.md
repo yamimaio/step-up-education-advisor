@@ -155,3 +155,11 @@ Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM 
 - Every rubric level 1 to 5 is defined. Degree gains a 4: all credits officially count toward a named graduate degree.
 - The rating answer is one valid JSON block. `ratingNotes` are card-ready (at most 20 words, no URLs); the evidence goes in a `reasoning` field that stays in the rating file.
 - The 4 rating files keep Perplexity's answer as provenance and add a "Reviewed ratings" block with the values the records use.
+
+## Rating skill, version 1 (issue #89, Oct 9)
+
+- The rating prompt lives only in `.claude/skills/rate-program/rating-prompt.md`; Prompt 2 in `docs/perplexity-program-prompts.md` points to it, so the rubric can't drift between two copies.
+- Perplexity still rates, as before (it saves Claude usage). The skill reviews each answer against the rubric and Yami's rulings (`rulings.md`, R1 to R8 from the Oct 9 review), and writes the Reviewed ratings block the converter reads.
+- Each correction Yami makes becomes a ruling and bumps the skill version. The block heading names the skill version and the reviewer ("reviewed by: pending" until Yami approves).
+- Default taken: until the schema has a rating provenance field, the provenance lives only in that heading. A `ratingVerification` field is a later decision.
+
