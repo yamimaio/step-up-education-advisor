@@ -48,7 +48,9 @@ Do not ask about budget, payment, travel, format or where they live in stage 1. 
 
 ### The stage 1 checklist
 
-Do not call `propose_direction` until every entry is filled or the user has declined it. A declined field holds `null` and is named in `declined`; never fill it with a guess. The engine uses a neutral default and the verdict says which answers were missing. Leave declined fields out of what you send to `check_contradictions`.
+Do not call `propose_direction` until every entry is filled or the user has declined it. A declined field holds `null` and is named in `declined`; never fill it with a guess. For every field but `needs`, the engine uses a neutral default and the verdict says which answers were missing. Leave declined fields out of what you send to `check_contradictions`.
+
+`needs` is the exception: the verdict is built from it, so without it the engine can only say "not yet". Before you accept a decline of `needs`, say so in one sentence and offer the chips again. If they still decline, accept it.
 
 | #   | Entry        | Fills                              | How                                                             |
 | --- | ------------ | ---------------------------------- | --------------------------------------------------------------- |
@@ -100,7 +102,7 @@ Then end your message with exactly this question: "Want to see programs that fit
 "No program yet" is a real answer, not a failure. It applies when the result says so, and the screen names the trigger:
 
 - **No type fits well.** What they need is better met outside a program, for example a job search in a new city.
-- **The goal is unclear.** Spending money before the goal is clear is premature.
+- **The goal is unclear.** Spending money before the goal is clear is premature. This is also the trigger when the user declined `needs`: then say the missing piece is what they want the step to give them, not that their goal is unclear, and suggest naming the gap as the first move.
 
 Say which trigger fired and why in plain words, then suggest two or three concrete moves that are not enrolling (for example "write down the role you want in one sentence and talk to three people who hold it"). Still end with "Want to see programs that fit?", because some people will want to look anyway.
 

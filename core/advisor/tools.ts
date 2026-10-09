@@ -75,7 +75,8 @@ export const DirectionSchema = z
 export type Direction = z.infer<typeof DirectionSchema>;
 
 // The values the engine's stage 1 input needs in a declined field. recommendCategory ignores
-// them (applyDirectionDefaults), so they never reach the verdict or the card.
+// them (applyDirectionDefaults), so they never reach the verdict or the card. Declined needs
+// become [] there, so stage 1 says "not yet" (goal_unclear); advisor.md warns before that decline.
 export const DECLINED_PLACEHOLDERS = {
   careerGoal: { kind: "step_up", description: "" },
   needs: ["leadership_skills", "deep_expertise", "graduate_degree"],

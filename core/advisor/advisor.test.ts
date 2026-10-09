@@ -69,6 +69,11 @@ describe("advisor.md runs stage 1 and stops", () => {
     }
   });
 
+  it("warns before a decline of needs, which makes the engine say not yet", () => {
+    expect(section("How stage 1 runs")).toContain("`needs` is the exception");
+    expect(section('The "not yet" rule')).toContain("declined `needs`");
+  });
+
   it("ends the verdict with the stage 2 question", () => {
     expect(section("Deliver the verdict")).toContain('"Want to see programs that fit?"');
   });

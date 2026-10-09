@@ -67,6 +67,8 @@ type ChatResponse = {
   // When set, replace the user message the page just sent (the last one in its history) with
   // this one: the server's rewritten tool result. The page must not keep both: two
   // tool_results for one tool_use_id make the Messages API reject every later turn.
+  // Always null when the model call failed (`notice` set): the page keeps the label-only or
+  // `{ confirmed }` message it sent, so a retry posts it unchanged and the server rewrites it again.
   replaceLastUserMessage: MessageParam | null;
 
   // Then append these, in order: the new assistant turns and the results of server tools
@@ -87,7 +89,9 @@ type ChatResponse = {
   // From message 30: the messages left before the cap.
   counter: { remaining: number } | null;
 
-  // A plain message for the user when the model failed. `text` may then be empty.
+  // A plain message for the user when the model failed. `messages` is then empty (server-tool
+  // rounds from the failed request are dropped, and a retry runs them again) and `text` is empty
+  // or the post-confirm template.
   notice: { kind: "retryable" | "auth_or_credit" | "refusal" | "unknown"; message: string } | null;
 };
 
@@ -122,7 +126,7 @@ When the user confirms, the page sends `{ confirmed: true }`. The server:
 4. calls the model, which explains the verdict and ends with "Want to see programs that fit?";
 5. returns the result in `direction`, so the verdict card renders from engine data, never from model text.
 
-If the model fails after a confirm, the response still carries `direction` and a template explanation in `text` (`server/fallback.ts`), with `notice` set.
+If the model fails after a confirm, the response still carries `direction` and a template explanation in `text` (`server/fallback.ts`), with `notice` set, `replaceLastUserMessage` null and `messages` empty. The page shows the verdict card and the template text but does not add them to the history.
 
 On a correction, the server passes `{ confirmed: false, corrections }` through as the tool result, and the advisor updates the answers and calls `propose_direction` again (a new card, a new `toolUseId`).
 
@@ -142,6 +146,8 @@ The server answers with `is_error` and the problems, so the model asks again, wi
 | 405 | Any method but `POST` | `{ error: "method_not_allowed" }` |
 
 Model failures are not HTTP errors: they return 200 with `notice` set, so the page can keep the history and offer a retry.
+
+**Retrying.** After a failure the history the page holds is exactly what it posted: the server returned no messages and no replacement, so the last message is still the page's own (a typed message, a label-only `ChipAnswer` or a `{ confirmed }` answer). The page's only next request is that same history, unchanged, behind a Retry button; input stays disabled until a retry succeeds. The server treats it as a first attempt: it resolves the labels or reruns `recommendCategory` (deterministic, so the verdict is the same) and, on success, returns the rewrite in `replaceLastUserMessage`. A rewritten result (`chosen` holding objects, or `confirmed` with a `result`) is valid only earlier in the history, never as the last message; as the last message it gets a 400.
 
 ## Example: a chip turn
 
