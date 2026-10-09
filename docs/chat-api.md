@@ -35,9 +35,10 @@ The new user message at the end is one of:
 ```ts
 // The labels of the chips tapped, in order: one for a single choice, `pick` for a multi-select
 // (needs: 3). Labels only: the server looks each one up in CHIPS[field] (the field of the
-// pending ask_choice) and refuses a label that isn't in the set with a 400. The client never
-// sends a chip value. If the user types instead of tapping, `typed` holds their words and
-// `chosen` is empty.
+// pending ask_choice). The answer must hold exactly `pick` distinct labels from the set, or
+// none with `typed`; anything else gets a 400. The client never sends a chip value. If the
+// user types instead of tapping, `typed` holds their words and `chosen` is empty; the advisor
+// then asks with ask_choice again, because the card only accepts chip fields from a tap.
 type ChipAnswer = {
   chosen: string[];
   typed?: string;
@@ -124,7 +125,7 @@ type PendingConfirm = {
 
 When the user confirms, the page sends `{ confirmed: true }`. The server:
 
-1. finds the `propose_direction` call it answers in the history and takes its `direction` (never a direction the client sends);
+1. finds the `propose_direction` call it answers in the history and takes its `direction`, never a direction outside the validated tool call. Because the history is client-held, it runs that call's checks again (below) against the history before it, and answers 400 if they fail;
 2. turns it into the engine's stage 1 input with `toEngineDirection` (`core/advisor/tools.ts`): a declined field, which holds `null`, gets the placeholder the engine ignores, and `peerPreference` and `resolvedTensions` are dropped. Then it runs `recommendCategory`;
 3. rewrites the tool result to `{ confirmed: true, result: DirectionResult }` and returns it in `replaceLastUserMessage`, so the page stores the same bytes the model saw (one tool result, not two) and the cache stays warm;
 4. calls the model, which explains the verdict and ends with "Want to see programs that fit?";
@@ -140,7 +141,7 @@ The server answers with `is_error` and the problems, so the model asks again, wi
 
 - the input fails `ProposeDirectionInput`;
 - `check_contradictions` hasn't been called in the history;
-- a chip field's value doesn't match a chip the user tapped. Taps are read from the history by label, through `CHIPS[field]`; a value written next to a label is never trusted. A declined field (`null`, named in `declined`) is exempt.
+- a chip field's value doesn't equal the user's **latest** tap for that field (`needs` in the order tapped). Taps are read from the history by label, through `CHIPS[field]`; a value written next to a label is never trusted. A typed answer is not a tap. A declined field (`null`, named in `declined`) is exempt.
 
 ## Errors
 
