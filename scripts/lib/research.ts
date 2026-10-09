@@ -173,14 +173,17 @@ const OVERRIDE_KEYS = [
   ...SOURCED_OVERRIDE_KEYS,
   "figureNotes",
   "extraSources",
+  "replaceSources",
 ] as const;
 
 export type Overrides = Partial<
-  Pick<ProgramInput, Exclude<(typeof OVERRIDE_KEYS)[number], "extraSources">>
+  Pick<ProgramInput, Exclude<(typeof OVERRIDE_KEYS)[number], "extraSources" | "replaceSources">>
 > & {
   locationOffers: ProgramInput["locationOffers"];
   /** Sources to append, for example quotes the research kept in its Part 2 tables. */
   extraSources?: ProgramInput["sources"];
+  /** Fields whose research sources are dropped, because newer extraSources replace them. */
+  replaceSources?: string[];
 };
 
 export type Converted = {
@@ -278,7 +281,13 @@ export function convertResearch(input: {
       `The overrides file for ${id} sets ${unknownKeys.join(", ")}, which it may not. Allowed: ${OVERRIDE_KEYS.join(", ")}.`,
     );
   }
-  const { extraSources = [], ...overrides } = input.overrides as Overrides;
+  const { extraSources = [], replaceSources = [], ...overrides } = input.overrides as Overrides;
+  const unreplaced = replaceSources.filter((f) => !extraSources.some((s) => s.field === f));
+  if (unreplaced.length > 0) {
+    throw new Error(
+      `The overrides file for ${id} replaces the sources of ${unreplaced.join(", ")} without a matching extraSources entry.`,
+    );
+  }
   const unsourced = SOURCED_OVERRIDE_KEYS.filter(
     (k) => k in overrides && !extraSources.some((s) => s.field === k),
   );
@@ -334,6 +343,7 @@ export function convertResearch(input: {
     const quote = typeof s.quote === "string" ? s.quote.trim() : "";
     if (!quote || /^not published\.?$/i.test(quote)) continue; // placeholder for a null fact
     if (field === "nextStartDate") continue;
+    if (replaceSources.includes(field)) continue;
     if (field === "lodgingPerNightUsd" && lodging === null) continue;
     if (field === "mastersStackability" || field === "admissionRequirements") {
       notes.push(`Source for "${field}" dropped: the schema has no such field.`);
