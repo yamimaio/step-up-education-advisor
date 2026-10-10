@@ -236,19 +236,28 @@ describe("the page, stage 2", () => {
     expect(scrolled.at(-1)!.el).not.toBe(heading);
   });
 
-  it("leaves focus and the view on Retry when the cards arrive with a failed reply", async () => {
-    queue[queue.length - 1] = {
+  it("leaves focus and the view on Retry after a failed reply, and lands once Retry succeeds", async () => {
+    // The confirm's reply fails but carries the programs; Retry gets the scripted success.
+    queue.splice(-1, 0, {
       ...ok,
       programs: search,
       text: "Here is what fits.",
       notice: { kind: "retryable", message: "Try again" },
-    };
-    const results = await walkToPrograms(userEvent.setup());
+    });
+    const user = userEvent.setup();
+    const results = await walkToPrograms(user);
     const heading = within(results).getByRole("heading", { level: 2, name: "Programs that fit" });
     const retry = await screen.findByRole("button", { name: "Retry" });
     await waitFor(() => expect(document.activeElement).toBe(retry));
     // No scroll to the heading, which would leave the focused Retry below the view.
     expect(scrolled.some((s) => s.el === heading)).toBe(false);
+
+    await user.click(retry);
+    await screen.findByText("Here is what fits.", { selector: "li *" });
+    await waitFor(() => expect(document.activeElement?.textContent).toBe("Programs that fit"));
+    const landed = document.activeElement!;
+    expect(scrolled.at(-1)).toEqual({ el: landed, options: { block: "start" } });
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
   });
 
   it("keeps the programs under their own card's answer when a later search confirm fails", async () => {

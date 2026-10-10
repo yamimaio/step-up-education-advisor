@@ -70,15 +70,15 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
   }, [state.status]);
 
   // When a search's program cards first show, the view starts at "Programs that fit" rather than
-  // past the last card, and focus goes to that heading. After a failed reply the view stays put:
-  // Retry, below the cards, keeps focus and stays in view. Declared after the effects above, so
-  // it runs after them.
+  // past the last card, and focus goes to that heading. That waits for an idle reply: after a
+  // failed or blocked one the view stays on the notice below the cards (Retry keeps focus), and a
+  // successful Retry lands then. Declared after the effects above, so it runs after them.
   const resultsId = state.results?.toolUseId ?? null;
   useEffect(() => {
-    if (resultsId === shownResults.current) return;
+    if (resultsId === shownResults.current || state.status !== "idle") return;
     shownResults.current = resultsId;
     const heading = resultsRef.current?.querySelector<HTMLElement>("h2");
-    if (!heading || state.status === "failed") return;
+    if (!heading) return;
     heading.scrollIntoView?.({ block: "start" });
     heading.focus({ preventScroll: true });
   }, [resultsId, state.status]);
