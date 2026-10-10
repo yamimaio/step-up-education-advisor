@@ -251,6 +251,31 @@ describe("failures", () => {
     expect(recordProblems(record)).toEqual([]);
   });
 
+  it("lets the overrides set a trip count counted from a published calendar", () => {
+    const s = sample();
+    const base = s.overrides as { extraSources?: unknown[] };
+    s.overrides = { ...base, residencyCount: 22 };
+    expect(() => convertResearch(s)).toThrow(
+      /sets residencyCount without a matching extraSources entry/,
+    );
+    s.overrides = {
+      ...base,
+      residencyCount: 22,
+      extraSources: [
+        ...(base.extraSources ?? []),
+        {
+          field: "residencyCount",
+          url: "https://example.edu/fake-sample/calendar.pdf",
+          quote: "Class Sessions in San Francisco",
+          checkedOn: "2026-10-10",
+        },
+      ],
+    };
+    const { record } = convertResearch(s);
+    expect(record.residencyCount).toBe(22);
+    expect(recordProblems(record)).toEqual([]);
+  });
+
   it("lets the overrides set a price from another intake (B1) with a source", () => {
     const s = sample();
     const base = s.overrides as { extraSources?: unknown[] };

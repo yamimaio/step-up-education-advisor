@@ -151,6 +151,7 @@ const SOURCED_OVERRIDE_KEYS = [
   "workCompatible",
   "cohortMedianExperienceYears",
   "onsiteDaysPerYear",
+  "residencyCount",
   "longestStretchDays",
   "hoursPerWeek",
 ] as const;
