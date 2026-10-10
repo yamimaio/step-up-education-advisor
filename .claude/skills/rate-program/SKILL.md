@@ -5,7 +5,7 @@ description: Rate a Step Up program on the five needs (1 to 5) from its saved re
 
 # Rate a program
 
-**Version 2 (Oct 9, 2026).** Bump the version whenever `rating-prompt.md` or `rulings.md` changes, and add a line to the changelog at the end.
+**Version 3 (Oct 10, 2026).** Bump the version whenever `rating-prompt.md` or `rulings.md` changes, and add a line to the changelog at the end.
 
 Files in this skill:
 
@@ -15,7 +15,8 @@ Files in this skill:
 ## Rules
 
 - Start from the facts in `docs/research/<id>.md` and `docs/research/<id>-overrides.json`. When a rating turns on a fact the research lacks or got wrong, verify it on the school's own pages or documents (a web search is fine for finding them) and add it to the overrides file: the value, plus an `extraSources` entry with the URL, the verbatim quote and `checkedOn`. `docs/decisions.md` lists the facts the overrides file may set. Never use what you know about the program without such a source. Yami's first-hand knowledge enters only through a ruling.
-- Every card note (`ratingNotes`) states facts from the research. Judgments go in `reasoning` (R8).
+- When the fact has no record field (career services, curriculum structure, majors), verify it the same way and add an `extraSources` entry with field `ratingNotes`: the URL, the verbatim quote and `checkedOn`. A card note may then state it.
+- Every card note (`ratingNotes`) states facts from the research or from an `extraSources` entry in the overrides file. Judgments go in `reasoning` (R8).
 - Never change the research file or edit `core/data/programs.json` by hand. The overrides file changes only to add a verified fact as above. The converter (`draft-records --force docs/research/<id>`) reads the ratings from the rating file and the facts from the overrides.
 
 ## Steps
@@ -27,7 +28,7 @@ Files in this skill:
 5. Write the result at the end of `docs/research/<id>-rating.md`, replacing an earlier block from this skill and leaving Perplexity's answer as provenance. If the file doesn't exist, create it with only this block:
 
    ````markdown
-   ## Reviewed ratings (rate-program v1, YYYY-MM-DD; reviewed by: pending)
+   ## Reviewed ratings (rate-program vN, YYYY-MM-DD; reviewed by: pending)
 
    One line on what was reviewed, under which skill version.
 
@@ -48,7 +49,7 @@ Files in this skill:
 6. Check before reporting:
    - The JSON parses, and it is the last `"ratings": {` object in the file. The converter (`parseRatings` in `scripts/lib/research.ts`) reads only that one.
    - Every note is 20 words or fewer, with no URLs, footnotes or rubric words.
-   - Every fact in a note appears in the research.
+   - Every fact in a note appears in the research or in an `extraSources` entry.
 7. Report to Yami: a table of the five ratings, the differences from Perplexity, and the close calls.
 
 ## When Yami reviews
@@ -67,3 +68,4 @@ Prompt and skill changes go in their own issue and PR, separate from the step 4 
 
 - v1 (Oct 9, 2026): first version. The rating prompt moved here from `docs/perplexity-program-prompts.md`, with the rules from issue #87. Rulings R1 to R8 come from Yami's review of MIT TLP, Wharton EMBA SF, Northwestern MEM and Harvard Extension.
 - v2 (Oct 9, 2026): R9 and the senior_network rubric line: a published experience breakdown gives the median, which beats a stated average (Yami, MIT TLP review). Facts the research lacks may now be verified on official pages and added to the overrides file with a source (Yami: re-rate every program ourselves, verifying where needed).
+- v3 (Oct 10, 2026): a fact with no record field that a rating or card note rests on is recorded as an `extraSources` entry with field `ratingNotes`; `format` can be set with a source in the overrides file; R10 (open enrollment with classmates per course is not "no cohort"). From the Wharton EMBA SF and Northwestern MEM re-ratings.
