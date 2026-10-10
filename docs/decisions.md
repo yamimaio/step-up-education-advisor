@@ -246,3 +246,7 @@ Stage 1 only. Yami split step 6 by stage (Oct 9, on the round 1 review of PR #10
 - **Persona A's fake** (`MODEL_FAKE=1`) builds its card from the taps in the history, so page work off persona A's exact path still reaches a verdict, and after a refused call it ends its turn instead of repeating the call.
 - **Typed answers to chip fields** (`advisor.md`): the advisor asks again with `ask_choice`, unless the typed answer declines the question. Then the field is declined as usual (`needs` keeps its one re-offer).
 - **Corrections to chip fields from the card** (round 2 review): the advisor asks again with `ask_choice` on that field before the next card, unless the correction declines the field (round 3 review). Then the field is set to `null` and named in `declined`.
+
+## Advisor markdown in the chat (issue #129)
+
+- Advisor messages render a small markdown subset (paragraphs, `-`/`*` and numbered lists, bold, italic) with a hand-written renderer in `app/components/Markdown.tsx` instead of a markdown library: it only builds React text nodes, so no model text can become HTML, and it adds no dependency. Anything else (headings, links, tables) shows as plain text. The user's own messages and the downloaded transcript stay as typed.
