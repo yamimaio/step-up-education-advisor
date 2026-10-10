@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "@app/api/chat/route";
 import type { ChatRequest } from "@app/lib/chatTypes";
 import Home from "@app/page";
+import { chatRateLimiter } from "@server/rateLimit";
 
 // The whole page against the real /api/chat route through a mocked fetch. MODEL_FAKE=1 makes the
 // route serve persona A's scripted advisor (server/model/personaA.ts), so the server's rewrites,
@@ -15,6 +16,7 @@ let requests: ChatRequest[] = [];
 
 beforeEach(() => {
   requests = [];
+  chatRateLimiter.reset();
   vi.stubEnv("MODEL_FAKE", "1");
   // The route logs one line of numbers per request; keep the test output clean.
   vi.spyOn(console, "info").mockImplementation(() => {});
@@ -96,6 +98,29 @@ describe("the Stage 1 page with the real route on the fake model", () => {
     expect(md).toContain("I've led engineering teams for twelve years.");
     expect(md).toContain("- Best next step: Executive program");
     expect(requests.length).toBe(fetches);
+  });
+
+  it("keeps the conversation going after a 429: shows the wait, then retries the same history", async () => {
+    const user = userEvent.setup();
+    vi.mocked(fetch).mockImplementationOnce(async (_url, init) => {
+      requests.push(JSON.parse(String(init!.body)) as ChatRequest);
+      return Response.json(
+        { error: "rate_limited", retryAfter: 12 },
+        { status: 429, headers: { "Retry-After": "12" } },
+      );
+    });
+    render(<Home />);
+    await user.type(screen.getByLabelText("Your message"), "Hello{Enter}");
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain("Wait 12 seconds, then retry.");
+    expect((screen.getByLabelText("Your message") as HTMLTextAreaElement).disabled).toBe(true);
+
+    await user.click(within(alert).getByRole("button", { name: "Retry" }));
+    await screen.findByRole("button", { name: "Step up to a bigger leadership role" });
+    expect(requests).toHaveLength(2);
+    expect(requests[1]).toEqual(requests[0]);
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("doesn't send an empty message", async () => {

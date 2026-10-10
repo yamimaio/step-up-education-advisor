@@ -152,6 +152,9 @@ The server answers with `is_error` and the problems, so the model asks again, wi
 | --- | --- | --- |
 | 400 | The body fails the request schema, breaks a limit, or doesn't answer the pending tool | `{ error: "bad_request" }`, never echoing the input |
 | 405 | Any method but `POST` | `{ error: "method_not_allowed" }` |
+| 429 | The client address passed the rate limit (20 a minute, 100 an hour; `docs/decisions.md`). Checked before the body is read | `{ error: "rate_limited", retryAfter }`, `retryAfter` in whole seconds, also sent as `Retry-After` |
+
+The page treats only `400` and `413` as a refusal of the history (input off). A `408`, a `429`, any other status without a `ChatResponse` and a network error keep the history and offer a Retry; for a `429` the notice says how long to wait.
 
 ### After a notice
 
