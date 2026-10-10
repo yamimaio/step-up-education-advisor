@@ -5,12 +5,12 @@ import type { ProgressStep } from "@app/lib/progress";
 // rests on color alone.
 export function ProgressLine({ steps }: { steps: ProgressStep[] }) {
   return (
-    <ol aria-label="Progress" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+    <ol aria-label="Progress" className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs sm:gap-x-2 sm:text-sm">
       {steps.map((step, i) => (
         <li
           key={step.label}
           aria-current={step.state === "current" ? "step" : undefined}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5 sm:gap-2"
         >
           {i > 0 && (
             <span aria-hidden="true" className="text-muted">

@@ -33,7 +33,7 @@ export default function Home() {
   };
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 px-4 py-6 lg:max-w-6xl lg:px-8">
+    <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 px-4 py-6 lg:max-w-[calc(64.5rem+4rem)] lg:px-8">
       <header className="flex flex-col gap-3 border-b border-line pb-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -52,7 +52,7 @@ export default function Home() {
         <p className="text-sm text-muted">{TAGLINE}</p>
         <ProgressLine steps={progressSteps(state)} />
       </header>
-      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,42rem)_20rem] lg:justify-center lg:gap-10">
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-10">
         <main className="flex min-w-0 flex-col gap-4">
           <PrivacyNotice />
           <Chat
