@@ -1,5 +1,5 @@
 import { CHIPS, type ChipField } from "@core/advisor/chips";
-import type { Direction } from "@core/advisor/tools";
+import type { Direction, STAGE_1_CHIP_FIELDS } from "@core/advisor/tools";
 import type { Category } from "@core/schema/enums";
 
 // Everything the card and the verdict show is a chip label from CHIPS or an engine value,
@@ -40,6 +40,18 @@ export const DIRECTION_FIELD_LABELS: Record<string, string> = {
   keepWorking: "Keep working",
   degreeRequired: "Degree",
 };
+
+// The label of each Stage 1 chip field, for the "question: answer" lines in the chat and the
+// "What I've understood" panel. The goal's chips are its kind.
+export const CHIP_FIELD_LABELS: Record<string, string> = {
+  careerGoalKind: DIRECTION_FIELD_LABELS.careerGoal!,
+  needs: DIRECTION_FIELD_LABELS.needs!,
+  peerPreference: DIRECTION_FIELD_LABELS.peerPreference!,
+  maxProgramMonths: DIRECTION_FIELD_LABELS.maxProgramMonths!,
+  hoursPerWeek: DIRECTION_FIELD_LABELS.hoursPerWeek!,
+  keepWorking: DIRECTION_FIELD_LABELS.keepWorking!,
+  degreeRequired: DIRECTION_FIELD_LABELS.degreeRequired!,
+} satisfies Record<(typeof STAGE_1_CHIP_FIELDS)[number], string>;
 
 export type CardLine = { label: string; value: string };
 

@@ -1,5 +1,6 @@
 import { WRAP_UP_NOTE } from "@core/advisor/wrapUp";
 import { blocksOf, type MessageParam } from "./chatTypes";
+import { CHIP_FIELD_LABELS, type CardLine } from "./labels";
 
 // What the user sees of the history: the user's words, the chips they tapped, their answer to
 // the card and the advisor's text. Thinking, tool calls and server-tool results stay hidden.
@@ -7,9 +8,18 @@ import { blocksOf, type MessageParam } from "./chatTypes";
 export type Turn =
   | { kind: "user"; text: string }
   | { kind: "assistant"; text: string }
-  | { kind: "chips"; question: string; chosen: string[]; typed?: string }
+  | ChipsTurn
   | { kind: "confirm"; confirmed: true }
   | { kind: "confirm"; confirmed: false; corrections: string };
+
+// `field` is the ask_choice input's field, so the chat can label the answer without model text.
+export type ChipsTurn = {
+  kind: "chips";
+  field: string;
+  question: string;
+  chosen: string[];
+  typed?: string;
+};
 
 type ToolCall = { name: string; input: Record<string, unknown> };
 
@@ -84,6 +94,7 @@ export function toTurns(history: MessageParam[]): Turn[] {
           const typed = typeof answer.typed === "string" ? answer.typed : undefined;
           turns.push({
             kind: "chips",
+            field: String(call.input.field ?? ""),
             question: String(call.input.question ?? ""),
             chosen: labelsOf(answer.chosen),
             ...(typed ? { typed } : {}),
@@ -116,4 +127,22 @@ export function turnText(turn: Turn): string {
     case "confirm":
       return turn.confirmed ? "Looks right" : `Change something: ${turn.corrections}`;
   }
+}
+
+// A chip answer as one "question: answer" line. The label is the field's fixed label, or the
+// asked question (without its closing "?") for a field with none; needs keep their order; a
+// typed answer shows its words.
+export function answerLine(turn: ChipsTurn): CardLine {
+  if (Object.hasOwn(CHIP_FIELD_LABELS, turn.field)) {
+    return { label: CHIP_FIELD_LABELS[turn.field]!, value: chipAnswerText(turn) };
+  }
+  let label = turn.question.trim();
+  while (/[?.:!]$/.test(label)) label = label.slice(0, -1).trimEnd();
+  return { label, value: chipAnswerText(turn) };
+}
+
+export function chipAnswerText(turn: ChipsTurn): string {
+  if (turn.typed !== undefined) return turn.typed;
+  if (turn.field === "needs") return turn.chosen.map((c, i) => `${i + 1}. ${c}`).join(", ");
+  return turn.chosen.join(", ");
 }

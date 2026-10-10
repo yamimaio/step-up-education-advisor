@@ -68,11 +68,24 @@ describe("the Stage 1 page with the real route on the fake model", () => {
 
     const card = await screen.findByRole("region", { name: "Here's what I understood" });
     expect(card.textContent).toContain('"Move into an executive role"');
+
+    // Taps show as "question: answer" lines; the progress line and the panel follow the answers.
+    const log = screen.getByRole("log", { name: "Conversation" });
+    expect(log.textContent).toContain("You: Longest program: Up to a year");
+    expect(log.textContent).toContain(
+      "You: What's missing: 1. A senior network, 2. Leadership skills, 3. Deep expertise in a field",
+    );
+    const progress = screen.getByRole("list", { name: "Progress" });
+    expect(progress.querySelector('[aria-current="step"]')?.textContent).toContain("Verdict");
+    const panel = screen.getByRole("complementary", { name: "What Step Up has understood" });
+    expect(panel.textContent).toContain('"Move into an executive role"');
     await user.click(within(card).getByRole("button", { name: "Looks right" }));
 
     const verdict = await screen.findByRole("region", { name: "Your verdict" });
     expect(verdict.textContent).toContain("Executive program");
     expect(screen.queryByRole("region", { name: "Here's what I understood" })).toBeNull();
+    expect(progress.querySelector('[aria-current="step"]')).toBeNull();
+    expect(progress.textContent).toContain("Verdict (done)");
 
     // The page sent labels only, and kept the server's rewrites: one tool result per tool call.
     const last = requests.at(-1)!.messages;

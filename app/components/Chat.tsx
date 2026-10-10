@@ -76,7 +76,7 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
         </ol>
       </div>
       {/* Always mounted, so the change of text is announced. */}
-      <p role="status" className="text-sm text-ink/60">
+      <p role="status" className="text-sm text-muted">
         {state.status === "sending" ? "Step Up is thinking…" : ""}
       </p>
 
@@ -102,14 +102,14 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
       </div>
 
       {state.notice && (
-        <div role="alert" className="rounded border border-amber-600/40 bg-amber-50 p-3 text-sm">
+        <div role="alert" className="rounded-xl border border-warm bg-card p-3 text-sm">
           <p>{state.notice.message}</p>
           {state.status === "failed" && (
             <button
               ref={retryRef}
               type="button"
               onClick={on.onRetry}
-              className="mt-2 rounded bg-teal px-3 py-1 text-paper"
+              className="mt-2 rounded-lg bg-teal px-3 py-1 font-medium text-white"
             >
               Retry
             </button>
@@ -145,12 +145,12 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
               e.currentTarget.form?.requestSubmit();
             }
           }}
-          className="flex-1 rounded border border-ink/30 bg-white p-2 disabled:opacity-60"
+          className="min-w-0 flex-1 rounded-xl border border-muted bg-card p-2 placeholder:text-muted disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={busy || !state.draft.trim()}
-          className="self-end rounded bg-teal px-4 py-2 text-paper disabled:opacity-50"
+          className="self-end rounded-lg bg-teal px-4 py-2 font-medium text-white disabled:opacity-50"
         >
           Send
         </button>

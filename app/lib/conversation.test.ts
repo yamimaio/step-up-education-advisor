@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { chatReducer, initialChatState, type ChatState } from "./chatState";
 import { toolResultMessage, type ChatResponse, type MessageParam } from "./chatTypes";
 import { WRAP_UP_NOTE } from "@core/advisor/wrapUp";
-import { toTurns } from "./conversation";
+import { answerLine, toTurns } from "./conversation";
 import { buildTranscript } from "./transcript";
 
 // The server's wrap-up note at turn 35 (docs/chat-api.md, "Message cap").
@@ -38,6 +38,7 @@ describe("toTurns and the wrap-up note", () => {
     expect(toTurns([ask, tapWithNote]).slice(1)).toEqual([
       {
         kind: "chips",
+        field: "maxProgramMonths",
         question: "The longest program you'd take on now",
         chosen: ["Up to a year"],
       },
@@ -133,5 +134,45 @@ describe("toTurns and turns the server rejected", () => {
       kind: "assistant",
       text: "Here's what I understood.",
     });
+  });
+});
+
+describe("answerLine", () => {
+  const chips = (field: string, chosen: string[], typed?: string) => ({
+    kind: "chips" as const,
+    field,
+    question: "Which one, would you say?",
+    chosen,
+    ...(typed ? { typed } : {}),
+  });
+
+  it("labels a chip answer with the field's fixed label", () => {
+    expect(answerLine(chips("maxProgramMonths", ["Up to a year"]))).toEqual({
+      label: "Longest program",
+      value: "Up to a year",
+    });
+    expect(answerLine(chips("careerGoalKind", ["Lead better in my current role"])).label).toBe(
+      "Your goal",
+    );
+  });
+
+  it("numbers the needs in the order tapped", () => {
+    expect(
+      answerLine(chips("needs", ["A senior network", "Leadership skills", "Deep expertise"])),
+    ).toEqual({
+      label: "What's missing",
+      value: "1. A senior network, 2. Leadership skills, 3. Deep expertise",
+    });
+  });
+
+  it("shows the typed words of a typed answer", () => {
+    expect(answerLine(chips("needs", [], "Mostly people to learn from")).value).toBe(
+      "Mostly people to learn from",
+    );
+  });
+
+  it("falls back to the asked question for a field with no label", () => {
+    expect(answerLine(chips("travelComfort", ["Fine"])).label).toBe("Which one, would you say");
+    expect(answerLine(chips("toString", ["Fine"])).label).toBe("Which one, would you say");
   });
 });
