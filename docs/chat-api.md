@@ -233,31 +233,38 @@ After the verdict the advisor asks "Want to see programs that fit?". On a yes, i
 
 `ask_choice` takes every chip set: `STAGE_1_CHIP_FIELDS` and `STAGE_2_CHIP_FIELDS` (`core/advisor/tools.ts`). A stage 2 chip set before a direction is confirmed gets `is_error` (the advisor asks again later), and a pending one in a history with no confirmed direction gets a 400. `locationValues` takes exactly 2 taps, in order; every other stage 2 set takes 1. A stage 1 chip set can still be asked in stage 2, when the user changes a stage 1 answer.
 
+### `check_contradictions` runs on the taps
+
+The model sends `{ resolvedTensions: [{ rule, chosen }], declined: [...] }` and nothing else, in both stages. Every field a contradiction rule reads is a chip field (`TENSION_FIELDS` in `core/advisor/tools.ts`), so the server runs the rules on the user's latest tap for each of them, less the fields named in `declined`, with the tensions in `resolvedTensions` marked resolved. A field with no tap is missing, and a rule that needs it doesn't fire. The model can't leave out an answer a rule needs.
+
 ### The search card
 
-`confirm` is `{ toolUseId, profile }`: the profile the engine will run on (`ProfileSchema`), never the model's text.
+The model's `propose_search` input is `{ search: SearchAnswers }`: only what has no chips and only the model can fill in. That is the home (`homeCity`, `homeRegion`, `homeCountry`, `homeLat`, `homeLon`), `yearsExperience`, `yearsLeading`, the degree's field (`degreeField`), the tensions resolved in stage 2 (`resolvedTensions`) and the stage 2 fields the user declined (`declined`). The server builds the profile from it (`searchProfile`).
 
-- **Stage 1 answers** come from the last confirmed `propose_direction` card in the history, never from the search card. A field declined there holds the engine's placeholder (`DECLINED_PLACEHOLDERS`) and is named in `declined`. `peerPreference` and any `tieBreaker` come from that card too; `resolvedTensions` holds the direction's, then any new ones from the search card.
-- **Stage 2 answers** come from the search card. A field named in `declined` holds a neutral value the engine ignores; the page shows it as "Not answered".
+`confirm` is `{ toolUseId, profile }`: that profile, the one the engine will run on (`ProfileSchema`).
+
+- **Stage 1 answers** come from the last confirmed `propose_direction` card in the history. A field declined there holds the engine's placeholder (`DECLINED_PLACEHOLDERS`) and is named in `declined`. `peerPreference` and any `tieBreaker` come from that card too; `resolvedTensions` holds the direction's, then any new ones from the search card.
+- **Stage 2 chip answers** come from the user's latest taps, never from the model. A field named in `declined` holds a neutral placeholder the engine ignores (`STAGE_2_PLACEHOLDERS`), even after a tap; the page shows it as "Not answered".
 - **Home:** `homeCountry` is a two-letter ISO 3166-1 code (`server/countries.ts`), `homeLat` and `homeLon` decimal degrees. A declined home holds `""` for `homeCity` and `homeCountry` and null for `homeRegion`, `homeLat` and `homeLon`, all five named in `declined`.
 
 ### Validation the server does on `propose_search`
 
 The server answers with `is_error` and the problems, so the model asks again, without pausing, when:
 
-- the input fails `ProposeSearchInput` (`{ profile: ProfileSchema }`), including a country code that isn't two capital letters or a latitude or longitude out of range. A problem with the home tells the advisor to ask where the user lives again, or to decline the home;
-- `homeCountry` is not a real ISO 3166-1 alpha-2 code ("XX", "UK");
+- the input fails `ProposeSearchInput`, for example with a chip or stage 1 answer in it;
 - no `propose_direction` card has been confirmed, or the last confirmed one fails its own checks against the history before it;
+- **a stage 1 answer changed since that confirm**: the user tapped a stage 1 chip set after the confirm with another value. The problem tells the advisor to call `check_contradictions` and `propose_direction` again, and only then `propose_search`;
 - `check_contradictions` hasn't been called since that confirm;
-- a contradiction rule fires on the profile the engine would run on, the user hasn't resolved it (`resolvedTensions`), and no `check_contradictions` result in the history returned it. So a check sent without the stage 2 answers can't hide a stage 2 tension. Whether the user resolves a tension the advisor did see stays the advisor's call, as in stage 1;
-- **the stage 1 answers changed since that confirm**: a stage 1 field on the search card differs from the confirmed direction (a field declined on one and not the other counts), or the user tapped a stage 1 chip set after the confirm with another value. The problem tells the advisor to ask again with `ask_choice` if needed, call `check_contradictions` and `propose_direction` again, and only then `propose_search`;
-- a stage 2 chip field's value doesn't equal the user's **latest** tap for that field (`locationValues` in the order tapped), unless the field is named in `declined`.
+- a stage 2 chip field has no tap and isn't named in `declined`; the problem names the `ask_choice` field to ask;
+- the built profile fails `ProfileSchema`: a country code that isn't two capital letters, a latitude or longitude out of range, a home field empty without being declined, or a half-declined pair of coordinates. A problem with the home tells the advisor to ask where the user lives again, or to decline the home;
+- `homeCountry` is not a real ISO 3166-1 alpha-2 code ("XX", "UK");
+- a contradiction rule fires on the built profile, the user hasn't resolved it, and no `check_contradictions` result in the history returned it, for example after a tap that came later. Whether the user resolves a tension the advisor did see stays the advisor's call, as in stage 1.
 
 ### The programs result
 
 When the user confirms the search card, the page sends `{ confirmed: true }`. The server:
 
-1. finds the `propose_search` call it answers in the history and runs its checks again (above) against the history before it, and answers 400 if they fail;
+1. finds the `propose_search` call it answers in the history, builds its profile again from that call and the taps before it, runs its checks again (above), and answers 400 if they fail;
 2. takes the category from the last confirmed direction before that call: it reruns `recommendCategory` on that card's input, so neither the model nor a verdict stored in the client-held history can change it;
 3. runs `evaluatePrograms(profile, category, programs, today)` on the card's profile (as built above);
 4. rewrites the tool result to `{ confirmed: true, result: SearchSummary }` and returns it in `replaceLastUserMessage`. `SearchSummary` (`server/stage2.ts`) is what the model needs to explain the list: for each program in `ranking.ranked` and `ranking.alsoWorthALook`, its id, name and institution from the record, category, status, `why`, its city, the checks it misses or can't be checked on and the passing checks the engine has a note on (each with its `note`, such as a per-course estimate, a lodging-only travel total or "requires relocating"), the format and travel lines, the estimated total cost and the confidence level; plus `access`, `noProgram`, `profileGaps` and how many programs are not listed. The whole `SearchResult` is about 2,000 characters a program, and a tool result in the posted history is capped at 20,000;

@@ -6,15 +6,16 @@ import {
   CheckContradictionsInput,
   ProposeDirectionInput,
   ProposeSearchInput,
+  searchProfile,
   STAGE_1_CHIP_FIELDS,
   STAGE_2_CHIP_FIELDS,
+  TENSION_FIELDS,
   toEngineDirection,
-  toEngineProfile,
   type Direction,
 } from "../core/advisor/tools";
 import { checkContradictions, evaluatePrograms, recommendCategory } from "../core/index";
 import type { DirectionResult, SearchResult } from "../core/engine/types";
-import type { Profile } from "../core/schema/profile";
+import { ProfileSchema, type PartialProfile, type Profile } from "../core/schema/profile";
 import type { Program } from "../core/schema/program";
 import { COUNTRY_CODES } from "./countries";
 import { MAX_TEXT_CHARS } from "./limits";
@@ -51,10 +52,27 @@ export class EmptyInput extends Error {
 
 const problemsOf = (error: z.ZodError) => z.prettifyError(error);
 
-export function runCheckContradictions(input: unknown, programs: Program[]) {
+// What the rules see: the user's latest tap for each field a rule reads (every one is a chip
+// field), less the fields the user declined, and the tensions the user resolved. The model sends
+// only those last two, so it can't leave out an answer a rule needs.
+export function tensionDraft(
+  history: Message[],
+  input: z.infer<typeof CheckContradictionsInput>,
+): PartialProfile {
+  const taps = latestTaps(history);
+  const declined = new Set<string>(input.declined);
+  const draft: Record<string, unknown> = { resolvedTensions: input.resolvedTensions };
+  for (const field of TENSION_FIELDS) {
+    if (taps.has(field) && !declined.has(field)) draft[field] = taps.get(field);
+  }
+  return draft as PartialProfile;
+}
+
+// `history` is everything before the call.
+export function runCheckContradictions(input: unknown, history: Message[], programs: Program[]) {
   const parsed = CheckContradictionsInput.safeParse(input);
   if (!parsed.success) return { isError: true, content: problemsOf(parsed.error) };
-  const tensions = checkContradictions(parsed.data.profile, programs);
+  const tensions = checkContradictions(tensionDraft(history, parsed.data), programs);
   return { isError: false, content: JSON.stringify({ tensions }) };
 }
 
@@ -211,34 +229,10 @@ export function confirmedDirection(
   return checked.ok ? { direction: checked.direction, resultAt: call.resultAt } : null;
 }
 
-// The stage 1 fields of the propose_search profile, compared with the confirmed direction.
-const STAGE_1_FIELDS = [
-  "careerGoal",
-  "goalClarity",
-  "needs",
-  "peerPreference",
-  "maxProgramMonths",
-  "hoursPerWeek",
-  "keepWorking",
-  "degreeRequired",
-] as const satisfies readonly (keyof Direction & keyof Profile)[];
-
-// The stage 1 answers that changed since the confirmed direction: a card value that differs
-// from it (a field declined on one card and not the other counts), or a stage 1 chip tapped
-// after the confirm with another value. Any of these needs a new propose_direction.
-function stage1Changes(
-  direction: Direction,
-  card: Profile,
-  tapsAfterConfirm: Map<string, unknown>,
-): string[] {
+// The stage 1 chip fields the user tapped again after the confirmed direction, with another
+// value than the card's: the direction changed, so it needs a new propose_direction.
+function stage1Changes(direction: Direction, tapsAfterConfirm: Map<string, unknown>): string[] {
   const changed = new Set<string>();
-  for (const field of STAGE_1_FIELDS) {
-    const wasDeclined = (direction.declined as readonly string[]).includes(field);
-    const isDeclined = card.declined.includes(field);
-    if (wasDeclined ? !isDeclined : isDeclined || !same(card[field], direction[field])) {
-      changed.add(field);
-    }
-  }
   for (const chipField of STAGE_1_CHIP_FIELDS) {
     if (!tapsAfterConfirm.has(chipField)) continue;
     const path = CHIP_TARGET[chipField];
@@ -274,23 +268,15 @@ function tensionsReturned(history: Message[]): Set<string> {
 
 // The checks before the stage 2 card shows (docs/chat-api.md, "Validation the server does on
 // propose_search"). `history` is everything before the call. On success, `profile` is what the
-// engine runs on: the stage 1 answers from the confirmed direction, the rest from the card.
+// engine runs on (searchProfile): the stage 1 answers from the confirmed direction, the chip
+// answers from the user's taps, the rest from the card.
 export function validateProposeSearch(
   input: unknown,
   history: Message[],
   programs: Program[],
 ): { ok: true; direction: Direction; profile: Profile } | { ok: false; problems: string } {
   const parsed = ProposeSearchInput.safeParse(input);
-  if (!parsed.success) {
-    const home = parsed.error.issues.some(
-      (i) => i.path[0] === "profile" && HOME_FIELDS.includes(String(i.path[1])),
-    );
-    return {
-      ok: false,
-      problems: problemsOf(parsed.error) + (home ? `\n${ASK_HOME_AGAIN}` : ""),
-    };
-  }
-  const card = parsed.data.profile;
+  if (!parsed.success) return { ok: false, problems: problemsOf(parsed.error) };
   const confirmed = confirmedDirection(history);
   if (!confirmed) {
     return {
@@ -302,52 +288,46 @@ export function validateProposeSearch(
   const { direction, resultAt } = confirmed;
   const afterConfirm = history.slice(resultAt + 1);
   const problems: string[] = [];
-  const changed = stage1Changes(direction, card, latestTaps(afterConfirm));
+  const changed = stage1Changes(direction, latestTaps(afterConfirm));
   if (changed.length) {
     problems.push(
-      `These stage 1 answers differ from the confirmed direction card: ${changed.join(", ")}. If the user changed one, ask for it again with ask_choice when it has chips, then call check_contradictions and propose_direction again before propose_search. Otherwise copy them from the confirmed card; a field declined there stays named in declined.`,
+      `The user changed these stage 1 answers after confirming the direction: ${changed.join(", ")}. Call check_contradictions and propose_direction again, and let the user confirm the new direction before propose_search.`,
     );
   }
   if (!calledBefore(afterConfirm, "check_contradictions")) {
+    problems.push("Call check_contradictions before propose_search.");
+  }
+  const { profile, missing } = searchProfile(direction, parsed.data.search, latestTaps(history));
+  for (const chipField of missing) {
     problems.push(
-      "Call check_contradictions with the answers so far, stage 2 included, before propose_search.",
+      `${CHIP_TARGET[chipField]} has no answer: ask for it with ask_choice on ${chipField}, or name ${CHIP_TARGET[chipField].split(".")[0]} in declined if the user won't say.`,
     );
   }
-  const taps = latestTaps(history);
-  for (const chipField of STAGE_2_CHIP_FIELDS) {
-    const path = CHIP_TARGET[chipField];
-    const field = path.split(".")[0]!;
-    if (card.declined.includes(field)) continue;
-    if (!taps.has(chipField)) {
-      problems.push(
-        `${path} was not set by a chip tap: ask for it with ask_choice on ${chipField}, or name ${field} in declined if the user won't say.`,
-      );
-    } else if (!same(taps.get(chipField), valueAt(card, path))) {
-      problems.push(
-        `${path} doesn't match the chip the user tapped last for ${chipField}. If the user changed this answer, ask for it again with ask_choice on ${chipField}; otherwise use the tapped value.`,
-      );
-    }
-  }
-  if (card.homeCountry !== "" && !COUNTRY_CODES.has(card.homeCountry)) {
+  // The built profile holds the model's words for the home: the country format, the coordinate
+  // ranges and the declined pairing are ProfileSchema's.
+  const checked = ProfileSchema.safeParse(profile);
+  if (!checked.success) {
+    const home = checked.error.issues.some((i) => HOME_FIELDS.includes(String(i.path[0])));
+    problems.push(problemsOf(checked.error) + (home ? `\n${ASK_HOME_AGAIN}` : ""));
+  } else if (profile.homeCountry !== "" && !COUNTRY_CODES.has(profile.homeCountry)) {
     problems.push(
       `homeCountry is not an ISO 3166-1 alpha-2 country code (for example AR or US). ${ASK_HOME_AGAIN}`,
     );
   }
-  const profile = toEngineProfile(direction, card);
-  // A tension that fires on the card's answers must have reached the advisor through
-  // check_contradictions, so the server, not the model's choice of what to send, decides that
-  // the user saw it. Whether the user resolved it stays the advisor's call, as in stage 1.
+  // A tension that fires on the answers must have reached the advisor through
+  // check_contradictions, for example after a tap that came later. Whether the user resolved it
+  // stays the advisor's call, as in stage 1.
   const seen = tensionsReturned(history);
   const unseen = checkContradictions(profile, programs).filter(
     (t) => !t.resolved && !seen.has(t.id),
   );
   if (unseen.length) {
     problems.push(
-      `These tensions fire on the card's answers, but check_contradictions never returned them: ${unseen
+      `These tensions fire on the user's answers, but check_contradictions never returned them: ${unseen
         .map((t) => `${t.id} (${t.text})`)
         .join(
           "; ",
-        )}. Call check_contradictions with the stage 1 answers and the stage 2 answers it takes, raise each tension with the user and record their choice in resolvedTensions, then call propose_search again.`,
+        )}. Call check_contradictions, raise each tension with the user and record their choice in resolvedTensions, then call propose_search again.`,
     );
   }
   return problems.length

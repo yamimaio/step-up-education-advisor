@@ -162,8 +162,10 @@ describe("advisor.md leads stage 2 to a card the server accepts", () => {
     );
   });
 
-  it("copies the stage 1 answers from the confirmed card, and goes back to it when one changes", () => {
-    expect(stage2()).toContain("Copy every stage 1 answer from the confirmed direction card");
+  it("sends only the answers with no chips, and goes back to the direction when one changes", () => {
+    expect(stage2()).toContain("You never send a chip answer: the system reads it from the tap.");
+    expect(stage2()).toContain("so you don't send them");
+    expect(stage2()).not.toContain("Copy every stage 1 answer");
     expect(stage2()).toMatch(/call `propose_direction` again and let them confirm the new verdict/);
   });
 
@@ -192,5 +194,14 @@ describe("advisor.md says what a passing check asks of the user", () => {
     expect(section("Stage 2: show me programs")).toContain(
       "An issue that passes but has a `note` is something the program asks of them",
     );
+  });
+});
+
+// check_contradictions runs on the taps (decisions.md, "The real API refused the stage 2
+// schemas"): the prompt must not ask the model to send answers the tool no longer takes.
+describe("advisor.md calls check_contradictions with what the tool takes", () => {
+  it("never tells the model to send answers to check_contradictions", () => {
+    expect(advisor).not.toMatch(/check_contradictions` with the/);
+    expect(section("The tools")).toContain("You send only the tensions they resolved");
   });
 });

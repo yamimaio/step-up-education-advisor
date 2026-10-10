@@ -1,5 +1,5 @@
-import { toEngineProfile, type Direction } from "../../core/advisor/tools";
-import type { Profile } from "../../core/schema/profile";
+import { CHIP_TARGET } from "../../core/advisor/chips";
+import { STAGE_2_CHIP_FIELDS, type SearchAnswers } from "../../core/advisor/tools";
 import { hasConfirmedDirection, latestTaps, parseJson, type Message } from "../history";
 import type { ModelRequest, ModelTurn } from "./adapter";
 import { text, toolUse, turn } from "./fake";
@@ -111,67 +111,22 @@ export function directionFromTaps(messages: Message[]) {
   };
 }
 
-// The full profile the taps in the history give: stage 1 as on the direction card (declined
-// fields hold the engine's placeholder), stage 2 from the taps, the free text from persona A.
-// A stage 2 chip field with no tap is declined, with a neutral value the engine ignores.
-export function profileFromTaps(messages: Message[]): Profile {
+// The search card persona A's advisor sends: the home and background in persona A's words, and
+// every stage 2 chip field with no tap in the history named in `declined` (the server fills the
+// chip answers from the taps).
+export function searchFromTaps(messages: Message[]): SearchAnswers {
   const taps = latestTaps(messages);
-  const declined: string[] = [];
-  const tapped = <T>(chipField: string, otherwise: T, field = chipField): T => {
-    if (taps.has(chipField)) return taps.get(chipField) as T;
-    declined.push(field);
-    return otherwise;
-  };
-  const stage2 = {
-    tuitionBudgetUsd: tapped<number | null>("tuitionBudgetUsd", null),
-    paymentPlan: tapped("paymentPlan", "no_preference"),
-    travelBudgetUsd: tapped<number | null>("travelBudgetUsd", null),
-    travelComfort: tapped("travelComfort", "fine"),
-    formatPreference: tapped("formatPreference", "no_preference"),
-    maxOnsiteDays: tapped("maxOnsiteDays", 0),
-    maxStretchDays: tapped("maxStretchDays", 0),
-    relocate: tapped("relocate", false),
-    airfareRange: tapped("airfareRange", "unknown"),
-    locationValues: tapped<string[]>("locationValues", []),
-    degree: {
-      level: tapped("degreeLevel", "other", "degree"),
-      field: PERSONA_A_BACKGROUND.degreeField,
-    },
-    currentRole: tapped("currentRole", "other"),
-  };
-  const card = {
-    ...stage2,
+  const declined = STAGE_2_CHIP_FIELDS.filter((f) => !taps.has(f)).map(
+    (f) => CHIP_TARGET[f].split(".")[0] as SearchAnswers["declined"][number],
+  );
+  return {
     ...PERSONA_A_HOME,
     yearsExperience: PERSONA_A_BACKGROUND.yearsExperience,
     yearsLeading: PERSONA_A_BACKGROUND.yearsLeading,
+    degreeField: PERSONA_A_BACKGROUND.degreeField,
     resolvedTensions: [],
     declined,
-  } as unknown as Profile;
-  return toEngineProfile(directionFromTaps(messages) as Direction, card);
-}
-
-// check_contradictions gets the answers so far, without the declined fields (advisor.md). In
-// stage 2 it also gets the stage 2 answers the rules read.
-function draftFromTaps(messages: Message[]) {
-  const direction = directionFromTaps(messages);
-  const taps = latestTaps(messages);
-  const stage2 = hasConfirmedDirection(messages)
-    ? Object.fromEntries(
-        (
-          [
-            "tuitionBudgetUsd",
-            "travelComfort",
-            "maxOnsiteDays",
-            "maxStretchDays",
-            "relocate",
-            "locationValues",
-          ] as const
-        ).flatMap((f) => (taps.has(f) ? [[f, taps.get(f)]] : [])),
-      )
-    : {};
-  return Object.fromEntries(
-    Object.entries({ ...direction, ...stage2 }).filter(([, value]) => value !== null),
-  );
+  };
 }
 
 const propose = (request: ModelRequest, lead: string) =>
@@ -189,16 +144,17 @@ const proposeSearch = (request: ModelRequest) =>
     text("Here's what I'll search with."),
     toolUse(
       "propose_search",
-      { profile: profileFromTaps(request.messages) },
+      { search: searchFromTaps(request.messages) },
       `toolu_a_search_${request.messages.length}`,
     ),
   );
 
+// The rules run on the taps; persona A resolves no tension and declines no rule field.
 const check = (request: ModelRequest) =>
   turn(
     toolUse(
       "check_contradictions",
-      { profile: draftFromTaps(request.messages) },
+      { resolvedTensions: [], declined: [] },
       `toolu_a_check_${request.messages.length}`,
     ),
   );

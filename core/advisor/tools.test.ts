@@ -13,15 +13,19 @@ import {
   AskChoiceInput,
   CheckContradictionsInput,
   DIRECTION_DECLINABLE,
-  DirectionDraftSchema,
   DirectionSchema,
   ProposeDirectionInput,
   ProposeSearchInput,
+  SEARCH_DECLINABLE,
+  searchProfile,
   STAGE_1_CHIP_FIELDS,
   STAGE_2_CHIP_FIELDS,
+  STAGE_2_PLACEHOLDERS,
+  TENSION_FIELDS,
   toEngineDirection,
   toEngineProfile,
   type Direction,
+  type SearchAnswers,
 } from "./tools";
 
 const stage1Fields = STAGE_1_CHECKLIST.flatMap((e) => e.fields);
@@ -102,29 +106,114 @@ describe("ask_choice offers every chip set, split by stage", () => {
   });
 });
 
-describe("check_contradictions takes the answers its rules read", () => {
-  it("accepts stage 2 answers next to stage 1 ones", () => {
-    const profile = { needs: ["senior_network"], maxOnsiteDays: 5, travelComfort: "burden" };
-    expect(CheckContradictionsInput.safeParse({ profile }).success).toBe(true);
+// The real API refused bigger schemas (decisions.md, "The real API refused the stage 2
+// schemas"): the model sends only what it learned in conversation, the taps give the rest.
+describe("check_contradictions takes only the resolved tensions and the declined fields", () => {
+  it("accepts them, and nothing else", () => {
+    const input = { resolvedTensions: [{ rule: "R4", chosen: "time" }], declined: ["needs"] };
+    expect(CheckContradictionsInput.safeParse(input).success).toBe(true);
+    expect(
+      CheckContradictionsInput.safeParse({ ...input, needs: ["senior_network"] }).success,
+    ).toBe(false);
+    expect(CheckContradictionsInput.safeParse({ resolvedTensions: [] }).success).toBe(false);
   });
 
-  it("refuses a stage 2 field no rule reads", () => {
-    const profile = { paymentPlan: "loans" };
-    expect(CheckContradictionsInput.safeParse({ profile }).success).toBe(false);
+  it("refuses a rule that doesn't exist and a field no rule reads", () => {
+    expect(
+      CheckContradictionsInput.safeParse({
+        resolvedTensions: [{ rule: "R9", chosen: "x" }],
+        declined: [],
+      }).success,
+    ).toBe(false);
+    expect(
+      CheckContradictionsInput.safeParse({ resolvedTensions: [], declined: ["paymentPlan"] })
+        .success,
+    ).toBe(false);
   });
 });
 
-describe("propose_search carries the full profile", () => {
-  it("accepts persona A's profile", () => {
-    expect(ProposeSearchInput.parse({ profile: personaAProfile })).toEqual({
-      profile: personaAProfile,
-    });
+const answersA: SearchAnswers = {
+  homeCity: personaAProfile.homeCity,
+  homeRegion: personaAProfile.homeRegion,
+  homeCountry: personaAProfile.homeCountry,
+  homeLat: personaAProfile.homeLat,
+  homeLon: personaAProfile.homeLon,
+  yearsExperience: personaAProfile.yearsExperience,
+  yearsLeading: personaAProfile.yearsLeading,
+  degreeField: personaAProfile.degree.field,
+  resolvedTensions: [],
+  declined: [],
+};
+
+// Persona A's latest taps as values by chip field (personas/A.md).
+const tapsA = new Map<string, unknown>([
+  ["tuitionBudgetUsd", 80000],
+  ["paymentPlan", "installments"],
+  ["travelBudgetUsd", 10000],
+  ["travelComfort", "appeal"],
+  ["formatPreference", "blended"],
+  ["maxOnsiteDays", 20],
+  ["maxStretchDays", 7],
+  ["relocate", false],
+  ["airfareRange", "1000_1500"],
+  ["locationValues", ["immersion", "network_density"]],
+  ["degreeLevel", "bachelor"],
+  ["currentRole", "manager"],
+]);
+
+describe("propose_search takes only the answers with no chips", () => {
+  it("accepts persona A's answers, and refuses a chip or stage 1 answer", () => {
+    expect(ProposeSearchInput.parse({ search: answersA })).toEqual({ search: answersA });
+    for (const extra of [{ tuitionBudgetUsd: 5000 }, { needs: ["senior_network"] }]) {
+      expect(ProposeSearchInput.safeParse({ search: { ...answersA, ...extra } }).success).toBe(
+        false,
+      );
+    }
   });
 
-  it("refuses a partial profile", () => {
-    const partial: Record<string, unknown> = { ...personaAProfile };
-    delete partial.tuitionBudgetUsd;
-    expect(ProposeSearchInput.safeParse({ profile: partial }).success).toBe(false);
+  it("declines only stage 2 fields", () => {
+    expect([...SEARCH_DECLINABLE].sort()).toEqual(stage2Fields.sort());
+  });
+});
+
+describe("searchProfile builds the stage 2 profile from the taps", () => {
+  it("rebuilds persona A's profile", () => {
+    const { profile, missing } = searchProfile(direction, answersA, tapsA);
+    expect(missing).toEqual([]);
+    expect(profile).toEqual(personaAProfile);
+  });
+
+  it("lists a chip field neither tapped nor declined", () => {
+    const taps = new Map(tapsA);
+    taps.delete("currentRole");
+    taps.delete("degreeLevel");
+    expect(searchProfile(direction, answersA, taps).missing).toEqual([
+      "degreeLevel",
+      "currentRole",
+    ]);
+  });
+
+  it("gives a declined chip field its placeholder, even after a tap", () => {
+    const answers: SearchAnswers = { ...answersA, declined: ["travelBudgetUsd", "degree"] };
+    const { profile, missing } = searchProfile(direction, answers, tapsA);
+    expect(missing).toEqual([]);
+    expect(profile.travelBudgetUsd).toBe(STAGE_2_PLACEHOLDERS.travelBudgetUsd);
+    expect(profile.degree.level).toBe(STAGE_2_PLACEHOLDERS.degreeLevel);
+    expect(profile.declined).toEqual(["travelBudgetUsd", "degree"]);
+    expect(ProfileSchema.safeParse(profile).success).toBe(true);
+  });
+
+  it("gives every declined chip field a value ProfileSchema accepts", () => {
+    const all = { ...answersA, declined: [...SEARCH_DECLINABLE] };
+    const home = { homeCity: "", homeRegion: null, homeCountry: "", homeLat: null, homeLon: null };
+    const { profile, missing } = searchProfile(direction, { ...all, ...home }, new Map());
+    expect(missing).toEqual([]);
+    expect(ProfileSchema.safeParse(profile).success).toBe(true);
+  });
+
+  it("takes stage 1 answers from the direction, never from the taps", () => {
+    const taps = new Map([...tapsA, ["maxProgramMonths", 24]]);
+    expect(searchProfile(direction, answersA, taps).profile.maxProgramMonths).toBe(12);
   });
 });
 
@@ -206,12 +295,9 @@ describe("propose_direction carries the stage 1 answers and nothing else", () =>
     expect(parse({ ...direction, declined: ["tuitionBudgetUsd"] })).toBe(false);
   });
 
-  it("refuses fewer than 3 needs on the card, allows them in a draft", () => {
+  it("refuses fewer than 3 needs on the card", () => {
     const short = { ...direction, needs: ["senior_network"] };
     expect(ProposeDirectionInput.safeParse({ direction: short }).success).toBe(false);
-    expect(
-      CheckContradictionsInput.safeParse({ profile: { needs: ["senior_network"] } }).success,
-    ).toBe(true);
   });
 });
 
@@ -257,12 +343,15 @@ describe("A declined stage 1 field holds null, never an invented answer", () => 
   });
 });
 
-// check_contradictions takes a draft, not the whole profile (the API's limit on optional
-// parameters), so the draft must hold every field a rule reads, or the rule can never fire.
-describe("the check_contradictions draft holds every field the rules read", () => {
+// check_contradictions runs the rules on the user's taps for TENSION_FIELDS only (the server's
+// tensionDraft), so every field a rule reads must be listed there, and must be a chip field,
+// or the rule can never fire.
+describe("TENSION_FIELDS hold every field the rules read, each a chip field", () => {
   const programs = fixtureDataset();
   const draftOf = (profile: Profile) =>
-    Object.fromEntries(Object.entries(profile).filter(([k]) => k in DirectionDraftSchema.shape));
+    Object.fromEntries(
+      Object.entries(profile).filter(([k]) => (TENSION_FIELDS as readonly string[]).includes(k)),
+    );
 
   // One profile per rule, each built to fire it. A new rule needs a line here.
   const firing: [string, Profile][] = [
@@ -296,11 +385,16 @@ describe("the check_contradictions draft holds every field the rules read", () =
     expect([...fired].sort()).toEqual(["R1", "R2", "R3", "R4", "R5", "R6"]);
   });
 
-  it.each(firing)("%s fires the same on the draft as on the whole profile", (id, profile) => {
-    const draft = draftOf(profile);
-    expect(CheckContradictionsInput.safeParse({ profile: draft }).success).toBe(true);
-    const whole = checkContradictions(profile, programs);
+  it.each(firing)("%s fires the same on the tension fields as on the whole profile", (id, p) => {
+    const whole = checkContradictions(p, programs);
     expect(whole.map((t) => t.id)).toContain(id);
-    expect(checkContradictions(draft, programs)).toEqual(whole);
+    expect(checkContradictions(draftOf(p), programs)).toEqual(whole);
+  });
+
+  it("are all chip fields whose tap lands on the field of the same name", () => {
+    for (const field of TENSION_FIELDS) {
+      expect(CHIP_FIELDS, field).toContain(field);
+      expect(CHIP_TARGET[field]).toBe(field);
+    }
   });
 });

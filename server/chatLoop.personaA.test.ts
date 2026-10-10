@@ -238,7 +238,7 @@ describe("the server checks the card before it shows", () => {
 
   it("refuses a chip field that doesn't match the tap", async () => {
     const { r } = await atLastTap([
-      turn(toolUse("check_contradictions", { profile: {} })),
+      turn(toolUse("check_contradictions", { resolvedTensions: [], declined: [] })),
       turn(
         toolUse("propose_direction", {
           direction: { ...PERSONA_A_DIRECTION, maxProgramMonths: 24 },
@@ -254,7 +254,7 @@ describe("the server checks the card before it shows", () => {
 
   it("leaves the text of a rejected turn out of what the user sees", async () => {
     const { r } = await atLastTap([
-      turn(toolUse("check_contradictions", { profile: {} })),
+      turn(toolUse("check_contradictions", { resolvedTensions: [], declined: [] })),
       turn(
         text("Here's what I understood."),
         toolUse("propose_direction", {
@@ -275,7 +275,7 @@ describe("the server checks the card before it shows", () => {
   it("refuses needs in a different order from the tap", async () => {
     const reordered = ["leadership_skills", "senior_network", "deep_expertise"];
     const { r } = await atLastTap([
-      turn(toolUse("check_contradictions", { profile: {} })),
+      turn(toolUse("check_contradictions", { resolvedTensions: [], declined: [] })),
       turn(
         toolUse("propose_direction", { direction: { ...PERSONA_A_DIRECTION, needs: reordered } }),
       ),
@@ -288,7 +288,7 @@ describe("the server checks the card before it shows", () => {
 
   it("accepts a declined chip field as null", async () => {
     const { r } = await atLastTap([
-      turn(toolUse("check_contradictions", { profile: {} })),
+      turn(toolUse("check_contradictions", { resolvedTensions: [], declined: [] })),
       turn(
         toolUse("propose_direction", {
           direction: { ...PERSONA_A_DIRECTION, hoursPerWeek: null, declined: ["hoursPerWeek"] },
@@ -301,7 +301,7 @@ describe("the server checks the card before it shows", () => {
   it("answers two tool calls in one turn with is_error and asks again", async () => {
     const { r, model } = await atLastTap([
       turn(
-        toolUse("check_contradictions", { profile: {} }),
+        toolUse("check_contradictions", { resolvedTensions: [], declined: [] }),
         toolUse("ask_choice", { field: "needs", question: "Again?" }),
       ),
       turn(text("One at a time.")),
@@ -315,7 +315,7 @@ describe("the server checks the card before it shows", () => {
 
   it(`stops after ${MAX_SERVER_ROUNDS} server rounds`, async () => {
     const { r, model } = await atLastTap(() =>
-      turn(toolUse("check_contradictions", { profile: {} })),
+      turn(toolUse("check_contradictions", { resolvedTensions: [], declined: [] })),
     );
     expect(model.requests).toHaveLength(MAX_SERVER_ROUNDS + 1);
     expect(r.notice?.kind).toBe("unknown");
@@ -464,7 +464,7 @@ describe("the posted message must answer what is pending", () => {
 
   it("tells the advisor to ask again when a card changes a chip field without a tap", async () => {
     const { r } = await atLastTap([
-      turn(toolUse("check_contradictions", { profile: {} })),
+      turn(toolUse("check_contradictions", { resolvedTensions: [], declined: [] })),
       turn(
         toolUse("propose_direction", {
           direction: { ...PERSONA_A_DIRECTION, maxProgramMonths: 24 },
@@ -489,14 +489,29 @@ async function atLastStage2Tap(script: Script, taps: Record<string, string[]> = 
   return { page, model, r };
 }
 
-const checkAll = () => turn(toolUse("check_contradictions", { profile: {} }));
-const search = (profile: object) => turn(toolUse("propose_search", { profile }));
+const checkAll = (declined: string[] = []) =>
+  turn(toolUse("check_contradictions", { resolvedTensions: [], declined }));
+const search = (answers: object) => turn(toolUse("propose_search", { search: answers }));
+
+// Persona A's search card: the answers that have no chips (personas/A.md).
+const answersA = {
+  homeCity: "Buenos Aires",
+  homeRegion: "C",
+  homeCountry: "AR",
+  homeLat: -34.6037,
+  homeLon: -58.3816,
+  yearsExperience: 16,
+  yearsLeading: 12,
+  degreeField: "Engineering",
+  resolvedTensions: [],
+  declined: [],
+};
 
 describe("the server checks the stage 2 card before it shows", () => {
   it("refuses propose_search before a direction is confirmed", async () => {
     const { r } = await atLastTap([
       checkAll(),
-      search(personaAProfile),
+      search(answersA),
       turn(text("Let me confirm the direction first.")),
     ]);
     expect(r.confirm).toBeNull();
@@ -506,29 +521,29 @@ describe("the server checks the stage 2 card before it shows", () => {
   });
 
   it("refuses propose_search before check_contradictions in stage 2", async () => {
-    const { r } = await atLastStage2Tap([search(personaAProfile), turn(text("Checking first."))]);
+    const { r } = await atLastStage2Tap([search(answersA), turn(text("Checking first."))]);
     expect(r.confirm).toBeNull();
     expect(errorResultsIn(r.messages)[0]).toMatchObject({
       content: expect.stringContaining("check_contradictions"),
     });
   });
 
-  it("shows the card once the checks pass", async () => {
-    const { r } = await atLastStage2Tap([checkAll(), search(personaAProfile)]);
+  it("builds the card from the taps, the confirmed direction and the model's free text", async () => {
+    const { r } = await atLastStage2Tap([checkAll(), search(answersA)]);
     expect(r.confirm?.profile).toEqual(personaAProfile);
     expect(errorResultsIn(r.messages)).toHaveLength(0);
   });
 
-  it("asks for propose_direction again when a stage 1 answer on the card changed", async () => {
-    const { r } = await atLastStage2Tap([
-      checkAll(),
-      search({ ...personaAProfile, maxProgramMonths: 24 }),
-      turn(text("Let me fix that.")),
-    ]);
-    expect(r.confirm).toBeNull();
-    const [err] = errorResultsIn(r.messages);
-    expect(err).toMatchObject({ content: expect.stringContaining("maxProgramMonths") });
-    expect(err).toMatchObject({ content: expect.stringContaining("propose_direction again") });
+  it("refuses chip or stage 1 answers on the search card: they come from the taps", async () => {
+    for (const extra of [{ maxProgramMonths: 24 }, { tuitionBudgetUsd: 15000 }]) {
+      const { r } = await atLastStage2Tap([
+        checkAll(),
+        search({ ...answersA, ...extra }),
+        turn(text("Let me fix that.")),
+      ]);
+      expect(r.confirm).toBeNull();
+      expect(errorResultsIn(r.messages)).toHaveLength(1);
+    }
   });
 
   it("asks for propose_direction again when the user re-tapped a stage 1 answer", async () => {
@@ -542,25 +557,19 @@ describe("the server checks the stage 2 card before it shows", () => {
     ]);
     await page.post(answer(toolUseId, { chosen: PERSONA_A_TAPS.currentRole }));
     expect(page.last?.chips?.field).toBe("maxProgramMonths");
-    // Whatever the card says, the length changed since the confirmed direction.
-    for (const months of [12, 24]) {
-      const retry = new Page(new FakeModelClient([]), programs);
-      retry.history = [...page.history];
-      retry.last = page.last;
-      retry.model = new FakeModelClient([
-        checkAll(),
-        search({ ...personaAProfile, maxProgramMonths: months }),
-        turn(text("Back to the direction.")),
-      ]);
-      const r = await retry.tap("Up to 2 years");
-      expect(r.confirm).toBeNull();
-      expect(errorResultsIn(r.messages)[0]).toMatchObject({
-        content: expect.stringContaining("propose_direction again"),
-      });
-    }
+    page.model = new FakeModelClient([
+      checkAll(),
+      search(answersA),
+      turn(text("Back to the direction.")),
+    ]);
+    const r = await page.tap("Up to 2 years");
+    expect(r.confirm).toBeNull();
+    const [err] = errorResultsIn(r.messages);
+    expect(err).toMatchObject({ content: expect.stringContaining("maxProgramMonths") });
+    expect(err).toMatchObject({ content: expect.stringContaining("propose_direction again") });
   });
 
-  it("accepts a new propose_direction in stage 2, then the search on the new direction", async () => {
+  it("accepts a new propose_direction in stage 2, then searches on the new direction", async () => {
     const page = new Page(new FakeModelClient(personaAScript), programs);
     const toolUseId = await walkToLastStage2Tap(page);
     page.model = new FakeModelClient([
@@ -582,40 +591,46 @@ describe("the server checks the stage 2 card before it shows", () => {
     r = await page.confirm();
     expect(r.direction).not.toBeNull();
 
-    const longer = { ...personaAProfile, maxProgramMonths: 24 };
-    page.model = new FakeModelClient([checkAll(), search(longer)]);
+    page.model = new FakeModelClient([checkAll(), search(answersA)]);
     r = await page.type("Go on with the programs.");
     expect(r.confirm?.profile?.maxProgramMonths).toBe(24);
   });
 
-  it("refuses a stage 2 chip field that doesn't match the tap", async () => {
-    const { r } = await atLastStage2Tap([
+  it("asks for a stage 2 chip answer the user never tapped, unless it's declined", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    const id = await walkToLastStage2Tap(page);
+    const typed = answer(id, { chosen: [], typed: "I'd rather not say" });
+    page.model = new FakeModelClient([
       checkAll(),
-      search({ ...personaAProfile, tuitionBudgetUsd: 15000 }),
-      turn(text("Let me fix the budget.")),
+      search(answersA),
+      turn(text("Then let me ask with the options.")),
     ]);
+    const asked = new Page(page.model, programs);
+    asked.history = [...page.history];
+    asked.last = page.last;
+    let r = await asked.post(typed);
+    expect(r.confirm).toBeNull();
     expect(errorResultsIn(r.messages)[0]).toMatchObject({
-      content: expect.stringContaining("tuitionBudgetUsd doesn't match"),
+      content: expect.stringContaining("currentRole has no answer"),
     });
+
+    page.model = new FakeModelClient([
+      checkAll(),
+      search({ ...answersA, declined: ["currentRole"] }),
+    ]);
+    r = await page.post(typed);
+    expect(r.confirm?.profile).toMatchObject({ currentRole: "other", declined: ["currentRole"] });
   });
 
-  it("refuses location values in another order from the tap", async () => {
+  it("lets a decline win over an earlier tap", async () => {
     const { r } = await atLastStage2Tap([
       checkAll(),
-      search({ ...personaAProfile, locationValues: ["network_density", "immersion"] }),
-      turn(text("Let me fix the order.")),
+      search({ ...answersA, declined: ["travelBudgetUsd"] }),
     ]);
-    expect(errorResultsIn(r.messages)[0]).toMatchObject({
-      content: expect.stringContaining("locationValues"),
+    expect(r.confirm?.profile).toMatchObject({
+      travelBudgetUsd: null,
+      declined: ["travelBudgetUsd"],
     });
-  });
-
-  it("accepts a declined stage 2 field with any value", async () => {
-    const { r } = await atLastStage2Tap([
-      checkAll(),
-      search({ ...personaAProfile, travelBudgetUsd: 0, declined: ["travelBudgetUsd"] }),
-    ]);
-    expect(r.confirm?.profile?.declined).toEqual(["travelBudgetUsd"]);
   });
 
   it.each([
@@ -623,10 +638,12 @@ describe("the server checks the stage 2 card before it shows", () => {
     ["a country name", { homeCountry: "argentina" }, "homeCountry"],
     ["a latitude out of range", { homeLat: 120 }, "homeLat"],
     ["a longitude out of range", { homeLon: -200 }, "homeLon"],
+    ["half the coordinates", { homeLon: null }, "homeLon"],
+    ["an empty city that isn't declined", { homeCity: "" }, "homeCity"],
   ])("asks again for the home on %s", async (_, home, problem) => {
     const { r } = await atLastStage2Tap([
       checkAll(),
-      search({ ...personaAProfile, ...home }),
+      search({ ...answersA, ...home }),
       turn(text("Where do you live, again?")),
     ]);
     expect(r.confirm).toBeNull();
@@ -637,7 +654,7 @@ describe("the server checks the stage 2 card before it shows", () => {
 
   it("accepts a declined home", async () => {
     const declinedHome = {
-      ...personaAProfile,
+      ...answersA,
       homeCity: "",
       homeRegion: null,
       homeCountry: "",
@@ -651,45 +668,62 @@ describe("the server checks the stage 2 card before it shows", () => {
 });
 
 // Persona A with no days on site: R1 fires (a senior network first, fewer than 10 days).
-describe("a tension that fires in stage 2 must reach the advisor before the card", () => {
+describe("check_contradictions runs the rules on the taps", () => {
   const noDaysOnSite = { maxOnsiteDays: ["None"] };
-  const card = { ...personaAProfile, maxOnsiteDays: 0 };
 
-  it("refuses the card when check_contradictions never returned it", async () => {
-    // The model sends only the stage 1 answers, so R1 can't fire in its check.
-    const stage1Only = turn(
-      toolUse("check_contradictions", { profile: { needs: personaAProfile.needs } }),
-    );
-    const { r } = await atLastStage2Tap(
-      [stage1Only, search(card), turn(text("Let me check that properly."))],
-      noDaysOnSite,
-    );
-    expect(r.confirm).toBeNull();
-    const [err] = errorResultsIn(r.messages);
-    expect(err).toMatchObject({ content: expect.stringContaining("R1 (") });
-    expect(err).toMatchObject({ content: expect.stringContaining("never returned them") });
-  });
-
-  it("shows the card once check_contradictions returned it", async () => {
-    const withStage2 = turn(
-      toolUse("check_contradictions", {
-        profile: { needs: personaAProfile.needs, maxOnsiteDays: 0 },
-      }),
-    );
-    const { r } = await atLastStage2Tap([withStage2, search(card)], noDaysOnSite);
+  it("finds a stage 2 tension though the model sends no answers", async () => {
+    const { r } = await atLastStage2Tap([checkAll(), search(answersA)], noDaysOnSite);
     expect(lastBlocks(r.messages[1])[0]).toMatchObject({
       content: expect.stringContaining('"id":"R1"'),
     });
+    // Returned to the advisor, so the card shows; resolving it is the advisor's call.
     expect(r.confirm?.profile?.maxOnsiteDays).toBe(0);
   });
 
-  it("shows the card when the user already resolved it", async () => {
-    const resolved = { ...card, resolvedTensions: [{ rule: "R1", chosen: "network" }] };
-    const { r } = await atLastStage2Tap([checkAll(), search(resolved)], noDaysOnSite);
-    expect(r.confirm?.profile?.resolvedTensions).toEqual([{ rule: "R1", chosen: "network" }]);
+  it("leaves out a field the user declined", async () => {
+    const { r } = await atLastStage2Tap(
+      [checkAll(["maxOnsiteDays"]), search({ ...answersA, declined: ["maxOnsiteDays"] })],
+      noDaysOnSite,
+    );
+    expect(lastBlocks(r.messages[1])[0]).toMatchObject({
+      content: JSON.stringify({ tensions: [] }),
+    });
+    expect(r.confirm?.profile?.declined).toEqual(["maxOnsiteDays"]);
   });
 
-  it("lets persona A's fake, which sends the stage 2 answers, reach the programs", async () => {
+  it("marks a tension the user resolved", async () => {
+    const resolved = [{ rule: "R1", chosen: "the network, with fewer days" }];
+    const { r } = await atLastStage2Tap(
+      [
+        turn(toolUse("check_contradictions", { resolvedTensions: resolved, declined: [] })),
+        search({ ...answersA, resolvedTensions: resolved }),
+      ],
+      noDaysOnSite,
+    );
+    expect(lastBlocks(r.messages[1])[0]).toMatchObject({
+      content: expect.stringContaining('"resolved":true'),
+    });
+    expect(r.confirm?.profile?.resolvedTensions).toEqual(resolved);
+  });
+
+  it("refuses the card when a tension fires after the last check", async () => {
+    // The check runs with 20 days on site; then the user changes it to none.
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    const id = await walkToLastStage2Tap(page);
+    page.model = new FakeModelClient([
+      checkAll(),
+      turn(toolUse("ask_choice", { field: "maxOnsiteDays", question: "Days on site?" })),
+    ]);
+    await page.post(answer(id, { chosen: PERSONA_A_TAPS.currentRole }));
+    page.model = new FakeModelClient([search(answersA), turn(text("Let me check again."))]);
+    const r = await page.tap("None");
+    expect(r.confirm).toBeNull();
+    expect(errorResultsIn(r.messages)[0]).toMatchObject({
+      content: expect.stringContaining("R1 ("),
+    });
+  });
+
+  it("lets persona A's fake reach the programs with R1 firing", async () => {
     const page = new Page(new FakeModelClient(personaAScript), programs);
     const id = await walkToLastStage2Tap(page, noDaysOnSite);
     let r = await page.post(answer(id, { chosen: PERSONA_A_TAPS.currentRole }));
@@ -721,7 +755,7 @@ describe("the stage 2 confirm", () => {
     const page = new Page(new FakeModelClient(personaAScript), programs);
     const id = await walkToSearchCard(page);
     const history = structuredClone(page.history);
-    searchCall(history).input = { profile: { ...personaAProfile, tuitionBudgetUsd: 250000 } };
+    searchCall(history).input = { search: { ...answersA, homeCountry: "XX" } };
     await expect(post([...history, answer(id, { confirmed: true })])).rejects.toThrow(BadRequest);
   });
 

@@ -304,7 +304,11 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
         }
         results = [errorResult(use.id, checked.problems)];
       } else if (use.name === "check_contradictions") {
-        const ran = runCheckContradictions(use.input, deps.programs);
+        const ran = runCheckContradictions(
+          use.input,
+          [...history, ...added.slice(0, -1)],
+          deps.programs,
+        );
         results = [
           ran.isError
             ? errorResult(use.id, ran.content)
