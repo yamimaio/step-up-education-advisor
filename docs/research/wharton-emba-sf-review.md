@@ -12,6 +12,7 @@ A draft record built from `docs/research/wharton-emba-sf.md` and `docs/research/
 - `durationMonths`, on-site days, residencies, hours, accreditation and the lodging rate are null (not published for San Francisco). `lodgingIncluded: true` comes from the tuition-includes quote, so the travel estimate skips lodging.
 - `attendance: recurring_weekends` and `onsiteNote` come from the "every-other-weekend residential format" quote; `locationOffers` is my proposal (network_density, industry_hub).
 - `workCompatible: true` rests on "required to maintain full-time employment". The class profile's counters render as 0 and were not used.
+- `state: California` comes from the campus address ("San Francisco, CA 94105"), set in the overrides file.
 
 **From the research file's "uncertain or conflicting" list:**
 
@@ -55,6 +56,7 @@ Every source in the record, with the value it backs. **no quote** means the valu
 | ratingNotes | (rating evidence) | CareerPath: Centralized hub with job board, resume book, board resume section, and compensation data (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-career-services/ |
 | ratingNotes | (rating evidence) | Career Changers: Pivoting into new industries or functions (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-career-services/ |
 | onsiteNote | every-other-weekend residential format | **no quote** | |
+| state | California | **no quote** | |
 | campusLat | 37.7916 | **no quote** | |
 | campusLon | -122.3893 | **no quote** | |
 | country | US | **no quote** | |

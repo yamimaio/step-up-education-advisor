@@ -433,7 +433,7 @@
     "hoursPerWeek": null,
     "workCompatible": true,
     "city": "San Francisco",
-    "state": null,
+    "state": "California",
     "campusAddress": "2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105",
     "campusLat": 37.7916,
     "campusLon": -122.3893,
