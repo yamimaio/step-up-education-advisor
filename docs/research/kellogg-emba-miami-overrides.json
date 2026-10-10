@@ -23,10 +23,10 @@
   "figureNotes": {
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
     "campusLon": "Derived from campusAddress (approximate, from the street address).",
-    "cohortMedianExperienceYears": "Average published on the admissions page; no median or breakdown is published.",
+    "cohortMedianExperienceYears": "Average published for the September 2024 and January 2025 Chicago and Miami cohorts (combined), with a mid-80% range of 9 to 23 years; no median or breakdown is published.",
     "residencyCount": "Counted from the January 2027 first-year Miami calendar: orientation, eight class weekends, the July intensive week and Global Network Week (11 trips). The second-year calendar is not published.",
-    "longestStretchDays": "Orientation programming, January 12 to 17, 2027. Global Network Week's length is not published.",
-    "onsiteDaysPerYear": "Not set: the January 2027 first-year calendar gives 43 known days (6 orientation, 8 weekends of 4 days, a 5-day intensive week), plus Global Network Week, whose dates and length are not published.",
+    "longestStretchDays": "Orientation programming, January 12 to 17, 2027; Global Network Week is 5 days for U.S.-campus students.",
+    "onsiteDaysPerYear": "Counted from the January 2027 first-year Miami calendar: 6 days of orientation (January 12-17), 8 class weekends of 4 days (Thursday to Sunday, counted as full days), a 5-day intensive week (July 13-17) and 5 days of Global Network Week in Evanston for U.S.-campus students: 48 days. The second-year calendar is not published, so year 1 stands for both.",
     "tuitionUsd": "Kellogg's own estimated-expenses total for 2026-2027: tuition $205,486 plus required food and housing $42,986, billed by Kellogg in six quarters of $41,412. Food and housing is required of every student. Kellogg says tuition has historically risen 3-4% a year."
   },
   "extraSources": [
@@ -55,6 +55,34 @@
       "field": "residencyCount",
       "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/",
       "quote": "February 4 - 7, 2027 March 4 - 7, 2027 April 1 - 4, 2027 May 20 - May 23, 2027 June 24 - 27, 2027 July 13 - 17, 2027 (Intensive week) August 2027 (Global network week) September 9 - 12, 2027 October 7 - 10, 2027 November 4 - 7, 2027",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/",
+      "quote": "Programming: January 12 - 17, 2027",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/",
+      "quote": "Take classes once a month, beginning Thursday afternoon and ending midday Sunday.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/",
+      "quote": "July 13 - 17, 2027 (Intensive week) August 2027 (Global network week)",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/global-network-week/",
+      "quote": "Students based on U.S. campuses (Miami or Chicago) take courses for 5 days.",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
     },
@@ -115,9 +143,16 @@
       "kind": "official_page"
     },
     {
+      "field": "cohortMedianExperienceYears",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+      "quote": "15 Average years of work experience 9 23 Work experience range (mid-80%)",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
       "field": "ratingNotes",
       "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
-      "quote": "Hold senior positions (Director + VP + C-Suite)",
+      "quote": "70% Hold senior positions (Director + VP + C-Suite)",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
     },
@@ -169,7 +204,15 @@
       "quote": "CMC coaching sessions are tailored to experienced professionals making high-impact decisions.",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+      "quote": "Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
     }
   ],
-  "tuitionUsd": 248472
+  "tuitionUsd": 248472,
+  "onsiteDaysPerYear": 48
 }

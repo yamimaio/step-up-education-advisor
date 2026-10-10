@@ -15,8 +15,9 @@ The two researches were done separately, and Claude rated before reading Perplex
 | attendance | n/a | recurring_weekends (once a month, Thursday afternoon to midday Sunday) |
 | residencyCount | null | 11 trips in year 1 (January 2027 calendar) |
 | longestStretchDays | null | 6 (orientation, January 12-17, 2027) |
-| onsiteDaysPerYear | null | still null: 43 known days plus Global Network Week, whose length isn't published |
-| cohortMedianExperienceYears | null | 15 (average, admissions page) |
+| onsiteDaysPerYear | null | 48 (January 2027 year-1 calendar plus 5 days of Global Network Week) |
+| cohortMedianExperienceYears | null | 15 (average, admissions page and class profile; mid-80% 9 to 23) |
+| senior positions | not found | 70% Director + VP + C-Suite (class profile; Yami's screenshot) |
 | paymentOptions | installments | installments, employer sponsorship |
 | minExperienceYears | null | 8 (not overridable; stays null) |
 | accreditation | null | AACSB on Northwestern's Provost page (not overridable; stays null) |
@@ -38,7 +39,8 @@ The two researches were done separately, and Claude rated before reading Perplex
 **Decisions (Yami) and open questions:**
 
 - **Tuition basis (decided by Yami, Oct 10).** `tuitionUsd` is Kellogg's own estimated-expenses total, $248,472 for 2026-2027: tuition $205,486 plus food and housing $42,986, which Kellogg bills as a required charge ("Tuition and Food and Housing are both required expenses") in six quarters of $41,412. It is the same basis as Wharton's $243,000, which includes housing and is mandatory for every student. No page offers local students an opt-out. Recorded in `docs/decisions.md`.
-- **On-site days.** `onsiteDaysPerYear` is null because Global Network Week's dates and length are not published ("August 2027"). If you know or can find its length, the January 2027 year-1 count is 43 + that.
+- **On-site days (from Yami, Oct 10).** Global Network Week is 5 days for U.S.-campus students ("Students based on U.S. campuses (Miami or Chicago) take courses for 5 days."). `onsiteDaysPerYear 48` = 6 orientation + 8 weekends x 4 + 5 intensive week + 5 Global Network Week, from the January 2027 first-year calendar; the second-year calendar is not published, so year 1 stands for both. Thursdays and Sundays count as full days.
+- **Class profile (Yami's screenshots, Oct 10).** The figures load as images or counters: 70% hold senior positions (Director 32%, VP 20%, C-Suite 18%; Manager 25%, Other 5%), average 15 years of experience (mid-80% 9 to 23), average age 39. senior_network stays 4, now on the published shares.
 - **Address.** The street address appears only in the directions link on the Miami schedule page, not as page text. Please check it on the page.
 
 **Mine (derived, assumed or set by hand):**
@@ -84,6 +86,10 @@ Every source in the record, with the value it backs. **no quote** means the valu
 | campusAddress | 95 Merrick Way # 100, Coral Gables, FL 33134 | 95 Merrick Way # 100, Coral Gables, FL 33134 (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/ |
 | attendance | recurring_weekends | Take classes once a month, beginning Thursday afternoon and ending midday Sunday. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/ |
 | residencyCount | 11 | February 4 - 7, 2027 March 4 - 7, 2027 April 1 - 4, 2027 May 20 - May 23, 2027 June 24 - 27, 2027 July 13 - 17, 2027 (Intensive week) August 2027 (Global network week) September 9 - 12, 2027 October 7 - 10, 2027 November 4 - 7, 2027 (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/ |
+| onsiteDaysPerYear | 48 | Programming: January 12 - 17, 2027 (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/ |
+| onsiteDaysPerYear | 48 | Take classes once a month, beginning Thursday afternoon and ending midday Sunday. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/ |
+| onsiteDaysPerYear | 48 | July 13 - 17, 2027 (Intensive week) August 2027 (Global network week) (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/ |
+| onsiteDaysPerYear | 48 | Students based on U.S. campuses (Miami or Chicago) take courses for 5 days. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/global-network-week/ |
 | longestStretchDays | 6 | Programming: January 12 - 17, 2027 (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/ |
 | paymentOptions | ["installments", "employer_sponsorship"] | Tuition is billed by academic quarter. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/ |
 | paymentOptions | ["installments", "employer_sponsorship"] | If your organization is providing financial sponsorship, please state that in the letter as well. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/ |
@@ -92,7 +98,8 @@ Every source in the record, with the value it backs. **no quote** means the valu
 | tuitionIncludes | Kellogg's published 2026-2027 estimated expenses for the whole two-year program: tuition $205,486 plus required food and housing $42,986. It covers classes, e-books, a hotel room at the Hyatt Regency Coral Gables, three meals a day, career services and accommodation for one global elective. Not covered: travel to and from campus and international travel for global electives. | Individual rooms at the Omni All Suites Hotel (Chicago campus) or Hyatt Regency Coral Gables (Miami campus) (checked 2026-10-10) | https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/ |
 | tuitionIncludes | Kellogg's published 2026-2027 estimated expenses for the whole two-year program: tuition $205,486 plus required food and housing $42,986. It covers classes, e-books, a hotel room at the Hyatt Regency Coral Gables, three meals a day, career services and accommodation for one global elective. Not covered: travel to and from campus and international travel for global electives. | designed to be comprehensive and all-inclusive (checked 2026-10-10) | https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/ |
 | cohortMedianExperienceYears | 15 | Students in our program have an average of 15 years of work experience, including military service, (checked 2026-10-10) | https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/ |
-| ratingNotes | (rating notes) | Hold senior positions (Director + VP + C-Suite) (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/ |
+| cohortMedianExperienceYears | 15 | 15 Average years of work experience 9 23 Work experience range (mid-80%) (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/ |
+| ratingNotes | (rating notes) | 70% Hold senior positions (Director + VP + C-Suite) (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/ |
 | ratingNotes | (rating notes) | You are required to take all core courses, which you take at the same time as other students in your cohort. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/core-courses/ |
 | ratingNotes | (rating notes) | The series consists of five workshops (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/leadership-development.aspx |
 | ratingNotes | (rating notes) | Executive Perspectives on Leadership (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/core-courses/ |
@@ -100,6 +107,7 @@ Every source in the record, with the value it backs. **no quote** means the valu
 | ratingNotes | (rating notes) | These specializations are not recorded on the transcript or diploma. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/specializations |
 | ratingNotes | (rating notes) | Shift to a new function or industry with tools from the CMC that help you: (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/ |
 | ratingNotes | (rating notes) | CMC coaching sessions are tailored to experienced professionals making high-impact decisions. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/ |
+| ratingNotes | (rating notes) | Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/ |
 | onsiteNote | Thursday afternoon to midday Sunday once a month in Coral Gables (Miami), plus four intensive weeks a program, including orientation and Global Network Week in Evanston. | **no quote** | |
 | state | Florida | **no quote** | |
 | campusLat | 25.7497 | **no quote** | |
@@ -115,5 +123,5 @@ Every source in the record, with the value it backs. **no quote** means the valu
 | leadership_skills | 4 | Required core courses Leadership and Executive Perspectives on Leadership, five team workshops and an executive leadership coach. |
 | deep_expertise | 3 | A general MBA of 19 required core courses, including a capstone; specializations are not recorded on the diploma. |
 | graduate_degree | 5 | Awards an MBA after two years. |
-| senior_network | 4 | Classmates average 15 years of experience and hold director, VP and C-suite roles; four days together monthly. |
+| senior_network | 4 | 70% hold director, VP or C-suite roles; classmates average 15 years of experience; four days together monthly. |
 | new_industry_or_city | 4 | Career coaching for experienced professionals, including tools to shift to a new function or industry. |
