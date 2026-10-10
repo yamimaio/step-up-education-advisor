@@ -105,7 +105,7 @@ Research attached
 [^1]: kellogg-emba-miami.md
 
 
-## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: pending)
+## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: Yami)
 
 Claude's independent rating under rate-program v3, from Claude's own official-page research (`kellogg-emba-miami-claude-check.md`) and Perplexity's research file, written before reading Perplexity's rating answer above.
 
