@@ -141,8 +141,13 @@ const normalizeSourceField = (field: string) =>
   SOURCE_FIELD_MAP[field] ?? (field.startsWith("paymentOptions.") ? "paymentOptions" : field);
 
 // Facts the research got wrong or left out that later school material settles (a brochure, the
-// published schedule). Each one needs its own entry in extraSources.
+// published schedule), or that it nulled against B1 (a price from another intake). Each one needs
+// its own entry in extraSources.
 const SOURCED_OVERRIDE_KEYS = [
+  "format",
+  "tuitionUsd",
+  "tuitionIncludes",
+  "paymentOptions",
   "workCompatible",
   "cohortMedianExperienceYears",
   "onsiteDaysPerYear",
@@ -303,7 +308,8 @@ export function convertResearch(input: {
   }
   if (raw.nextStartDate != null) notes.push("nextStartDate dropped (DQ7).");
 
-  const online = raw.format === "online";
+  // An overridden format decides the online rules too (attendance none, no lodging).
+  const online = (overrides.format ?? raw.format) === "online";
   const rawSources = (Array.isArray(raw.sources) ? raw.sources : []).filter(isObject);
 
   // Payment options: fixed values only, an unknown string is a hard error.
