@@ -544,8 +544,8 @@
       }
     ],
     "verification": {
-      "status": "draft",
-      "verifiedBy": null
+      "status": "verified",
+      "verifiedBy": "Yami Maio"
     },
     "locationOffers": ["network_density", "industry_hub"]
   },

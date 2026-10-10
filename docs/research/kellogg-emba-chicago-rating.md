@@ -2,7 +2,7 @@
 
 No Perplexity rating was run for this campus (see `kellogg-emba-chicago.md`).
 
-## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: pending)
+## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: Yami)
 
 The same ratings as `kellogg-emba-miami` (rate-program v3, Oct 10): the two campuses share the curriculum, class profile and career services. Only the senior_network note changes, for Chicago's schedule.
 
