@@ -229,13 +229,25 @@ function overLimit(e: ProgramEvaluation): boolean {
   return e.status === "near_miss" && e.checks.some((c) => c.status === "near_miss" && isOver(c));
 }
 
+// Up to RUNNER_UP_LIMIT of the sorted programs, keeping the best pass when there is one. The
+// access card says the alternative has a program "within your limits" whenever one of its
+// programs passes, so near misses over nothing that outscore it mustn't push it out of the
+// list the card points to (#247 review round 2).
+function withBestPass(sorted: ProgramEvaluation[]): ProgramEvaluation[] {
+  const top = sorted.slice(0, RUNNER_UP_LIMIT);
+  const pass = sorted.find((e) => e.status === "pass");
+  if (pass === undefined || top.includes(pass)) return top;
+  return [...top.slice(0, RUNNER_UP_LIMIT - 1), pass];
+}
+
 // One list: the confirmed category's programs within or near the limits (passes and near misses
-// over nothing first, by score; then near misses over a published limit), then up
-// to RUNNER_UP_LIMIT passing programs of the runner-up category. When the confirmed category has
+// over nothing first, by score; then near misses over a published limit), then up to
+// RUNNER_UP_LIMIT passing programs of the runner-up category. When the confirmed category has
 // nothing within or near the limits, "Also worth a look" holds the programs of the category the
-// access card names instead (`access.alternative`), in the same order, so the list never comes
-// back empty while a program is within reach. A ruled-out type is never listed. With no
-// confirmed category (an unresolved tie) nothing is listed yet.
+// access card names instead (`access.alternative`), in the same order and always with its best
+// pass if it has one, so the list never comes back empty while a program is within reach. A
+// ruled-out type is never listed. With no confirmed category (an unresolved tie) nothing is
+// listed yet.
 export function rankPrograms(
   evaluations: ProgramEvaluation[],
   category: Pick<CategoryResult, "winner" | "runnerUp" | "scores">,
@@ -260,10 +272,10 @@ export function rankPrograms(
   const alsoWorthALook =
     other === winner
       ? []
-      : listed(other)
-          .filter((e) => instead || e.status === "pass")
-          .sort(passFirst)
-          .slice(0, RUNNER_UP_LIMIT)
-          .map((e): RankedProgram => ({ id: e.id, why: whyLine("Also worth a look", e.score) }));
+      : withBestPass(
+          listed(other)
+            .filter((e) => instead || e.status === "pass")
+            .sort(passFirst),
+        ).map((e): RankedProgram => ({ id: e.id, why: whyLine("Also worth a look", e.score) }));
   return { ranked, alsoWorthALook };
 }

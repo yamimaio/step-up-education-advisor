@@ -545,6 +545,50 @@ describe("Also worth a look", () => {
     expect(ids(r.alsoWorthALook)).toEqual(["fake-s3", "fake-s2"]);
   });
 
+  it("keeps the alternative's best pass, which the access card points to (#247 review round 2)", () => {
+    // Two near misses over nothing outscore the only pass; the card says the type has a program
+    // "within your limits", so the pass keeps the last slot.
+    const withShort = { ...confirmed, scores: { ...scores, short_course: 10 } };
+    const r = rank(
+      [
+        ev("fake-exec", { status: "fail" }),
+        ev("fake-s1", { category: "short_course", total: 45, ...unpublished }),
+        ev("fake-s2", { category: "short_course", total: 40, ...unpublished }),
+        ev("fake-s3", { category: "short_course", total: 35, ...unpublished }),
+        ev("fake-pass", { category: "short_course", total: 20 }),
+      ],
+      withShort,
+      "short_course",
+    );
+    expect(ids(r.alsoWorthALook)).toEqual(["fake-s1", "fake-pass"]);
+  });
+
+  it("leaves the alternative list by score when its pass already has a slot, or it has none", () => {
+    const withShort = { ...confirmed, scores: { ...scores, short_course: 10 } };
+    const short = (id: string, total: number, over = {}) =>
+      ev(id, { category: "short_course", total, ...over });
+    const passListed = rank(
+      [
+        short("fake-s1", 45, unpublished),
+        short("fake-pass", 40),
+        short("fake-s2", 35, unpublished),
+      ],
+      withShort,
+      "short_course",
+    );
+    expect(ids(passListed.alsoWorthALook)).toEqual(["fake-s1", "fake-pass"]);
+    const noPass = rank(
+      [
+        short("fake-s1", 45, unpublished),
+        short("fake-s2", 40, overLimit),
+        short("fake-s3", 35, unpublished),
+      ],
+      withShort,
+      "short_course",
+    );
+    expect(ids(noPass.alsoWorthALook)).toEqual(["fake-s1", "fake-s3"]);
+  });
+
   it("lists the runner-up's near miss when it is the only program within reach (review #86)", () => {
     // Persona A who can spend at most a day on site, a day at a time: every program fails but
     // the online certificate, a near miss on unpublished hours.
