@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import { fixtureDataset } from "../../tests/fixtures/dataset";
 import { personaAProfile } from "../../tests/fixtures/profiles";
-import { ProfileSchema } from "../schema/profile";
+import { checkContradictions } from "../engine/contradictions";
+import { ProfileSchema, type Profile } from "../schema/profile";
 import { CHIP_FIELDS, CHIP_TARGET } from "./chips";
 import { pickOf, STAGE_1_CHECKLIST, STAGE_2_CHECKLIST } from "./fields";
 import {
@@ -11,6 +13,7 @@ import {
   AskChoiceInput,
   CheckContradictionsInput,
   DIRECTION_DECLINABLE,
+  DirectionDraftSchema,
   DirectionSchema,
   ProposeDirectionInput,
   ProposeSearchInput,
@@ -251,5 +254,53 @@ describe("A declined stage 1 field holds null, never an invented answer", () => 
     expect(engine.needs).toEqual(direction.needs);
     expect(engine.hoursPerWeek).toEqual(direction.hoursPerWeek);
     expect(engine.careerGoal).toEqual(direction.careerGoal);
+  });
+});
+
+// check_contradictions takes a draft, not the whole profile (the API's limit on optional
+// parameters), so the draft must hold every field a rule reads, or the rule can never fire.
+describe("the check_contradictions draft holds every field the rules read", () => {
+  const programs = fixtureDataset();
+  const draftOf = (profile: Profile) =>
+    Object.fromEntries(Object.entries(profile).filter(([k]) => k in DirectionDraftSchema.shape));
+
+  // One profile per rule, each built to fire it. A new rule needs a line here.
+  const firing: [string, Profile][] = [
+    ["R1", { ...personaAProfile, maxOnsiteDays: 5 }],
+    ["R2", { ...personaAProfile, degreeRequired: "required", tuitionBudgetUsd: 1000 }],
+    [
+      "R3",
+      {
+        ...personaAProfile,
+        needs: ["new_industry_or_city", "leadership_skills", "deep_expertise"],
+        relocate: false,
+        maxOnsiteDays: 0,
+      },
+    ],
+    ["R4", { ...personaAProfile, hoursPerWeek: { min: 0, max: 5 } }],
+    ["R5", { ...personaAProfile, travelComfort: "burden" }],
+    [
+      "R6",
+      {
+        ...personaAProfile,
+        needs: ["deep_expertise", "leadership_skills", "senior_network"],
+        maxStretchDays: 7,
+      },
+    ],
+  ];
+
+  it("has a firing profile for every rule", () => {
+    const fired = new Set(
+      firing.flatMap(([, p]) => checkContradictions(p, programs).map((t) => t.id)),
+    );
+    expect([...fired].sort()).toEqual(["R1", "R2", "R3", "R4", "R5", "R6"]);
+  });
+
+  it.each(firing)("%s fires the same on the draft as on the whole profile", (id, profile) => {
+    const draft = draftOf(profile);
+    expect(CheckContradictionsInput.safeParse({ profile: draft }).success).toBe(true);
+    const whole = checkContradictions(profile, programs);
+    expect(whole.map((t) => t.id)).toContain(id);
+    expect(checkContradictions(draft, programs)).toEqual(whole);
   });
 });

@@ -285,7 +285,11 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
         }
         results = [errorResult(use.id, checked.problems)];
       } else if (use.name === "propose_search") {
-        const checked = validateProposeSearch(use.input, [...history, ...added.slice(0, -1)]);
+        const checked = validateProposeSearch(
+          use.input,
+          [...history, ...added.slice(0, -1)],
+          deps.programs,
+        );
         if (checked.ok) {
           confirm = { toolUseId: use.id, profile: checked.profile };
           shown.push(said);

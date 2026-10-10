@@ -249,6 +249,7 @@ The server answers with `is_error` and the problems, so the model asks again, wi
 - `homeCountry` is not a real ISO 3166-1 alpha-2 code ("XX", "UK");
 - no `propose_direction` card has been confirmed, or the last confirmed one fails its own checks against the history before it;
 - `check_contradictions` hasn't been called since that confirm;
+- a contradiction rule fires on the profile the engine would run on, the user hasn't resolved it (`resolvedTensions`), and no `check_contradictions` result in the history returned it. So a check sent without the stage 2 answers can't hide a stage 2 tension. Whether the user resolves a tension the advisor did see stays the advisor's call, as in stage 1;
 - **the stage 1 answers changed since that confirm**: a stage 1 field on the search card differs from the confirmed direction (a field declined on one and not the other counts), or the user tapped a stage 1 chip set after the confirm with another value. The problem tells the advisor to ask again with `ask_choice` if needed, call `check_contradictions` and `propose_direction` again, and only then `propose_search`;
 - a stage 2 chip field's value doesn't equal the user's **latest** tap for that field (`locationValues` in the order tapped), unless the field is named in `declined`.
 

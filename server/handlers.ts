@@ -23,6 +23,8 @@ import {
   chipValue,
   lastConfirmedDirectionCall,
   latestTaps,
+  parseJson,
+  toolCalls,
   type Message,
 } from "./history";
 import { searchSummary } from "./stage2";
@@ -255,12 +257,28 @@ const HOME_FIELDS = ["homeCity", "homeRegion", "homeCountry", "homeLat", "homeLo
 const ASK_HOME_AGAIN =
   'Ask the user where they live again, or, if they won\'t say, name homeCity, homeRegion, homeCountry, homeLat and homeLon in declined ("" for the city and country, null for the rest).';
 
+// The tension ids any check_contradictions result in the history returned to the advisor.
+function tensionsReturned(history: Message[]): Set<string> {
+  const ids = new Set<string>();
+  for (const { use, result } of toolCalls(history)) {
+    if (use.name !== "check_contradictions" || !result || result.is_error) continue;
+    const tensions = (parseJson(result.content) as { tensions?: unknown } | undefined)?.tensions;
+    if (!Array.isArray(tensions)) continue;
+    for (const t of tensions) {
+      const id = (t as { id?: unknown } | null)?.id;
+      if (typeof id === "string") ids.add(id);
+    }
+  }
+  return ids;
+}
+
 // The checks before the stage 2 card shows (docs/chat-api.md, "Validation the server does on
 // propose_search"). `history` is everything before the call. On success, `profile` is what the
 // engine runs on: the stage 1 answers from the confirmed direction, the rest from the card.
 export function validateProposeSearch(
   input: unknown,
   history: Message[],
+  programs: Program[],
 ): { ok: true; direction: Direction; profile: Profile } | { ok: false; problems: string } {
   const parsed = ProposeSearchInput.safeParse(input);
   if (!parsed.success) {
@@ -315,9 +333,26 @@ export function validateProposeSearch(
       `homeCountry is not an ISO 3166-1 alpha-2 country code (for example AR or US). ${ASK_HOME_AGAIN}`,
     );
   }
+  const profile = toEngineProfile(direction, card);
+  // A tension that fires on the card's answers must have reached the advisor through
+  // check_contradictions, so the server, not the model's choice of what to send, decides that
+  // the user saw it. Whether the user resolved it stays the advisor's call, as in stage 1.
+  const seen = tensionsReturned(history);
+  const unseen = checkContradictions(profile, programs).filter(
+    (t) => !t.resolved && !seen.has(t.id),
+  );
+  if (unseen.length) {
+    problems.push(
+      `These tensions fire on the card's answers, but check_contradictions never returned them: ${unseen
+        .map((t) => `${t.id} (${t.text})`)
+        .join(
+          "; ",
+        )}. Call check_contradictions with the stage 1 answers and the stage 2 answers it takes, raise each tension with the user and record their choice in resolvedTensions, then call propose_search again.`,
+    );
+  }
   return problems.length
     ? { ok: false, problems: problems.join("\n") }
-    : { ok: true, direction, profile: toEngineProfile(direction, card) };
+    : { ok: true, direction, profile };
 }
 
 // A confirm of the stage 2 card becomes { confirmed: true, result }, where result is a summary
@@ -337,7 +372,7 @@ export function rewriteSearchConfirm(
     checkTyped(answer.corrections);
     return null;
   }
-  const checked = validateProposeSearch(callInput, historyBeforeCall);
+  const checked = validateProposeSearch(callInput, historyBeforeCall, programs);
   if (!checked.ok) throw new BadRequest("confirmed search card fails validation");
   const { category } = recommendCategory(toEngineDirection(checked.direction), programs);
   const result = evaluatePrograms(checked.profile, category, programs, today);

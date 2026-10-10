@@ -142,15 +142,17 @@ export async function walkToSearchCard(page: Page) {
 }
 
 // Runs persona A up to, not including, the last stage 2 tap (currentRole): a test can post that
-// tap against its own script.
-export async function walkToLastStage2Tap(page: Page) {
+// tap against its own script. `taps` replaces persona A's tap for a field, so a test can make a
+// contradiction rule fire.
+export async function walkToLastStage2Tap(page: Page, taps: Record<string, string[]> = {}) {
   await walkToLastTap(page);
   await page.tap(...PERSONA_A_TAPS.degreeRequired!);
   await page.confirm();
   await page.type(PERSONA_A_PROGRAMS_YES);
   await page.type(PERSONA_A_BACKGROUND_ANSWER);
   while (page.last?.chips && page.last.chips.field !== "currentRole") {
-    await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    const field = page.last.chips.field;
+    await page.tap(...(taps[field] ?? PERSONA_A_TAPS[field]!));
   }
   if (page.last?.chips?.field !== "currentRole") throw new Error("walk lost its way");
   return page.last.chips.toolUseId;

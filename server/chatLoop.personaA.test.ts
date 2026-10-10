@@ -480,9 +480,9 @@ describe("the posted message must answer what is pending", () => {
 
 // Persona A up to the last stage 2 tap (currentRole), then a scripted model for the turn under
 // test. The tap is posted as persona A's.
-async function atLastStage2Tap(script: Script) {
+async function atLastStage2Tap(script: Script, taps: Record<string, string[]> = {}) {
   const page = new Page(new FakeModelClient(personaAScript), programs);
-  const toolUseId = await walkToLastStage2Tap(page);
+  const toolUseId = await walkToLastStage2Tap(page, taps);
   const model = new FakeModelClient(script);
   page.model = model;
   const r = await page.post(answer(toolUseId, { chosen: PERSONA_A_TAPS.currentRole }));
@@ -647,6 +647,55 @@ describe("the server checks the stage 2 card before it shows", () => {
     };
     const { r } = await atLastStage2Tap([checkAll(), search(declinedHome)]);
     expect(r.confirm?.profile?.homeCountry).toBe("");
+  });
+});
+
+// Persona A with no days on site: R1 fires (a senior network first, fewer than 10 days).
+describe("a tension that fires in stage 2 must reach the advisor before the card", () => {
+  const noDaysOnSite = { maxOnsiteDays: ["None"] };
+  const card = { ...personaAProfile, maxOnsiteDays: 0 };
+
+  it("refuses the card when check_contradictions never returned it", async () => {
+    // The model sends only the stage 1 answers, so R1 can't fire in its check.
+    const stage1Only = turn(
+      toolUse("check_contradictions", { profile: { needs: personaAProfile.needs } }),
+    );
+    const { r } = await atLastStage2Tap(
+      [stage1Only, search(card), turn(text("Let me check that properly."))],
+      noDaysOnSite,
+    );
+    expect(r.confirm).toBeNull();
+    const [err] = errorResultsIn(r.messages);
+    expect(err).toMatchObject({ content: expect.stringContaining("R1 (") });
+    expect(err).toMatchObject({ content: expect.stringContaining("never returned them") });
+  });
+
+  it("shows the card once check_contradictions returned it", async () => {
+    const withStage2 = turn(
+      toolUse("check_contradictions", {
+        profile: { needs: personaAProfile.needs, maxOnsiteDays: 0 },
+      }),
+    );
+    const { r } = await atLastStage2Tap([withStage2, search(card)], noDaysOnSite);
+    expect(lastBlocks(r.messages[1])[0]).toMatchObject({
+      content: expect.stringContaining('"id":"R1"'),
+    });
+    expect(r.confirm?.profile?.maxOnsiteDays).toBe(0);
+  });
+
+  it("shows the card when the user already resolved it", async () => {
+    const resolved = { ...card, resolvedTensions: [{ rule: "R1", chosen: "network" }] };
+    const { r } = await atLastStage2Tap([checkAll(), search(resolved)], noDaysOnSite);
+    expect(r.confirm?.profile?.resolvedTensions).toEqual([{ rule: "R1", chosen: "network" }]);
+  });
+
+  it("lets persona A's fake, which sends the stage 2 answers, reach the programs", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    const id = await walkToLastStage2Tap(page, noDaysOnSite);
+    let r = await page.post(answer(id, { chosen: PERSONA_A_TAPS.currentRole }));
+    expect(r.confirm?.profile?.maxOnsiteDays).toBe(0);
+    r = await page.confirm();
+    expect(r.programs).not.toBeNull();
   });
 });
 
