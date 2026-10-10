@@ -4,10 +4,11 @@
     "industry_hub"
   ],
   "attendance": "recurring_weekends",
-  "onsiteNote": "every-other-weekend residential format",
+  "onsiteNote": "Friday and Saturday classes every other week, with some three-day weekends and several extended sessions; opening class sessions in Philadelphia and a one-week Global Business Week in the second year.",
+  "durationMonths": 22,
   "lodgingIncluded": true,
   "tuitionUsd": 243000,
-  "tuitionIncludes": "Tuition, program fees, and housing and dining for regular class weekends and required modular courses; textbooks are not included.",
+  "tuitionIncludes": "Tuition, program fees, and housing and dining for regular class weekends and required modular courses (a hotel room on Friday nights). Not included: books and supplies, travel to and from campus (including Global Business Week airfare), personal expenses during class weekends, and hotels and dining for elective modular courses or additional class weekends.",
   "paymentOptions": [
     "installments",
     "employer_sponsorship",
@@ -24,24 +25,19 @@
     "tuitionUsd": "Price for the class entering in 2026; the 2027 price is not published.",
     "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028.",
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
-    "campusLon": "Derived from campusAddress (approximate, from the street address)."
+    "campusLon": "Derived from campusAddress (approximate, from the street address).",
+    "durationMonths": "The school's published length; the 2027-2029 San Francisco calendar runs from May 29, 2027 to May 15, 2029."
   },
   "replaceSources": [
     "tuitionUsd",
-    "cohortMedianExperienceYears"
+    "cohortMedianExperienceYears",
+    "tuitionIncludes"
   ],
   "extraSources": [
     {
       "field": "tuitionUsd",
       "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
       "quote": "Tuition and fees for the class entering in 2026 is $243,000 or $40,500 per academic term.",
-      "checkedOn": "2026-10-10",
-      "kind": "official_page"
-    },
-    {
-      "field": "tuitionIncludes",
-      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
-      "quote": "Please note that this does not include the cost of textbooks.",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
     },
@@ -53,22 +49,115 @@
       "kind": "official_page"
     },
     {
-      "field": "attendance",
-      "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
-      "quote": "every-other-weekend residential format",
-      "checkedOn": "2026-10-08"
-    },
-    {
-      "field": "tuitionIncludes",
-      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
-      "quote": "Housing and dining for regular class weekends and for required modular courses.",
-      "checkedOn": "2026-10-08"
-    },
-    {
       "field": "paymentOptions",
       "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
       "quote": "Program tuition is due in six equal installments.",
       "checkedOn": "2026-10-08"
+    },
+    {
+      "field": "durationMonths",
+      "url": "https://executivemba.wharton.upenn.edu/mba-or-emba/",
+      "quote": "22 months, plus an Orientation Program Session in Philadelphia",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "attendance",
+      "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+      "quote": "every-other-weekend residential format",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "attendance",
+      "url": "https://executivemba.wharton.upenn.edu/emba-academic-calendar/",
+      "quote": "Classes on Friday and Saturday, every other week, with some three-day weekends.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteNote",
+      "url": "https://executivemba.wharton.upenn.edu/emba-academic-calendar/",
+      "quote": "All students (San Francisco, Philadelphia, and Global) start in Philadelphia with opening class sessions.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteNote",
+      "url": "https://executivemba.wharton.upenn.edu/emba-academic-calendar/",
+      "quote": "All students participate in Global Business Week, a week-long global experience in the second year.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteNote",
+      "url": "https://executivemba.wharton.upenn.edu/emba-program-details/",
+      "quote": "Students attend classes every other weekend, with several additional extended sessions through the program.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Housing and dining for regular class weekends and for required modular courses",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Please note that this does not include the cost of textbooks.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Books and supplies",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Travel to and from campus",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Personal expenses during class weekends",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Hotels and dining for elective modular courses or for additional class weekends",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/mba-or-emba/",
+      "quote": "Transportation, airfare for Global Business Week, and parking are not included.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "lodgingIncluded",
+      "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+      "quote": "The program provides hotel rooms on Friday night during program weekends.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "lodgingIncluded",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "All charges are mandatory for all students, regardless of whether they choose to stay in a provided hotel space",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
     },
     {
       "field": "cohortMedianExperienceYears",
