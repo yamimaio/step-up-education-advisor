@@ -251,6 +251,35 @@ describe("failures", () => {
     expect(recordProblems(record)).toEqual([]);
   });
 
+  it("lets the overrides set a price from another intake (B1) with a source", () => {
+    const s = sample();
+    const base = s.overrides as { extraSources?: unknown[] };
+    s.overrides = { ...base, tuitionUsd: 243000, paymentOptions: ["installments", "loans"] };
+    expect(() => convertResearch(s)).toThrow(
+      /sets tuitionUsd, paymentOptions without a matching extraSources entry/,
+    );
+    const price = {
+      field: "tuitionUsd",
+      url: "https://example.edu/fake-sample/tuition",
+      quote: "Tuition for the class entering in 2026 is $243,000.",
+      checkedOn: "2026-10-10",
+    };
+    s.overrides = {
+      ...base,
+      tuitionUsd: 243000,
+      paymentOptions: ["installments", "loans"],
+      extraSources: [
+        ...(base.extraSources ?? []),
+        price,
+        { ...price, field: "paymentOptions", quote: "six equal installments ... loans" },
+      ],
+    };
+    const { record } = convertResearch(s);
+    expect(record.tuitionUsd).toBe(243000);
+    expect(record.paymentOptions).toEqual(["installments", "loans"]);
+    expect(recordProblems(record)).toEqual([]);
+  });
+
   it("drops the research sources of a field the overrides replace", () => {
     const s = sample();
     const base = s.overrides as { extraSources?: unknown[] };

@@ -141,9 +141,13 @@ const normalizeSourceField = (field: string) =>
   SOURCE_FIELD_MAP[field] ?? (field.startsWith("paymentOptions.") ? "paymentOptions" : field);
 
 // Facts the research got wrong or left out that later school material settles (a brochure, the
-// published schedule). Each one needs its own entry in extraSources.
+// published schedule), or that it nulled against B1 (a price from another intake). Each one needs
+// its own entry in extraSources.
 const SOURCED_OVERRIDE_KEYS = [
   "format",
+  "tuitionUsd",
+  "tuitionIncludes",
+  "paymentOptions",
   "workCompatible",
   "cohortMedianExperienceYears",
   "onsiteDaysPerYear",
