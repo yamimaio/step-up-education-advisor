@@ -37,7 +37,7 @@ export function logRateLimited(window: "minute" | "hour"): void {
 }
 
 // Temporary (issue #186): which client-address headers reach the app on the host, to confirm the
-// rate limit's key. Counts and booleans only, never an address. Remove once confirmed.
+// rate limit's key. Counts and booleans only, never an address. Removed by #190 once confirmed.
 export function logClientHeaders(shape: ClientHeaderShape): void {
   // Rebuilt field by field, like logRequest.
   const line: ClientHeaderShape = {

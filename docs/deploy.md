@@ -60,13 +60,13 @@ Keep one instance: the rate limit is held in memory, so a second instance would 
 2. Play persona A (`personas/A.md`) to the verdict. The answers come from the real model, not the scripted fake.
 3. In Render, open the service's **Logs**. Each chat request logs one `{"event":"chat_request",...}` line with counts and statuses. No line holds message text.
 4. In the Console, the Step Up workspace's usage shows the spend from the test run.
-5. The rate limit counts each visitor separately. The limiter (#186) keys on `CF-Connecting-IP`, which Cloudflare sets in front of Render, and falls back to the last `X-Forwarded-For` entry when it is missing; that can only be checked live. Do it last, since it uses up your own quota for a minute. While the temporary diagnostic from #186 is in, each chat request also logs a `{"event":"chat_client_headers",...}` line: on Render it should show `"cfConnectingIp":true`. If it shows `false`, the limiter is on the fallback; take it back to #186:
+5. The rate limit counts each visitor separately. The limiter (#186) keys on `CF-Connecting-IP`, which Cloudflare sets in front of Render, and falls back to the last `X-Forwarded-For` entry when it is missing; that can only be checked live. Do it last, since it uses up your own quota for a minute. Until #190 removes it, each chat request also logs a temporary `{"event":"chat_client_headers",...}` line: on Render it should show `"cfConnectingIp":true`. If it shows `false`, the limiter is on the fallback; take it back to #190:
    1. On a laptop on home Wi-Fi, open the site, open the browser's developer console and run this. It sends empty requests, which count toward the limit but never reach the model:
       ```js
       for (let i = 0; i < 25; i++) console.log((await fetch("/api/chat", { method: "POST", body: "{}" })).status);
       ```
       The first ones print `400` (empty request) and the rest `429` once the per-minute limit (`server/limits.ts`) is reached. All `400` means the limit isn't working.
-   2. Within that minute, on a phone on mobile data (not the same Wi-Fi), open the site and send a message. It gets an answer. A "Wait … seconds" notice means every visitor shares one address: don't announce the URL, and take it back to #186.
+   2. Within that minute, on a phone on mobile data (not the same Wi-Fi), open the site and send a message. It gets an answer. A "Wait … seconds" notice means every visitor shares one address: don't announce the URL, and take it back to #190.
 
 When all five hold, tick the boxes in #123 and close it.
 

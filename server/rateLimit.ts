@@ -80,7 +80,7 @@ export function clientAddress(headers: Headers): string {
 }
 
 // Which client-address headers a request carries, as counts and booleans only, for the temporary
-// diagnostic log of issue #186. No address leaves this function.
+// diagnostic log of issue #186 (removed by #190). No address leaves this function.
 export function clientHeaderShape(headers: Headers): ClientHeaderShape {
   return {
     forwardedFor: forwardedFor(headers).length,
