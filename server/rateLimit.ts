@@ -64,18 +64,58 @@ export class RateLimiter {
   }
 }
 
-// The client's address: the last entry of X-Forwarded-For, the one the host's proxy added for
-// the connection it received (earlier entries come from the client and can be forged). Next.js
-// fills the header with the socket address only when no proxy sent one. Then X-Real-IP, then one
-// shared bucket. Never logged.
+// The client's key: the last entry of X-Forwarded-For, the one the host's proxy appended for the
+// connection it received (earlier entries come from the client and can be forged). That entry is
+// trustworthy only behind the host's proxy. Next.js fills the header with the socket address only
+// when it is missing, so with no proxy in front (local dev) a client that sends its own header
+// chooses its key. No entry means one shared bucket. Never logged.
 export function clientAddress(headers: Headers): string {
-  const forwarded = (headers.get("x-forwarded-for") ?? "")
+  const address = (headers.get("x-forwarded-for") ?? "")
     .split(",")
     .map((s) => s.trim())
-    .filter(Boolean);
-  const address = forwarded.at(-1) ?? headers.get("x-real-ip")?.trim();
+    .filter(Boolean)
+    .at(-1);
   // An address is at most 45 characters (IPv6 with an IPv4 tail); anything longer isn't one.
-  return address && address.length <= 45 ? address : "unknown";
+  return address && address.length <= 45 ? clientKey(address) : "unknown";
+}
+
+// An IPv6 address counts by its /64, since one host usually holds a whole /64 and could send each
+// request from a new address in it. An IPv4-mapped address counts as its IPv4 form. Anything that
+// doesn't parse as IPv6 is used as it is.
+export function clientKey(address: string): string {
+  if (!address.includes(":")) return address;
+  const hextets = expandIPv6(address.replace(/%.*$/, ""));
+  if (!hextets) return address;
+  if (hextets.slice(0, 5).every((h) => h === 0) && hextets[5] === 0xffff) {
+    const [hi, lo] = [hextets[6]!, hextets[7]!];
+    return [hi >> 8, hi & 0xff, lo >> 8, lo & 0xff].join(".");
+  }
+  return `${hextets
+    .slice(0, 4)
+    .map((h) => h.toString(16))
+    .join(":")}::/64`;
+}
+
+// The eight 16-bit groups of an IPv6 address, or null if it isn't one.
+function expandIPv6(address: string): number[] | null {
+  let text = address.toLowerCase();
+  // An IPv4 tail ("::ffff:203.0.113.7") is the last two groups.
+  const v4 = /^(.*:)(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(text);
+  if (v4) {
+    const bytes = v4.slice(2).map(Number);
+    if (bytes.some((b) => b > 255)) return null;
+    text = `${v4[1]}${((bytes[0]! << 8) | bytes[1]!).toString(16)}:${((bytes[2]! << 8) | bytes[3]!).toString(16)}`;
+  }
+  const halves = text.split("::");
+  if (halves.length > 2) return null;
+  const groups = (part: string) => (part ? part.split(":") : []);
+  const head = groups(halves[0]!);
+  const tail = halves.length === 2 ? groups(halves[1]!) : [];
+  const missing = 8 - head.length - tail.length;
+  if (halves.length === 2 ? missing < 1 : missing !== 0) return null;
+  const all = [...head, ...Array<string>(missing).fill("0"), ...tail];
+  if (!all.every((g) => /^[0-9a-f]{1,4}$/.test(g))) return null;
+  return all.map((g) => parseInt(g, 16));
 }
 
 export const chatRateLimiter = new RateLimiter({

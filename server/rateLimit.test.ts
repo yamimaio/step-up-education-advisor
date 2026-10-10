@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RATE_LIMIT_PER_HOUR, RATE_LIMIT_PER_MINUTE } from "./limits";
-import { clientAddress, RateLimiter } from "./rateLimit";
+import { clientAddress, clientKey, RateLimiter } from "./rateLimit";
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -87,16 +87,46 @@ describe("clientAddress", () => {
     expect(clientAddress(headers({ "x-forwarded-for": "1.1.1.1, 203.0.113.7" }))).toBe(
       "203.0.113.7",
     );
-    expect(clientAddress(headers({ "x-forwarded-for": "2001:db8::1" }))).toBe("2001:db8::1");
+    expect(clientAddress(headers({ "x-forwarded-for": "2001:db8::1" }))).toBe("2001:db8:0:0::/64");
   });
 
-  it("falls back to X-Real-IP, then one shared bucket", () => {
-    expect(clientAddress(headers({ "x-real-ip": "198.51.100.2" }))).toBe("198.51.100.2");
+  it("uses one shared bucket with no entry, and ignores X-Real-IP", () => {
+    // Next.js always fills X-Forwarded-For, so an X-Real-IP fallback would never run.
+    expect(clientAddress(headers({ "x-real-ip": "198.51.100.2" }))).toBe("unknown");
     expect(clientAddress(headers({ "x-forwarded-for": " , " }))).toBe("unknown");
     expect(clientAddress(headers({}))).toBe("unknown");
   });
 
   it("refuses a value too long to be an address", () => {
     expect(clientAddress(headers({ "x-forwarded-for": "x".repeat(46) }))).toBe("unknown");
+  });
+});
+
+describe("clientKey", () => {
+  it("keys an IPv6 address by its /64, so addresses in one /64 share a bucket", () => {
+    const a = clientKey("2001:db8:85a3:12::1");
+    expect(a).toBe("2001:db8:85a3:12::/64");
+    expect(clientKey("2001:0DB8:85a3:0012:ffff:1:2:3")).toBe(a);
+    expect(clientKey("2001:db8:85a3:13::1")).not.toBe(a);
+    expect(clientKey("fe80::1%eth0")).toBe("fe80:0:0:0::/64");
+  });
+
+  it("keys an IPv4-mapped address as its IPv4 form", () => {
+    expect(clientKey("::ffff:203.0.113.7")).toBe("203.0.113.7");
+    expect(clientKey("::ffff:cb00:7107")).toBe("203.0.113.7");
+  });
+
+  it("leaves IPv4 and anything that isn't IPv6 as it is", () => {
+    expect(clientKey("198.51.100.2")).toBe("198.51.100.2");
+    expect(clientKey("1:2:3::4::5")).toBe("1:2:3::4::5");
+    expect(clientKey("1:2:3:4:5:6:7:8:9")).toBe("1:2:3:4:5:6:7:8:9");
+    expect(clientKey("::ffff:300.0.0.1")).toBe("::ffff:300.0.0.1");
+  });
+
+  it("shares a bucket across a /64 in the limiter", () => {
+    const rl = new RateLimiter({ perMinute: 1, perHour: 5, maxClients: 10 }, () => 0);
+    const from = (ip: string) => clientAddress(new Headers({ "x-forwarded-for": ip }));
+    expect(rl.take(from("2001:db8:1:2::a")).ok).toBe(true);
+    expect(rl.take(from("2001:db8:1:2::b")).ok).toBe(false);
   });
 });
