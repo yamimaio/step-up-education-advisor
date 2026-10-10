@@ -122,6 +122,19 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
     );
   });
 
+  it("names what separates the winner from the runner-up when the needs don't", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain(
+      "When the needs don't separate the winner from the runner-up (`decidingNeeds` is empty), name the reason that does",
+    );
+  });
+
+  it('matches the engine: a ruled-out type\'s reasons start with "Out:"', () => {
+    expect(section("Deliver the verdict")).toContain(
+      'A type is ruled out only when its reasons start with "Out:"',
+    );
+  });
+
   it("takes every loss reason from the type's reasons, so no length reason is invented", () => {
     const verdict = section("Deliver the verdict");
     expect(verdict).toContain("only from that type's `reasons`");

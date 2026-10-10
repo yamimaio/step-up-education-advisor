@@ -87,6 +87,8 @@ export const RATING_WORDS: Record<Rating, string> = {
   2: "Little help with",
   1: "Little help with",
 };
+// For graduate_degree on a type in REQUIRED_RULES_OUT, in place of its rating words.
+export const NO_DEGREE_WORDS = "Doesn't award a graduate degree.";
 export const DEGREE_WORDS = {
   no: "Built around a degree you said you don't need.",
   unsure: "Built around a degree you're not sure you need.",

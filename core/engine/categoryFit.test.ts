@@ -131,10 +131,30 @@ describe("A tie is not broken by formula", () => {
 
 describe("The two needs that decided it", () => {
   it("are the needs with the largest weighted gap between winner and runner-up", () => {
-    const result = score({ degreeRequired: "no" });
-    // worked-example needs: network, leadership, expertise
-    expect(result.winner).toBe("executive");
-    expect(result.decidingNeeds).toHaveLength(2);
+    // EMBA over MBA, both 26: degree 3x(5-5), new city 2x(3-5), network 1x(5-1). Only the
+    // network is in the EMBA's favour.
+    const result = score({
+      needs: ["graduate_degree", "new_industry_or_city", "senior_network"],
+      degreeRequired: "required",
+      tieBreaker: "emba",
+    });
+    expect(result).toMatchObject({ winner: "emba", runnerUp: "mba" });
+    expect(result.decidingNeeds).toEqual(["senior_network"]);
+  });
+
+  it("leaves out needs the runner-up serves as well (persona A: empty)", () => {
+    // Persona A: network, leadership, expertise, degree "no". The executive program and the EMBA
+    // are both 5/5/3 on those needs; only the EMBA's degree reason separates them.
+    const result = score({
+      needs: ["senior_network", "leadership_skills", "deep_expertise"],
+      degreeRequired: "no",
+    });
+    expect(result).toMatchObject({ winner: "executive", runnerUp: "emba" });
+    expect(result.decidingNeeds).toEqual([]);
+    expect(result.reasons.emba).toContain("Built around a degree you said you don't need.");
+    expect(result.reasons.executive).not.toContain(
+      "Built around a degree you said you don't need.",
+    );
   });
 
   it("measures against the lowest rating when there is no runner-up", () => {
@@ -202,6 +222,32 @@ describe("An unresolved tie has no winner", () => {
   });
 });
 
+describe('A ruled-out type\'s reasons start with "Out:"', () => {
+  it("puts the degree reason first, before the need words", () => {
+    const { scores, reasons } = score({
+      needs: ["senior_network", "leadership_skills", "deep_expertise"],
+      degreeRequired: "required",
+    });
+    expect(scores.executive).toBe("out");
+    expect(reasons.executive).toEqual([
+      "Out: you need a degree and this type does not award one.",
+      "Strong for a senior network and leadership skills.",
+      "Some help with deep expertise in a field.",
+    ]);
+  });
+
+  it("puts the limits reason first, and only ruled-out types have one", () => {
+    const profile = applyDeclinedDefaults(makeProfile({ maxProgramMonths: 3 })).profile;
+    const r = categoryFit(profile, [{ id: "a", category: "mba" }], [{ id: "a", status: "fail" }]);
+    expect(r.reasons.mba[0]).toMatch(/^Out: no program of this type is within your limits/);
+    for (const [c, why] of Object.entries(r.reasons)) {
+      const out = r.scores[c as keyof typeof r.scores] === "out";
+      expect(why[0]?.startsWith("Out:")).toBe(out);
+      expect(why.slice(1).some((w) => w.startsWith("Out:"))).toBe(false);
+    }
+  });
+});
+
 describe("A ruled-out type says which checks ruled it out", () => {
   it("names the failed checks in plain words", () => {
     const profile = applyDeclinedDefaults(makeProfile({ maxProgramMonths: 3 })).profile;
@@ -251,6 +297,18 @@ describe("Reasons are in words, never scores (issue #130)", () => {
       "Some help with deep expertise in a field.",
     ]);
     expect(reasons.emba).toContain("Built around a degree you said you don't need.");
+  });
+
+  it("says a type that awards no degree doesn't award one, in place of its rating words", () => {
+    const { reasons } = score({
+      needs: ["graduate_degree", "leadership_skills", "senior_network"],
+      degreeRequired: "preferred",
+    });
+    for (const c of ["executive", "certificate", "short_course"] as const) {
+      expect(reasons[c][0]).toBe("Doesn't award a graduate degree.");
+      expect(reasons[c].join(" ")).not.toContain("help with a graduate degree");
+    }
+    expect(reasons.mba[0]).toBe("Strong for a graduate degree.");
   });
 
   it("puts no number in any reason", () => {

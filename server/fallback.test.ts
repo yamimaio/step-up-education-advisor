@@ -59,6 +59,15 @@ describe("the verdict survives a failed model call (plan test 6, DQ3)", () => {
 });
 
 describe("the template explanation", () => {
+  it("skips the deciding-needs line when the needs don't separate the top two (persona A)", () => {
+    // No records, so the EMBA isn't out on length and is the runner-up, as strong on every need.
+    const result = recommendCategory(toEngineDirection(PERSONA_A_DIRECTION as never), []);
+    expect(result.category).toMatchObject({ runnerUp: "emba", decidingNeeds: [] });
+    const text = fallbackExplanation(result);
+    expect(text).toContain("My verdict: an executive program.");
+    expect(text).not.toContain("It fits best on");
+  });
+
   it("names a not-yet trigger and still asks about programs", () => {
     const unclear = recommendCategory(
       toEngineDirection({ ...PERSONA_A_DIRECTION, goalClarity: "unclear" } as never),

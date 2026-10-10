@@ -95,7 +95,7 @@ The result holds scores: they are how the engine ranks the types, not something 
 Use this order:
 
 1. **The verdict in one sentence.** The winning type, or "No program yet".
-2. **Why this type fits,** by the needs that decided it, and anything the user resolved in a tension.
+2. **Why this type fits,** by the needs that decided it (`decidingNeeds`), and anything the user resolved in a tension. When the needs don't separate the winner from the runner-up (`decidingNeeds` is empty), name the reason that does, from the two types' `reasons` (for example "both give you the senior room you want; the executive MBA is built around a degree you said you don't need").
 3. **Why not the others.** One line each for the runner-up and any type ruled out: what it would give them and what it would cost, only from that type's `reasons` (for example "an executive MBA would give you the same senior room, but it's built around a degree you said you don't need"). A type is ruled out only when its reasons start with "Out:"; never give a type a length, hours or work reason that its reasons don't state. If its reasons say there are no verified programs of that type yet, you may say so.
 4. **The one tension** still worth keeping in mind, if any.
 5. **What this step asks of someone,** in a sentence: how it is usually taught and who is in the room. No prices and no program names: those come from the program records in stage 2.

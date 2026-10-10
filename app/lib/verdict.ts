@@ -17,7 +17,8 @@ export type VerdictView = {
   tie: [string, string] | null;
   decidingNeeds: string[];
   tensions: string[];
-  // Every type, best fit first and ruled-out types last, with the engine's reasons in words.
+  // Every type, with the engine's reasons in words: the winner, the runner-up, then the rest best
+  // fit first, ruled-out types last. With no scores shown, this order is the ranking the user sees.
   rows: VerdictRow[];
   notAnswered: string[];
 };
@@ -35,9 +36,11 @@ const rank = (s: number | "out") => (s === "out" ? Number.MIN_SAFE_INTEGER : s);
 
 export function verdictView({ direction, result }: Verdict): VerdictView {
   const { category, noProgram, profileGaps } = result;
+  // A tie the user broke leaves the winner and runner-up on the same score, so name them first.
+  const lead = (c: Category) => (c === category.winner ? 0 : c === category.runnerUp ? 1 : 2);
   const rows = (Object.keys(category.scores) as Category[])
     .map((c) => ({ c, s: category.scores[c] }))
-    .sort((a, b) => rank(b.s) - rank(a.s))
+    .sort((a, b) => lead(a.c) - lead(b.c) || rank(b.s) - rank(a.s))
     .map(({ c, s }) => ({
       category: c,
       name: CATEGORY_LABELS[c],

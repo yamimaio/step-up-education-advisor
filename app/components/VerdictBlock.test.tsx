@@ -16,15 +16,32 @@ const verdictFor = (direction: Direction) => ({
 const block = () => screen.getByRole("region", { name: "Your verdict" }).textContent ?? "";
 
 describe("VerdictBlock", () => {
-  it("names the category, the runner-up and the deciding needs from the engine result", () => {
+  it("names the category and the runner-up from the engine result", () => {
     const verdict = verdictFor(personaADirection);
     render(<VerdictBlock verdict={verdict} />);
     const text = block();
     expect(verdict.result.category.winner).toBe("executive");
     expect(text).toContain("Executive program");
-    expect(text).toMatch(/Runner-up: \S/);
-    expect(text).toContain("Deciding needs: A senior network");
+    expect(text).toContain("Runner-up: Executive MBA");
     expect(text).toContain("Executive programStrong for a senior network and leadership skills.");
+  });
+
+  it("shows no deciding needs when the runner-up is as strong on every need (persona A)", () => {
+    const verdict = verdictFor(personaADirection);
+    expect(verdict.result.category.decidingNeeds).toEqual([]);
+    render(<VerdictBlock verdict={verdict} />);
+    expect(block()).not.toContain("Deciding needs");
+  });
+
+  it("shows the deciding needs when they separate the winner from the runner-up", () => {
+    const verdict = verdictFor({
+      ...personaADirection,
+      needs: ["graduate_degree", "new_industry_or_city", "senior_network"],
+      degreeRequired: "required",
+      tieBreaker: "emba",
+    });
+    render(<VerdictBlock verdict={verdict} />);
+    expect(block()).toContain("Deciding needs: A senior network");
   });
 
   it("shows no scores, subtotals or points (issue #130)", () => {

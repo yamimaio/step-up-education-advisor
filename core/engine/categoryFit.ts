@@ -11,6 +11,7 @@ import {
   GROW_IN_ROLE_WORDS,
   NEED_WEIGHTS,
   NEED_WORDS,
+  NO_DEGREE_WORDS,
   RATING_WORDS,
   RATING_MIN,
   REQUIRED_RULES_OUT,
@@ -52,15 +53,20 @@ export function failedChecks(checkLists: Check[][]): CheckId[] {
 
 // How a type serves the user's ranked needs, in words and in their order: "Strong for a senior
 // network and leadership skills." then "Some help with deep expertise in a field." (issue #130).
+// A type that awards no degree says so rather than "Little help with a graduate degree.".
 export function needsInWords(category: Category, needs: Need[]): string[] {
   const groups = new Map<string, string[]>();
   for (const need of needs) {
+    if (need === "graduate_degree" && REQUIRED_RULES_OUT.includes(category)) {
+      groups.set(NO_DEGREE_WORDS, []);
+      continue;
+    }
     const word = RATING_WORDS[TYPE_RATINGS[category][need]];
     groups.set(word, [...(groups.get(word) ?? []), NEED_WORDS[need]]);
   }
   const and = (items: string[]) =>
     items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
-  return [...groups].map(([word, items]) => `${word} ${and(items)}.`);
+  return [...groups].map(([word, items]) => (items.length ? `${word} ${and(items)}.` : word));
 }
 
 // Stage 1: pick the type of program before any specific program. `evaluations` hold each
@@ -84,17 +90,17 @@ export function categoryFit(
       (sum, need, i) => sum + (NEED_WEIGHTS[i] ?? 0) * TYPE_RATINGS[category][need],
       0,
     );
-    why.push(
-      ...(profile.needs.length > 0
+    const needWords =
+      profile.needs.length > 0
         ? needsInWords(category, profile.needs)
-        : ["No ranked needs: you chose not to say."]),
-    );
+        : ["No ranked needs: you chose not to say."];
 
     const records = programs.filter((p) => p.category === category);
     const reachable = records.some((p) => statusById.get(p.id) !== "fail");
 
+    // A ruled-out type's reasons start with "Out:" (advisor.md, "Deliver the verdict").
     if (profile.degreeRequired === "required" && REQUIRED_RULES_OUT.includes(category)) {
-      why.push("Out: you need a degree and this type does not award one.");
+      why.push("Out: you need a degree and this type does not award one.", ...needWords);
       scores[category] = "out";
       continue;
     }
@@ -106,10 +112,12 @@ export function categoryFit(
       );
       why.push(
         `Out: no program of this type is within your limits${names.length ? ` (${names.join(", ")})` : ""}.`,
+        ...needWords,
       );
       scores[category] = "out";
       continue;
     }
+    why.push(...needWords);
 
     let score = subtotal;
     const degree = profile.degreeRequired;
@@ -160,8 +168,10 @@ export function categoryFit(
   };
 }
 
-// The two needs where weight × (winner rating − runner-up rating) is largest; ties go to the
-// higher-ranked need. With no runner-up the baseline is the lowest rating.
+// Up to two needs where weight × (winner rating − runner-up rating) is largest; ties go to the
+// higher-ranked need. With no runner-up the baseline is the lowest rating. A need the runner-up
+// serves as well (gap 0) didn't decide it, so it is left out: with equal needs the list is empty
+// and the degree or grow-in-role reason is what separates them.
 function decidingNeeds(needs: Need[], winner: Category | null, runnerUp: Category | null): Need[] {
   if (!winner) return [];
   return needs
@@ -172,6 +182,7 @@ function decidingNeeds(needs: Need[], winner: Category | null, runnerUp: Categor
         (NEED_WEIGHTS[i] ?? 0) *
         (TYPE_RATINGS[winner][need] - (runnerUp ? TYPE_RATINGS[runnerUp][need] : RATING_MIN)),
     }))
+    .filter((x) => x.gap > 0)
     .sort((a, b) => b.gap - a.gap || a.i - b.i)
     .slice(0, 2)
     .map((x) => x.need);

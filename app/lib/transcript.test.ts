@@ -94,6 +94,9 @@ describe("buildTranscript", () => {
       "| Executive program | Strong for a senior network and leadership skills.",
     );
     expect(md).not.toMatch(/\| Score \||subtotal/);
+    // Persona A: the runner-up is as strong on every need, so there's no deciding-needs line.
+    expect(verdict.result.category.decidingNeeds).toEqual([]);
+    expect(md).not.toContain("Deciding needs");
   });
 
   it("includes the template explanation shown after a failed confirm", () => {
