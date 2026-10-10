@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { recommendCategory } from "@core/engine/direction";
 import { toEngineDirection } from "@core/advisor/tools";
 import { personaADirection } from "../../tests/fixtures/directions";
+import { personaAProfile } from "../../tests/fixtures/profiles";
 import { answered, ask, tap } from "../../tests/fixtures/pageHistory";
-import type { MessageParam } from "./chatTypes";
+import { toolResultMessage, type MessageParam } from "./chatTypes";
 import { progressSteps, type StepState } from "./progress";
 
 const none = { history: [] as MessageParam[], confirm: null, verdict: null };
@@ -140,6 +141,39 @@ describe("progressSteps", () => {
       "done",
       "done",
       "done",
+    ]);
+  });
+
+  it("stays all done in stage 2, with the search card pending or corrected", () => {
+    const search = { toolUseId: "s1", profile: personaAProfile };
+    expect(states({ history: [], confirm: search, verdict })).toEqual([
+      "done",
+      "done",
+      "done",
+      "done",
+    ]);
+    const corrected: MessageParam[] = [
+      {
+        role: "assistant",
+        content: [{ type: "tool_use", id: "s1", name: "propose_search", input: {} }],
+      },
+      toolResultMessage("s1", { confirmed: false, corrections: "My budget is $30k" }),
+    ];
+    expect(states({ history: corrected, confirm: null, verdict })).toEqual([
+      "done",
+      "done",
+      "done",
+      "done",
+    ]);
+  });
+
+  it("doesn't take a search card for the stage 1 card", () => {
+    const search = { toolUseId: "s1", profile: personaAProfile };
+    expect(states({ history: [], confirm: search, verdict: null })).toEqual([
+      "current",
+      "todo",
+      "todo",
+      "todo",
     ]);
   });
 });

@@ -99,6 +99,57 @@ describe("clientAddress", () => {
 
   it("refuses a value too long to be an address", () => {
     expect(clientAddress(headers({ "x-forwarded-for": "x".repeat(46) }))).toBe("unknown");
+    expect(clientAddress(headers({ "cf-connecting-ip": "x".repeat(46) }))).toBe("unknown");
+  });
+
+  // Issue #186: on Render, Cloudflare sets CF-Connecting-IP and the last X-Forwarded-For entry is a
+  // proxy address that changes between requests.
+  it("prefers CF-Connecting-IP over X-Forwarded-For", () => {
+    expect(
+      clientAddress(
+        headers({
+          "cf-connecting-ip": "198.51.100.9",
+          "x-forwarded-for": "198.51.100.9, 10.0.0.4",
+        }),
+      ),
+    ).toBe("198.51.100.9");
+    expect(clientAddress(headers({ "cf-connecting-ip": " 2001:db8:1:2::a " }))).toBe(
+      "2001:db8:1:2::/64",
+    );
+  });
+
+  it("falls back to the last X-Forwarded-For entry when CF-Connecting-IP is missing or empty", () => {
+    expect(clientAddress(headers({ "x-forwarded-for": "1.1.1.1, 203.0.113.7" }))).toBe(
+      "203.0.113.7",
+    );
+    expect(
+      clientAddress(
+        headers({ "cf-connecting-ip": " ", "x-forwarded-for": "1.1.1.1, 203.0.113.7" }),
+      ),
+    ).toBe("203.0.113.7");
+  });
+
+  it("ignores True-Client-IP", () => {
+    expect(
+      clientAddress(
+        headers({ "true-client-ip": "198.51.100.9", "x-forwarded-for": "203.0.113.7" }),
+      ),
+    ).toBe("203.0.113.7");
+  });
+
+  it("keeps one visitor in one bucket behind CF-Connecting-IP, whatever X-Forwarded-For says", () => {
+    const rl = new RateLimiter({ perMinute: 2, perHour: 5, maxClients: 10 }, () => 0);
+    // A visitor forging a new first entry each time, with Render's proxy appending a new last one.
+    const from = (i: number) =>
+      clientAddress(
+        headers({
+          "cf-connecting-ip": "198.51.100.9",
+          "x-forwarded-for": `203.0.113.${i}, 10.0.0.${i}`,
+        }),
+      );
+    expect(rl.take(from(1)).ok).toBe(true);
+    expect(rl.take(from(2)).ok).toBe(true);
+    expect(rl.take(from(3)).ok).toBe(false);
   });
 });
 

@@ -2,11 +2,18 @@ import { describe, expect, it } from "vitest";
 import { categoryFit, failedChecks } from "./categoryFit";
 import { applyDeclinedDefaults } from "./normalize";
 import { makeProfile } from "../../tests/fixtures/profiles";
-import type { Need } from "../schema/enums";
+import type { Category, Need } from "../schema/enums";
 import type { Profile } from "../schema/profile";
 
 // With no program records no type is ruled out on length or cost (D6), so the scores are
 // the matrix subtotal plus adjustments.
+// A program record as categoryFit reads it: id, type and verification status.
+const rec = (id: string, category: Category, status: "draft" | "verified" = "verified") => ({
+  id,
+  category,
+  verification: { status },
+});
+
 const score = (o: Partial<Profile>) =>
   categoryFit(applyDeclinedDefaults(makeProfile(o)).profile, [], []);
 
@@ -84,7 +91,7 @@ describe("A type with no records is never ruled out (D6, S8-9)", () => {
   it("keeps a score and notes the missing data", () => {
     const result = categoryFit(
       applyDeclinedDefaults(makeProfile()).profile,
-      [{ id: "fake-executive", category: "executive" }],
+      [rec("fake-executive", "executive")],
       [{ id: "fake-executive", status: "pass" }],
     );
     expect(result.scores.mba).not.toBe("out");
@@ -92,10 +99,7 @@ describe("A type with no records is never ruled out (D6, S8-9)", () => {
   });
 
   it("rules out a type whose every record fails, and keeps one with a near miss", () => {
-    const programs = [
-      { id: "a", category: "mba" as const },
-      { id: "b", category: "emba" as const },
-    ];
+    const programs = [rec("a", "mba"), rec("b", "emba")];
     const result = categoryFit(applyDeclinedDefaults(makeProfile()).profile, programs, [
       { id: "a", status: "fail" },
       { id: "b", status: "near_miss" },
@@ -167,11 +171,7 @@ describe("The two needs that decided it", () => {
           degreeRequired: "required",
         }),
       ).profile,
-      [
-        { id: "a", category: "mba" },
-        { id: "b", category: "emba" },
-        { id: "c", category: "specialized_masters" },
-      ],
+      [rec("a", "mba"), rec("b", "emba"), rec("c", "specialized_masters")],
       [
         { id: "a", status: "fail" },
         { id: "b", status: "fail" },
@@ -185,12 +185,7 @@ describe("The two needs that decided it", () => {
   it("is empty when every type is out", () => {
     const result = categoryFit(
       applyDeclinedDefaults(makeProfile({ degreeRequired: "required" })).profile,
-      [
-        { id: "a", category: "mba" },
-        { id: "b", category: "emba" },
-        { id: "c", category: "specialized_masters" },
-        { id: "d", category: "executive" },
-      ],
+      [rec("a", "mba"), rec("b", "emba"), rec("c", "specialized_masters"), rec("d", "executive")],
       [
         { id: "a", status: "fail" },
         { id: "b", status: "fail" },
@@ -238,8 +233,10 @@ describe('A ruled-out type\'s reasons start with "Out:"', () => {
 
   it("puts the limits reason first, and only ruled-out types have one", () => {
     const profile = applyDeclinedDefaults(makeProfile({ maxProgramMonths: 3 })).profile;
-    const r = categoryFit(profile, [{ id: "a", category: "mba" }], [{ id: "a", status: "fail" }]);
-    expect(r.reasons.mba[0]).toMatch(/^Out: no program of this type is within your limits/);
+    const r = categoryFit(profile, [rec("a", "mba")], [{ id: "a", status: "fail" }]);
+    expect(r.reasons.mba[0]).toBe(
+      "Out: the one full-time MBA program Step Up has verified so far isn't within your limits.",
+    );
     for (const [c, why] of Object.entries(r.reasons)) {
       const out = r.scores[c as keyof typeof r.scores] === "out";
       expect(why[0]?.startsWith("Out:")).toBe(out);
@@ -251,7 +248,7 @@ describe('A ruled-out type\'s reasons start with "Out:"', () => {
 describe("A ruled-out type says which checks ruled it out", () => {
   it("names the failed checks in plain words", () => {
     const profile = applyDeclinedDefaults(makeProfile({ maxProgramMonths: 3 })).profile;
-    const programs = [{ id: "a", category: "mba" as const }];
+    const programs = [rec("a", "mba")];
     const checks = [
       {
         id: "length" as const,
@@ -264,6 +261,78 @@ describe("A ruled-out type says which checks ruled it out", () => {
     ];
     const r = categoryFit(profile, programs, [{ id: "a", status: "fail", checks }]);
     expect(r.reasons.mba.join(" ")).toMatch(/within your limits \(program length\)/);
+  });
+});
+
+describe("A ruled-out type speaks of the programs Step Up has verified (issue #188)", () => {
+  const profile = applyDeclinedDefaults(makeProfile({ maxProgramMonths: 3 })).profile;
+  const length = [
+    {
+      id: "length" as const,
+      status: "fail" as const,
+      value: 22,
+      limit: 3,
+      unit: "",
+      unknown: false,
+    },
+  ];
+
+  it("names the type and the one record", () => {
+    const r = categoryFit(
+      profile,
+      [rec("a", "emba")],
+      [{ id: "a", status: "fail", checks: length }],
+    );
+    expect(r.scores.emba).toBe("out");
+    expect(r.reasons.emba[0]).toBe(
+      "Out: the one Executive MBA program Step Up has verified so far isn't within your limits (program length).",
+    );
+  });
+
+  it("names the type and how many records", () => {
+    const r = categoryFit(
+      profile,
+      [rec("a", "short_course"), rec("b", "short_course")],
+      [
+        { id: "a", status: "fail", checks: length },
+        { id: "b", status: "fail", checks: length },
+      ],
+    );
+    expect(r.reasons.short_course[0]).toBe(
+      "Out: none of the 2 short courses Step Up has verified so far is within your limits (program length).",
+    );
+  });
+
+  it("says the records are on record, not verified, when any is a draft", () => {
+    const r = categoryFit(
+      profile,
+      [rec("a", "emba", "draft")],
+      [{ id: "a", status: "fail", checks: length }],
+    );
+    expect(r.reasons.emba[0]).toBe(
+      "Out: the one Executive MBA program Step Up has on record so far isn't within your limits (program length).",
+    );
+    const mixed = categoryFit(
+      profile,
+      [rec("a", "emba"), rec("b", "emba", "draft")],
+      [
+        { id: "a", status: "fail", checks: length },
+        { id: "b", status: "fail", checks: length },
+      ],
+    );
+    expect(mixed.reasons.emba[0]).toBe(
+      "Out: none of the 2 Executive MBA programs Step Up has on record so far is within your limits (program length).",
+    );
+    expect(mixed.reasons.emba.join(" ")).not.toMatch(/verified/);
+  });
+
+  it("never claims that no program of the type exists", () => {
+    const r = categoryFit(
+      profile,
+      [rec("a", "emba")],
+      [{ id: "a", status: "fail", checks: length }],
+    );
+    expect(r.reasons.emba.join(" ")).not.toMatch(/no program of this type/);
   });
 });
 

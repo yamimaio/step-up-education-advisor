@@ -23,11 +23,14 @@ const tapped = (turn: ChipsTurn) => turn.typed === undefined;
 export function understood(
   state: Pick<ChatState, "history" | "confirm" | "verdict" | "lastCard">,
 ): Understood {
-  if (state.confirm) return { lines: directionLines(state.confirm.direction), note: null };
+  // The stage 1 card; the search card (stage 2) comes after the verdict, which the next line reads.
+  if (state.confirm && "direction" in state.confirm) {
+    return { lines: directionLines(state.confirm.direction), note: null };
+  }
   if (state.verdict) return { lines: directionLines(state.verdict.direction), note: null };
 
   const turns = toTurns(state.history);
-  const answeredAt = turns.findLastIndex((t) => t.kind === "confirm");
+  const answeredAt = turns.findLastIndex((t) => t.kind === "confirm" && t.stage === 1);
   const answer = turns[answeredAt];
   if (state.lastCard && answer?.kind === "confirm") {
     const lines = directionLines(state.lastCard);

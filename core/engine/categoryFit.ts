@@ -15,6 +15,7 @@ import {
   RATING_WORDS,
   RATING_MIN,
   REQUIRED_RULES_OUT,
+  TYPE_PROGRAM_WORDS,
   TYPE_RATINGS,
 } from "./constants";
 import type {
@@ -69,12 +70,32 @@ export function needsInWords(category: Category, needs: Need[]): string[] {
   return [...groups].map(([word, items]) => (items.length ? `${word} ${and(items)}.` : word));
 }
 
+// The reason a type with records is out. It speaks of the programs Step Up has, not of every
+// program of the type (issue #188): "Out: none of the 2 Executive MBA programs Step Up has
+// verified so far is within your limits (program length)." Drafts run too (D7), so with any draft
+// among them the records are "on record", not "verified".
+export function outOfLimits(
+  category: Category,
+  count: number,
+  allVerified: boolean,
+  checkNames: string[],
+): string {
+  const words = TYPE_PROGRAM_WORDS[category];
+  const has = allVerified ? "has verified" : "has on record";
+  const which = checkNames.length ? ` (${checkNames.join(", ")})` : "";
+  return count === 1
+    ? `Out: the one ${words.one} Step Up ${has} so far isn't within your limits${which}.`
+    : `Out: none of the ${count} ${words.many} Step Up ${has} so far is within your limits${which}.`;
+}
+
 // Stage 1: pick the type of program before any specific program. `evaluations` hold each
 // program's stage-1 checks (checkDirection), so a type is ruled out only by length, hours or
 // keeping a job, never by budget, travel or location.
 export function categoryFit(
   profile: EffectiveDirection,
-  programs: Pick<Program, "id" | "category">[],
+  programs: (Pick<Program, "id" | "category"> & {
+    verification: Pick<Program["verification"], "status">;
+  })[],
   evaluations: Evaluated[],
 ): CategoryResult {
   const scores = {} as Record<Category, number | "out">;
@@ -110,10 +131,8 @@ export function categoryFit(
       const names = failedChecks(records.map((p) => byId.get(p.id)?.checks ?? [])).map(
         (id) => CHECK_LABELS[id],
       );
-      why.push(
-        `Out: no program of this type is within your limits${names.length ? ` (${names.join(", ")})` : ""}.`,
-        ...needWords,
-      );
+      const allVerified = records.every((p) => p.verification.status === "verified");
+      why.push(outOfLimits(category, records.length, allVerified, names), ...needWords);
       scores[category] = "out";
       continue;
     }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { recommendCategory } from "@core/engine/direction";
 import { toEngineDirection } from "@core/advisor/tools";
 import { personaADirection } from "../../tests/fixtures/directions";
+import { personaAProfile } from "../../tests/fixtures/profiles";
 import { answered, ask, tap } from "../../tests/fixtures/pageHistory";
 import { chatReducer, initialChatState, type ChatState } from "./chatState";
 import { toolResultMessage, type ChatResponse, type MessageParam } from "./chatTypes";
@@ -22,6 +23,7 @@ const respond = (state: ChatState, r: Partial<ChatResponse>): ChatState =>
       chips: null,
       confirm: null,
       direction: null,
+      programs: null,
       counter: null,
       notice: null,
       ...r,
@@ -167,5 +169,30 @@ describe("understood", () => {
       confirm: { toolUseId: "p2", direction: personaADirection },
     });
     expect(understood(next).note).toBeNull();
+  });
+
+  it("keeps the confirmed card's lines in stage 2, whatever the search card does", () => {
+    const verdict = {
+      direction: personaADirection,
+      result: recommendCategory(toEngineDirection(personaADirection), []),
+    };
+    const search = { toolUseId: "s1", profile: personaAProfile };
+    expect(understood({ ...none, confirm: search, verdict })).toEqual({
+      lines: cardLines,
+      note: null,
+    });
+    const history = [
+      {
+        role: "assistant" as const,
+        content: [{ type: "tool_use", id: "s1", name: "propose_search", input: {} }],
+      },
+      toolResultMessage("s1", { confirmed: false, corrections: "My budget is $30k" }),
+    ];
+    expect(understood({ ...none, history, verdict })).toEqual({ lines: cardLines, note: null });
+  });
+
+  it("keeps the stage 1 card as lastCard when a search card arrives", () => {
+    const next = respond(withCard(), { confirm: { toolUseId: "s1", profile: personaAProfile } });
+    expect(next.lastCard).toEqual(personaADirection);
   });
 });

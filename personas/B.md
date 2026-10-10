@@ -19,7 +19,7 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 | keepWorking    | `Yes, I keep working`                                                                                |
 | degreeRequired | `Not sure`                                                                                           |
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 | Entry            | Answer                                               |
 | ---------------- | ---------------------------------------------------- |
@@ -49,7 +49,7 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 - `goalClarity`: unclear (set only after two follow-ups)
 - "No program yet", trigger `goal_unclear`. The advisor says why in plain words, gives two or three concrete moves that are not enrolling, and still ends with "Want to see programs that fit?"
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 - Programs, if shown, are labelled "if you decide to go anyway".
 

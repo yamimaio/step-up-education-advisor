@@ -42,9 +42,12 @@ export function progressSteps(
   const turns = toTurns(state.history);
   const tapped = (field: string) =>
     turns.some((t) => t.kind === "chips" && t.field === field && t.typed === undefined);
-  // The card has appeared: it is pending, or the user answered one, or confirmed it.
+  // The stage 1 card has appeared: it is pending, or the user answered one, or confirmed it. (The
+  // stage 2 search card only comes after the verdict.)
   const card =
-    state.confirm !== null || state.verdict !== null || turns.some((t) => t.kind === "confirm");
+    (state.confirm !== null && "direction" in state.confirm) ||
+    state.verdict !== null ||
+    turns.some((t) => t.kind === "confirm" && t.stage === 1);
   const done = [
     card || tapped("careerGoalKind"),
     card || tapped("needs"),

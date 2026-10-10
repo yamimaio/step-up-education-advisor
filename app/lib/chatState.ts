@@ -1,5 +1,6 @@
 import type { Direction } from "@core/advisor/tools";
-import type { DirectionResult } from "@core/engine/types";
+import type { DirectionResult, SearchResult } from "@core/engine/types";
+import type { Profile } from "@core/schema/profile";
 import type { ChatResponse, MessageParam, Notice, PendingChips, PendingConfirm } from "./chatTypes";
 
 // The page's chat state, in memory only (D3). The history holds exactly what the server returned
@@ -16,7 +17,7 @@ export type Status =
   | "blocked";
 
 // What was on screen before a send, so a refusal or an empty-input nudge can put it back. A
-// retried confirm that is refused also takes back the verdict its failed attempt showed.
+// retried confirm that is refused also takes back the verdict or programs its failed attempt showed.
 type Before = {
   chips: PendingChips | null;
   confirm: PendingConfirm | null;
@@ -24,16 +25,22 @@ type Before = {
   // The words sent from the card's "Change something" box, given back on a refusal.
   correction: string | null;
   verdict: Verdict | null;
+  results: Results | null;
   fallbackText: string | null;
 };
 
 export type Verdict = { direction: Direction; result: DirectionResult };
+
+// Stage 2: the search card the user confirmed (its toolUseId and profile) and the engine's result
+// for it. The chat draws the programs under that card's answer, not a later one's.
+export type Results = { toolUseId: string; profile: Profile; result: SearchResult };
 
 export type ChatState = {
   history: MessageParam[];
   chips: PendingChips | null;
   confirm: PendingConfirm | null;
   verdict: Verdict | null;
+  results: Results | null;
   // The template explanation after a confirm whose model call failed; shown, never in history.
   fallbackText: string | null;
   counter: { remaining: number } | null;
@@ -42,8 +49,8 @@ export type ChatState = {
   draft: string;
   // A refused correction, put back in the card's "Change something" box.
   correction: string | null;
-  // The last card the server showed, kept after it is answered, so the "What I've understood"
-  // panel can still read it while "Looks right" is sending or after "Change something".
+  // The last stage 1 card the server showed, kept after it is answered, so the "What I've
+  // understood" panel can still read it while "Looks right" is sending or after "Change something".
   lastCard: Direction | null;
   before: Before | null;
 };
@@ -53,6 +60,7 @@ export const initialChatState: ChatState = {
   chips: null,
   confirm: null,
   verdict: null,
+  results: null,
   fallbackText: null,
   counter: null,
   notice: null,
@@ -72,15 +80,36 @@ export type ChatAction =
   // 413 (no retry helps).
   | { type: "failure"; retry: boolean; message: string };
 
+// The card the last message answered, while the answer is in flight or just came back.
+function answeredCard(state: ChatState): PendingConfirm | null {
+  return state.before?.confirm ?? null;
+}
+
 // The direction the user just confirmed: the card answered by the last message.
 function confirmedDirection(state: ChatState): Direction | null {
-  return state.before?.confirm?.direction ?? state.verdict?.direction ?? null;
+  const card = answeredCard(state);
+  return card && "direction" in card ? card.direction : (state.verdict?.direction ?? null);
 }
 
 function withVerdict(state: ChatState, result: DirectionResult | null): Verdict | null {
   if (!result) return state.verdict;
   const direction = confirmedDirection(state);
   return direction ? { direction, result } : state.verdict;
+}
+
+// The programs after a response. A new verdict clears them: they were ranked for the direction it
+// replaces, and the advisor asks for a new search card before showing programs again. `programs`
+// is missing, not null, from a server that predates stage 2.
+function withResults(
+  state: ChatState,
+  r: Pick<ChatResponse, "direction" | "programs">,
+): Results | null {
+  if (r.direction) return null;
+  if (!r.programs) return state.results;
+  const card = answeredCard(state);
+  return card && "profile" in card
+    ? { toolUseId: card.toolUseId, profile: card.profile, result: r.programs }
+    : state.results;
 }
 
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
@@ -98,6 +127,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
           draft: state.draft,
           correction: action.correction ?? null,
           verdict: state.verdict,
+          results: state.results,
           fallbackText: state.fallbackText,
         },
         correction: null,
@@ -132,6 +162,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
             draft: "",
             correction: null,
             verdict: state.verdict,
+            results: state.results,
             fallbackText: state.fallbackText,
           };
           return {
@@ -142,6 +173,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
             draft: kind === "refusal" ? before.draft : "",
             correction: kind === "refusal" ? before.correction : null,
             verdict: before.verdict,
+            results: before.results,
             fallbackText: before.fallbackText,
             before: null,
             counter,
@@ -150,11 +182,13 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
           };
         }
         // retryable, unknown, auth_or_credit, limit: the history stays as posted. A failed confirm still
-        // carries the verdict and the template text, shown but not added to the history.
+        // carries the verdict or the programs and the template text, shown but not added to the history.
+        const confirmed = r.direction || r.programs;
         return {
           ...state,
           verdict: withVerdict(state, r.direction),
-          fallbackText: r.direction && r.text ? r.text : state.fallbackText,
+          results: withResults(state, r),
+          fallbackText: confirmed && r.text ? r.text : state.fallbackText,
           counter,
           notice: r.notice,
           status: kind === "auth_or_credit" || kind === "limit" ? "blocked" : "failed",
@@ -169,7 +203,8 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         chips: r.chips,
         confirm: r.confirm,
         verdict: withVerdict(state, r.direction),
-        lastCard: r.confirm?.direction ?? state.lastCard,
+        lastCard: r.confirm && "direction" in r.confirm ? r.confirm.direction : state.lastCard,
+        results: withResults(state, r),
         fallbackText: null,
         counter,
         notice: null,

@@ -19,7 +19,7 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 | keepWorking    | `No, I can stop`                                                                    |
 | degreeRequired | `Preferred`                                                                         |
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 | Entry            | Answer                                                       |
 | ---------------- | ------------------------------------------------------------ |
@@ -54,7 +54,7 @@ Hand-computed on the 1 to 5 category table (`docs/need-based-ranking.md`), not a
 - Tension to raise: none.
 - Ends with "Want to see programs that fit?"
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 - The data has no full-time MBA record yet, so the card says "no verified programs of this type yet" and the advisor does not invent one (a type with no records is never ruled out).
 
