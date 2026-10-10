@@ -236,7 +236,7 @@ describe("the page, stage 2", () => {
     expect(scrolled.at(-1)!.el).not.toBe(heading);
   });
 
-  it("keeps focus on Retry when the cards arrive with a failed reply", async () => {
+  it("leaves focus and the view on Retry when the cards arrive with a failed reply", async () => {
     queue[queue.length - 1] = {
       ...ok,
       programs: search,
@@ -247,7 +247,8 @@ describe("the page, stage 2", () => {
     const heading = within(results).getByRole("heading", { level: 2, name: "Programs that fit" });
     const retry = await screen.findByRole("button", { name: "Retry" });
     await waitFor(() => expect(document.activeElement).toBe(retry));
-    expect(scrolled.at(-1)).toEqual({ el: heading, options: { block: "start" } });
+    // No scroll to the heading, which would leave the focused Retry below the view.
+    expect(scrolled.some((s) => s.el === heading)).toBe(false);
   });
 
   it("keeps the programs under their own card's answer when a later search confirm fails", async () => {
