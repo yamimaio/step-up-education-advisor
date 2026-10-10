@@ -271,6 +271,18 @@ describe("advisor.md replies to a question typed while chips are open (issue #19
   });
 });
 
+describe("advisor.md shows the direction card once per set of answers (issue #203)", () => {
+  it("never calls propose_direction after a confirmed result unless an answer changed or it ties", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain(
+      "The verdict turn always has text. After a confirmed result, never call `propose_direction` again unless the user changed a stage 1 answer through `ask_choice` or the result is a tie.",
+    );
+    expect(verdict).toContain(
+      "If the user agrees with the verdict or asks about it, answer in words; the server refuses the same card twice.",
+    );
+  });
+});
+
 // Review round 1 (head 1ff2ee7): with no winner the engine lists nothing.
 describe("advisor.md offers programs only for a verdict that names a type", () => {
   it("drops the programs question with no winner and says the server refuses stage 2", () => {

@@ -387,3 +387,9 @@ Yami counted the review after the schema change as round 1.
 - Draft records run too (D7), so "verified" is said only when every record of the type is verified; with any draft among them the reason says "Step Up has on record so far" instead (review round 1). `categoryFit` reads each record's `verification.status` for this.
 - The type words live in `TYPE_PROGRAM_WORDS` (`core/engine/constants.ts`), since `core/` can't read the page labels in `app/lib/labels.ts`: "full-time MBA program", "Executive MBA program" (capitalized, as in the issue), "specialized master's program", "executive program", "certificate program", "short course", each with a plural.
 - `server/fallback.ts` gives the reason its own sentence after the type ("Ruled out: an executive MBA. The one Executive MBA program …"), so the type isn't named twice, with two different names, inside one sentence (review round 1).
+
+## The direction card shows once per set of answers (issue #203)
+
+- After a confirmed direction, the server refuses a `propose_direction` whose direction equals the last confirmed one, with `is_error` (`validateProposeDirection`, `server/handlers.ts`). The model is told the user already saw the verdict and to explain it in words.
+- "Equals" compares the whole card, the goal's description, `resolvedTensions` and `tieBreaker` included, ignoring key order and keys left undefined. Any changed answer, typed or tapped, or a new `tieBreaker` makes a new card, which passes. The check doesn't try to tell a real change of a typed answer from a rewording.
+- `advisor.md` ("Deliver the verdict") says the same: after a confirmed result, no new card unless a stage 1 answer changed through `ask_choice` or the result is a tie, and the verdict turn always has text.

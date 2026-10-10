@@ -28,6 +28,7 @@ import {
   personaAScript,
   RESULTS_TEXT,
   SIDE_QUESTION_REPLY,
+  VERDICT_TEXT,
 } from "./model/personaA";
 import { SYSTEM } from "./prompt";
 import { searchSummary } from "./stage2";
@@ -542,6 +543,81 @@ describe("the posted message must answer what is pending", () => {
     expect(errorResultsIn(r.messages)[0]).toMatchObject({
       content: expect.stringContaining("ask for it again with ask_choice on maxProgramMonths"),
     });
+  });
+});
+
+// Issue #203: after "Looks right", the same card came back under the verdict, and each press
+// showed the same card and verdict again.
+describe("the server shows a confirmed card only once (issue #203)", () => {
+  // Persona A to the direction card, then a scripted model for the turn after "Looks right".
+  async function atVerdict(script: Script) {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await walkToLastTap(page);
+    await page.tap(...PERSONA_A_TAPS.degreeRequired!);
+    page.model = new FakeModelClient(script);
+    const r = await page.confirm();
+    return { page, r };
+  }
+  const propose = (direction: object) => turn(toolUse("propose_direction", { direction }));
+
+  it("refuses the same card in the turn after the confirm, so the verdict comes in words", async () => {
+    const { r } = await atVerdict([propose(PERSONA_A_DIRECTION), turn(text(VERDICT_TEXT))]);
+    expect(r.direction?.category.winner).toBe("executive");
+    expect(r.confirm).toBeNull();
+    expect(r.text).toBe(VERDICT_TEXT);
+    const errors = errorResultsIn(r.messages);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
+      content: expect.stringContaining(
+        "The user already confirmed these answers and saw the verdict. Don't show the card again: explain the verdict in words.",
+      ),
+    });
+  });
+
+  it("refuses it on a later turn too, after check_contradictions runs again", async () => {
+    const { page } = await atVerdict([turn(text(VERDICT_TEXT))]);
+    page.model = new FakeModelClient([
+      checkAll(),
+      propose(PERSONA_A_DIRECTION),
+      turn(text("Glad it fits.")),
+    ]);
+    const r = await page.type("Yes, that verdict is right.");
+    expect(r.confirm).toBeNull();
+    expect(r.text).toBe("Glad it fits.");
+    expect(errorResultsIn(r.messages)).toHaveLength(1);
+  });
+
+  it("shows a new card after the user changed an answer through the chips", async () => {
+    const { page } = await atVerdict([turn(text(VERDICT_TEXT))]);
+    page.model = new FakeModelClient([
+      turn(
+        text("Let's change the length."),
+        toolUse("ask_choice", { field: "maxProgramMonths", question: "Length?" }),
+      ),
+    ]);
+    await page.type("Actually I could do two years.");
+    page.model = new FakeModelClient([
+      checkAll(),
+      propose({ ...PERSONA_A_DIRECTION, maxProgramMonths: 24 }),
+    ]);
+    let r = await page.tap("Up to 2 years");
+    expect(errorResultsIn(r.messages)).toHaveLength(0);
+    expect(r.confirm?.direction?.maxProgramMonths).toBe(24);
+
+    page.model = new FakeModelClient([turn(text("Here's the new verdict."))]);
+    r = await page.confirm();
+    expect(r.direction).not.toBeNull();
+  });
+
+  it("shows the card again with a tieBreaker", async () => {
+    const { page } = await atVerdict([turn(text(VERDICT_TEXT))]);
+    page.model = new FakeModelClient([
+      checkAll(),
+      propose({ ...PERSONA_A_DIRECTION, tieBreaker: "executive" }),
+    ]);
+    const r = await page.type("The executive program, if I had to pick.");
+    expect(errorResultsIn(r.messages)).toHaveLength(0);
+    expect(r.confirm?.direction?.tieBreaker).toBe("executive");
   });
 });
 

@@ -144,14 +144,19 @@ export function checkAskChoice(input: unknown, history: Message[], programs: Pro
   return ask;
 }
 
-// Deep equality that ignores object key order ({ min, max } and { max, min } are the same).
+// Deep equality that ignores object key order ({ min, max } and { max, min } are the same) and
+// keys set to undefined (a card with no tieBreaker, whether or not the key is there).
 function same(a: unknown, b: unknown): boolean {
   if (Array.isArray(a) && Array.isArray(b)) {
     return a.length === b.length && a.every((v, i) => same(v, b[i]));
   }
   if (typeof a === "object" && a !== null && typeof b === "object" && b !== null) {
-    const ka = Object.keys(a).sort();
-    const kb = Object.keys(b).sort();
+    const keys = (o: object) =>
+      Object.keys(o)
+        .filter((k) => (o as never)[k] !== undefined)
+        .sort();
+    const ka = keys(a);
+    const kb = keys(b);
     return same(ka, kb) && ka.every((k) => same((a as never)[k], (b as never)[k]));
   }
   return a === b;
@@ -167,6 +172,9 @@ function valueAt(answers: Direction | Profile, path: string): unknown {
     );
 }
 
+const ALREADY_CONFIRMED =
+  "The user already confirmed these answers and saw the verdict. Don't show the card again: explain the verdict in words. Call propose_direction again only after the user changes a stage 1 answer (through ask_choice for a chip field), or with tieBreaker set when the result is a tie.";
+
 // The checks before the confirm card shows (docs/chat-api.md, "Validation the server does on
 // propose_direction"). `history` is everything before the call. Problems go back to the model as
 // an is_error result, so it asks again.
@@ -177,6 +185,12 @@ export function validateProposeDirection(
   const parsed = ProposeDirectionInput.safeParse(input);
   if (!parsed.success) return { ok: false, problems: problemsOf(parsed.error) };
   const { direction } = parsed.data;
+  // The same card again after its verdict only loops the user through "Looks right" (issue
+  // #203). A changed answer or a tieBreaker makes it a new direction, which passes.
+  const confirmed = confirmedDirection(history);
+  if (confirmed && same(confirmed.direction, direction)) {
+    return { ok: false, problems: ALREADY_CONFIRMED };
+  }
   const problems: string[] = [];
   if (!calledBefore(history, "check_contradictions")) {
     problems.push("Call check_contradictions with the stage 1 answers before propose_direction.");

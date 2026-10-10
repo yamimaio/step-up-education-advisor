@@ -159,6 +159,7 @@ The server answers with `is_error` and the problems, so the model asks again, wi
 - the input fails `ProposeDirectionInput`;
 - `check_contradictions` hasn't been called in the history;
 - a chip field's value doesn't equal the user's **latest** tap for that field (`needs` in the order tapped). Taps are read from the history by label, through `CHIPS[field]`; a value written next to a label is never trusted. A typed answer is not a tap. A declined field (`null`, named in `declined`) is exempt.
+- a direction is already confirmed and the call's direction equals it, `tieBreaker` included (issue #203). The user saw that verdict; showing the same card again only loops them through "Looks right". A changed stage 1 answer or a new `tieBreaker` makes a new direction, which passes.
 
 ## Errors
 
