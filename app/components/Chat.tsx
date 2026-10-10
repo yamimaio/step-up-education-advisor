@@ -89,7 +89,7 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
             onSend={on.onChips}
           />
         )}
-        {state.confirm && (
+        {state.confirm?.direction && (
           <DirectionCard
             key={state.confirm.toolUseId}
             direction={state.confirm.direction}
@@ -98,6 +98,13 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
             onConfirm={on.onConfirm}
             onCorrect={on.onCorrect}
           />
+        )}
+        {/* The stage 2 card (docs/chat-api.md, "Stage 2") renders with #147; until then the
+            page says so instead of drawing the stage 1 card without a direction. */}
+        {state.confirm?.profile && (
+          <p role="status" className="text-sm text-neutral-600">
+            The program search card isn&apos;t on this page yet. Your verdict stands.
+          </p>
         )}
       </div>
 

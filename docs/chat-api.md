@@ -264,6 +264,6 @@ When the user confirms the search card, the page sends `{ confirmed: true }`. Th
 5. calls the model, which explains the list from that summary;
 6. returns the whole result in `programs`: `SearchResult`, the core type `evaluatePrograms` returns, unchanged. The program cards render from it and from the program records (`loadPrograms()`), never from model text.
 
-If the model fails after the confirm, the response still carries `programs` and a template explanation in `text` (`fallbackSearchExplanation` in `server/fallback.ts`: the access message, the ranked programs by name with their why lines, "Also worth a look" and the declined answers), with `notice` set, `replaceLastUserMessage` null and `messages` empty, as for the verdict.
+If the model fails after the confirm, the response still carries `programs` and a template explanation in `text` (`fallbackSearchExplanation` in `server/fallback.ts`: the access message, the ranked programs by name with their why lines and, for a near miss, why: slightly over a published limit, a figure the school doesn't publish, or an answer of the user's that is missing; "Also worth a look"; the declined answers in plain words; and an unknown airfare the user didn't decline), with `notice` set, `replaceLastUserMessage` null and `messages` empty, as for the verdict.
 
 On a correction, the server passes `{ confirmed: false, corrections }` through, and the advisor updates the answers and calls `propose_search` again (a chip field through a new tap first).

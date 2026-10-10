@@ -116,7 +116,7 @@ describe("the programs survive a failed model call after the stage 2 confirm", (
     const expected = evaluatePrograms(profile, category, programs, TODAY);
     expect(r.programs).toEqual(expected);
     expect(r.direction).toBeNull();
-    expect(r.text).toBe(fallbackSearchExplanation(expected, programs));
+    expect(r.text).toBe(fallbackSearchExplanation(expected, programs, profile.declined));
     expect(r.notice).toEqual({ kind: "auth_or_credit", message: NOTICE_MESSAGES.auth_or_credit });
     expect(r.messages).toEqual([]);
     expect(r.replaceLastUserMessage).toBeNull();

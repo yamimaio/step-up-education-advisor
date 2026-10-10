@@ -93,6 +93,8 @@ type Resolved = {
   message: Message;
   direction: DirectionResult | null;
   programs: SearchResult | null;
+  // The searched profile's declined fields, with `programs`, for the template explanation.
+  declined: string[];
 };
 
 // The answer to the pending tool, rewritten for the model, or the typed message as posted.
@@ -101,7 +103,7 @@ function resolveLastMessage(posted: Message[], programs: Program[], today: Date)
   const last = posted.at(-1)!;
   const blocks = blocksOf(last);
   const pending = pendingTool(posted);
-  const asPosted = { message: last, direction: null, programs: null };
+  const asPosted = { message: last, direction: null, programs: null, declined: [] };
   if (!pending) {
     if (!blocks.every((b) => b.type === "text")) throw new BadRequest("nothing is pending");
     if (isEmptyInput(last)) throw new EmptyInput();
@@ -139,7 +141,12 @@ function resolveLastMessage(posted: Message[], programs: Program[], today: Date)
       today,
     );
     return confirmed
-      ? { ...asPosted, message: rewrite(confirmed.content), programs: confirmed.result }
+      ? {
+          ...asPosted,
+          message: rewrite(confirmed.content),
+          programs: confirmed.result,
+          declined: confirmed.declined,
+        }
       : asPosted;
   }
   const confirmed = rewriteConfirm(result.content, pending.use.input, before, programs);
@@ -202,7 +209,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
     text: direction
       ? fallbackExplanation(direction)
       : programs
-        ? fallbackSearchExplanation(programs, deps.programs)
+        ? fallbackSearchExplanation(programs, deps.programs, resolved.declined)
         : "",
     direction,
     programs,

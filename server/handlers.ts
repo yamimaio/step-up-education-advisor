@@ -366,7 +366,7 @@ export function rewriteSearchConfirm(
   historyBeforeCall: Message[],
   programs: Program[],
   today: Date,
-): { content: string; result: SearchResult } | null {
+): { content: string; result: SearchResult; declined: string[] } | null {
   const answer = parseAnswer(ConfirmAnswer, content);
   if (!answer.confirmed) {
     checkTyped(answer.corrections);
@@ -377,5 +377,9 @@ export function rewriteSearchConfirm(
   const { category } = recommendCategory(toEngineDirection(checked.direction), programs);
   const result = evaluatePrograms(checked.profile, category, programs, today);
   const summary = searchSummary(result, programs);
-  return { content: JSON.stringify({ confirmed: true, result: summary }), result };
+  return {
+    content: JSON.stringify({ confirmed: true, result: summary }),
+    result,
+    declined: checked.profile.declined,
+  };
 }
