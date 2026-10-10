@@ -227,7 +227,14 @@ describe("advisor.md reads a limit missing from issues as passed (issue #200)", 
 
   it("takes questions for the school only from issues and uncovered needs", () => {
     expect(explain()).toContain(
-      "Questions for the school come only from `issues` (a near miss, or a figure that is `unknown`) and from needs the result doesn't cover.",
+      "Questions for the school come only from `issues` (a near miss, a figure that is `unknown`, or an estimate the issue's `note` names) and from needs the result doesn't cover.",
+    );
+  });
+
+  // Review round 1: the figure of a passed check never reaches the model (server/stage2.ts).
+  it("answers a question about a passed figure from the limit and the card, not memory", () => {
+    expect(explain()).toContain(
+      "If they ask for the figure of a limit that passed, say it is within the limit they set (name it) and that the program card shows the figure; never state one from memory.",
     );
   });
 });
