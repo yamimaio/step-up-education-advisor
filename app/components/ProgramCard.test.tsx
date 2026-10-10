@@ -184,7 +184,7 @@ describe("ProgramCard", () => {
         ),
       );
       expect(card).toContain(
-        "Not fully checkedTuition: you chose Over $80k; priced per course; about $97,200 at 12 courses (estimate)",
+        "Not fully checkedTuition: you chose Over $80k, counted as up to $250,000; priced per course; about $97,200 at 12 courses (estimate)",
       );
       expect(card).not.toContain("Near missTuition");
     });
@@ -239,5 +239,26 @@ describe("ProgramCard", () => {
   it("shows the figure when the user's answer matches no chip", () => {
     const card = text(renderCard(fixture(), { ...personaAProfile, tuitionBudgetUsd: 27000 }));
     expect(card).toContain("Tuition: $30,000; your limit $27,000");
+  });
+
+  it("gives the figure an open-ended chip counts as when a check doesn't pass", () => {
+    const over = { ...personaAProfile, tuitionBudgetUsd: 250000 }; // "Over $80k"
+    expect(text(renderCard(fixture("fake-executive", { tuitionUsd: 300000 }), over))).toContain(
+      "Doesn't fitTuition: $300,000; you chose Over $80k, counted as up to $250,000",
+    );
+    cleanup();
+    expect(text(renderCard(fixture("fake-executive", { tuitionUsd: 270000 }), over))).toContain(
+      "Near missTuition: $270,000; you chose Over $80k, counted as up to $250,000",
+    );
+    cleanup();
+    const short = { ...personaAProfile, maxProgramMonths: 3 }; // "About 2 months"
+    expect(text(renderCard(fixture(), short))).toContain(
+      "Doesn't fitProgram length: 8 months; you chose About 2 months, counted as up to 3 months",
+    );
+    cleanup();
+    const busy = { ...personaAProfile, hoursPerWeek: { min: 20, max: 40 } }; // "More than 20"
+    expect(
+      text(renderCard(fixture("fake-executive", { hoursPerWeek: { min: 60, max: 70 } }), busy)),
+    ).toContain("you chose More than 20, counted as 20-40 hours a week");
   });
 });

@@ -303,11 +303,17 @@ const CHECK_CHIPS: Partial<Record<Check["id"], ChipField & keyof Profile>> = {
   hours: "hoursPerWeek",
 };
 
-// The user's side of a check: the chip they tapped, or the figure when no chip has it.
+// The user's side of a check: the chip they tapped, or the figure when no chip has it. A check
+// that doesn't pass also gives the figure the engine compared against, since an open-ended chip
+// doesn't say it ("Over $10k" counts as up to $50,000), and without it the reason is missing.
 function limitText(c: Check, profile: Profile, show: (v: number | string) => string): string {
   const field = CHECK_CHIPS[c.id];
   const chip = field ? chipFor(field, profile[field]) : null;
-  return chip !== null ? `you chose ${chip}` : `your limit ${show(c.limit!)}`;
+  const limit = c.limit!;
+  if (chip === null) return `your limit ${show(limit)}`;
+  if (c.status === "pass") return `you chose ${chip}`;
+  // Hours compare against the chip's range ("20-40"), the rest against an upper bound.
+  return `you chose ${chip}, counted as ${typeof limit === "number" ? "up to " : ""}${show(limit)}`;
 }
 
 function checkLine(c: Check, profile: Profile): CheckLine {
