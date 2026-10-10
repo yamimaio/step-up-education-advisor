@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { chatReducer, initialChatState, type ChatState } from "./chatState";
 import { toolResultMessage, type ChatResponse, type MessageParam } from "./chatTypes";
+import { STAGE_1_CHIP_FIELDS, STAGE_2_CHIP_FIELDS } from "@core/advisor/tools";
 import { WRAP_UP_NOTE } from "@core/advisor/wrapUp";
-import { toTurns } from "./conversation";
+import { answerLine, toTurns } from "./conversation";
 import { buildTranscript } from "./transcript";
 
 // The server's wrap-up note at turn 35 (docs/chat-api.md, "Message cap").
@@ -38,6 +39,7 @@ describe("toTurns and the wrap-up note", () => {
     expect(toTurns([ask, tapWithNote]).slice(1)).toEqual([
       {
         kind: "chips",
+        field: "maxProgramMonths",
         question: "The longest program you'd take on now",
         chosen: ["Up to a year"],
       },
@@ -147,6 +149,55 @@ describe("toTurns and turns the server rejected", () => {
       kind: "assistant",
       text: "Here's what I understood.",
     });
+  });
+});
+
+describe("answerLine", () => {
+  const chips = (field: string, chosen: string[]) => ({
+    kind: "chips" as const,
+    field,
+    question: "Which one, would you say?",
+    chosen,
+  });
+
+  it("labels a chip answer with the field's fixed label", () => {
+    expect(answerLine(chips("maxProgramMonths", ["Up to a year"]))).toEqual({
+      label: "Longest program",
+      value: "Up to a year",
+    });
+    expect(answerLine(chips("careerGoalKind", ["Lead better in my current role"])).label).toBe(
+      "Your goal",
+    );
+  });
+
+  it("labels a stage 2 answer with the search card's field name, not the question", () => {
+    expect(answerLine(chips("paymentPlan", ["Installments"])).label).toBe("How you'd pay");
+    expect(answerLine(chips("travelComfort", ["Fine"])).label).toBe("Traveling for it");
+    expect(answerLine(chips("degreeLevel", ["Master's"])).label).toBe("Highest degree");
+  });
+
+  it("labels every stage 1 and stage 2 chip field", () => {
+    for (const field of [...STAGE_1_CHIP_FIELDS, ...STAGE_2_CHIP_FIELDS]) {
+      expect(answerLine(chips(field, ["x"])).label).not.toBe("Which one, would you say");
+    }
+  });
+
+  it("numbers the picks of a multi-pick in the order tapped", () => {
+    expect(
+      answerLine(chips("needs", ["A senior network", "Leadership skills", "Deep expertise"])),
+    ).toEqual({
+      label: "What's missing",
+      value: "1. A senior network, 2. Leadership skills, 3. Deep expertise",
+    });
+    expect(answerLine(chips("locationValues", ["Immersion", "Network density"]))).toEqual({
+      label: "A location should give you",
+      value: "1. Immersion, 2. Network density",
+    });
+  });
+
+  it("falls back to the asked question for a field with no label", () => {
+    expect(answerLine(chips("somethingNew", ["Fine"])).label).toBe("Which one, would you say");
+    expect(answerLine(chips("toString", ["Fine"])).label).toBe("Which one, would you say");
   });
 });
 

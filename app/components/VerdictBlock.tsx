@@ -7,21 +7,18 @@ export function VerdictBlock({ verdict }: { verdict: Verdict }) {
   const headingId = useId();
   const v = verdictView(verdict);
   return (
-    <section
-      aria-labelledby={headingId}
-      className="rounded-lg border-2 border-teal bg-white/80 p-4 shadow-sm"
-    >
+    <section aria-labelledby={headingId} className="rounded-xl border-2 border-teal bg-card p-4">
       <h2 id={headingId} className="text-sm font-semibold uppercase tracking-wide text-teal">
         Your verdict
       </h2>
-      {v.notYet && <p className="mt-2 text-lg font-semibold">{v.notYet}</p>}
+      {v.notYet && <p className="mt-2 font-display text-lg font-semibold">{v.notYet}</p>}
       {v.winner && (
         <p className="mt-2">
-          <span className="text-2xl font-bold text-teal">{v.winner}</span>
+          <span className="font-display text-2xl font-semibold text-teal">{v.winner}</span>
         </p>
       )}
       {v.tie && (
-        <p className="mt-2 text-lg font-semibold">
+        <p className="mt-2 font-display text-lg font-semibold">
           A tie between {v.tie[0]} and {v.tie[1]}.
         </p>
       )}
@@ -37,10 +34,10 @@ export function VerdictBlock({ verdict }: { verdict: Verdict }) {
         <summary className="cursor-pointer text-teal">How each type compares</summary>
         <ul className="mt-2 space-y-2">
           {v.rows.map((row) => (
-            <li key={row.category} className="border-t border-ink/10 pt-2">
+            <li key={row.category} className="border-t border-line pt-2">
               <span className="font-medium">{row.name}</span>
-              {row.out && <span className="ml-2 text-ink/70">(ruled out)</span>}
-              <span className="block text-ink/80">{row.reasons.join(" ")}</span>
+              {row.out && <span className="ml-2 text-muted">(ruled out)</span>}
+              <span className="block text-muted">{row.reasons.join(" ")}</span>
             </li>
           ))}
         </ul>
