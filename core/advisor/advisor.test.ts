@@ -254,11 +254,26 @@ describe("advisor.md keeps stage 2 a conversation (issue #201)", () => {
     expect(opener.indexOf("call `ask_choice` for the first missing field")).toBeGreaterThan(coming);
   });
 
+  // Review round 1: a "yes" after a new verdict in stage 2 finds the stage 2 taps still in.
+  it("announces the questions only on the first yes", () => {
+    const opener = line("**Say what's coming.**");
+    expect(opener).toContain('Your reply to their first "yes"');
+    expect(opener).toContain(
+      "After a new verdict in stage 2, the stage 2 answers are already in: don't announce questions again",
+    );
+  });
+
   it("bridges each new group to stage 1 in one line with no program facts", () => {
     const bridge = line("**Bridge each new group.**");
     expect(bridge).toContain("budget, travel, format, where they live, background");
     expect(bridge).toContain("one short line tied to what they said in stage 1");
     expect(bridge).toContain("One line, with no program facts or numbers.");
+    // Review round 1: the page drops the ask_choice question from the chat after the tap
+    // (app/lib/conversation.ts, turnText), so the bridge is the turn's text.
+    const text = bridge.indexOf("the turn opens with text");
+    expect(text).toBeGreaterThanOrEqual(0);
+    expect(bridge.indexOf("Then call `ask_choice`")).toBeGreaterThan(text);
+    expect(bridge).toContain("The bridge goes in the text, not in the `ask_choice` question");
     const example = /for example "([^"]+)"/.exec(bridge)?.[1] ?? "";
     expect(example).not.toBe("");
     expect(example).not.toMatch(/\d/);

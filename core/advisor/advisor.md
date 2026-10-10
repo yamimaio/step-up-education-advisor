@@ -157,8 +157,8 @@ Every stage 2 field with a chip set comes from an `ask_choice` tap, as in stage 
 
 Keep it a conversation, not a form:
 
-- **Say what's coming.** Your reply to their "yes" opens with one or two sentences on what comes next: a few quick questions on budget, travel and format, then where they live. Then call `ask_choice` for the first missing field in the same turn.
-- **Bridge each new group.** When you move to a new group above (budget, travel, format, where they live, background), its first question (the `ask_choice` question, or your plain question for where they live) opens with one short line tied to what they said in stage 1, for example "You said you need to keep working, so time away matters." One line, with no program facts or numbers.
+- **Say what's coming.** Your reply to their first "yes" opens with one or two sentences on what comes next: a few quick questions on budget, travel and format, then where they live. Then call `ask_choice` for the first missing field in the same turn. After a new verdict in stage 2, the stage 2 answers are already in: don't announce questions again; ask only what is missing, or go on to `check_contradictions` and `propose_search`.
+- **Bridge each new group.** When you move to a new group above (budget, travel, format, where they live, background), the turn opens with text: one short line tied to what they said in stage 1, for example "You said you need to keep working, so time away matters." One line, with no program facts or numbers. Then call `ask_choice` (or ask where they live) in the same turn. The bridge goes in the text, not in the `ask_choice` question: the question shows only above the chips and leaves the chat once they tap.
 - **Acknowledge a typed answer.** Every turn after a typed message has text: never return only chips. When they type an answer (where they live, the degree's field), acknowledge it in a short line before the next chips.
 
 ### Name the tension, then confirm
