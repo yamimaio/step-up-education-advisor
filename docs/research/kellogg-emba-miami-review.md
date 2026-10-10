@@ -17,10 +17,10 @@ The two researches were done separately, and Claude rated before reading Perplex
 | longestStretchDays | null | 6 (orientation, January 12-17, 2027) |
 | onsiteDaysPerYear | null | 48 (January 2027 year-1 calendar plus 5 days of Global Network Week) |
 | cohortMedianExperienceYears | null | 15 (average, admissions page and class profile; mid-80% 9 to 23) |
-| senior positions | not found | 70% Director + VP + C-Suite (class profile; Yami's screenshot) |
+| cohortSeniority | null | 70% Director + VP + C-Suite (class profile; Yami's screenshot) |
 | paymentOptions | installments | installments, employer sponsorship |
-| minExperienceYears | null | 8 (not overridable; stays null) |
-| accreditation | null | AACSB on Northwestern's Provost page (not overridable; stays null) |
+| minExperienceYears | null | 8 (how-to-apply page) |
+| accreditation | null | AACSB (Northwestern's Provost page) |
 | career services | not found | CMC coaching and tools to shift function or industry |
 | curriculum | not found | 19 required core courses incl. Leadership, Executive Perspectives on Leadership and a capstone |
 
@@ -108,6 +108,9 @@ Every source in the record, with the value it backs. **no quote** means the valu
 | ratingNotes | (rating notes) | Shift to a new function or industry with tools from the CMC that help you: (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/ |
 | ratingNotes | (rating notes) | CMC coaching sessions are tailored to experienced professionals making high-impact decisions. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/ |
 | ratingNotes | (rating notes) | Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/ |
+| minExperienceYears | 8 | The Executive MBA Program is designed for fully-employed professionals with at least eight years of work experience. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/ |
+| accreditation | ["AACSB"] | Association to Advance Collegiate Schools of Business (checked 2026-10-10) | https://www.northwestern.edu/provost/about/university-accreditation/specialized-accreditation.html |
+| cohortSeniority | Career levels: 32% director, 20% VP and 18% C-suite (70% director or above), 25% manager, 5% other. | Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/ |
 | onsiteNote | Thursday afternoon to midday Sunday once a month in Coral Gables (Miami), plus four intensive weeks a program, including orientation and Global Network Week in Evanston. | **no quote** | |
 | state | Florida | **no quote** | |
 | campusLat | 25.7497 | **no quote** | |

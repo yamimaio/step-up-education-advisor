@@ -177,6 +177,10 @@ Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM 
 - Lodging that we estimate ourselves (the GSA rate in `lodgingPerNightUsd`, or any manual calculation) never goes into `tuitionUsd`; it is a travel expense the engine adds.
 - Kellogg's total is $248,472 for 2026-2027 (tuition $205,486 plus food and housing $42,986). No page offers local students an opt-out, so the total applies to them too, as at Wharton.
 
+## Admission and class-profile overrides (Kellogg EMBA Miami review, issue #173, Oct 10)
+
+- Yami, reviewing PR #180: `minExperienceYears`, `accreditation` and `cohortSeniority` join the facts the overrides file may set with an `extraSources` entry. The card shows all three. Before this, a fact found on an official page after the research run (Kellogg's "at least eight years", AACSB on Northwestern's accreditation page, the class profile's career levels) could not reach the record.
+
 ## Step 5
 
 - The "17 fields" are the intake table's rows, one entry each, plus the airfare question as its own entry (`core/advisor/fields.ts`). Entries that fill two profile fields (tuition and payment, time, on-site, home) are one entry.

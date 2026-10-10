@@ -211,8 +211,34 @@
       "quote": "Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
+    },
+    {
+      "field": "minExperienceYears",
+      "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
+      "quote": "The Executive MBA Program is designed for fully-employed professionals with at least eight years of work experience.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "accreditation",
+      "url": "https://www.northwestern.edu/provost/about/university-accreditation/specialized-accreditation.html",
+      "quote": "Association to Advance Collegiate Schools of Business",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "cohortSeniority",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+      "quote": "Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
     }
   ],
   "tuitionUsd": 248472,
-  "onsiteDaysPerYear": 48
+  "onsiteDaysPerYear": 48,
+  "minExperienceYears": 8,
+  "accreditation": [
+    "AACSB"
+  ],
+  "cohortSeniority": "Career levels: 32% director, 20% VP and 18% C-suite (70% director or above), 25% manager, 5% other."
 }
