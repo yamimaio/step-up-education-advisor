@@ -46,7 +46,9 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
   const pendingRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const retryRef = useRef<HTMLButtonElement>(null);
+  const resultsRef = useRef<HTMLLIElement>(null);
   const lastStatus = useRef(state.status);
+  const shownResults = useRef<string | null>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView?.({ block: "end" });
@@ -67,6 +69,20 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
     next?.focus();
   }, [state.status]);
 
+  // When a search's program cards first show, the view starts at "Programs that fit" rather than
+  // past the last card, and focus goes to that heading. That waits for an idle reply: after a
+  // failed or blocked one the view stays on the notice below the cards (Retry keeps focus), and a
+  // successful Retry lands then. Declared after the effects above, so it runs after them.
+  const resultsId = state.results?.toolUseId ?? null;
+  useEffect(() => {
+    if (resultsId === shownResults.current || state.status !== "idle") return;
+    shownResults.current = resultsId;
+    const heading = resultsRef.current?.querySelector<HTMLElement>("h2");
+    if (!heading) return;
+    heading.scrollIntoView?.({ block: "start" });
+    heading.focus({ preventScroll: true });
+  }, [resultsId, state.status]);
+
   const verdict = state.verdict && (
     <li>
       <VerdictBlock verdict={state.verdict} />
@@ -83,7 +99,7 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
       <li className="sr-only">
         {listed === 1 ? "1 program" : `${listed} programs`} listed below, under Programs that fit.
       </li>
-      <li aria-live="off">
+      <li ref={resultsRef} aria-live="off">
         <ProgramResults results={state.results} verdict={state.verdict} />
       </li>
     </>

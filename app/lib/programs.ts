@@ -51,6 +51,8 @@ export type ProgramView = {
   // The engine's why line ("Ranked first for …").
   why: string;
   draft: boolean;
+  // Four of the facts, repeated at the top of the card so cards can be compared at a glance.
+  summary: Fact[];
   facts: Fact[];
   checks: CheckLine[];
   // How the program serves each of the user's needs, and the format and travel fit lines.
@@ -376,19 +378,24 @@ function sourceLines(p: Program): SourceLine[] {
   return [...pages, ...out];
 }
 
+// The facts the card repeats under the program's name, in this order.
+const SUMMARY_LABELS = ["Format", "Length", "Where", "Tuition plus travel"];
+
 export function programView(
   program: Program,
   evaluation: ProgramEvaluation,
   profile: Profile,
   why: string,
 ): ProgramView {
+  const all = facts(program, evaluation, profile);
   return {
     id: program.id,
     name: program.name,
     institution: program.institution,
     why,
     draft: program.verification.status === "draft",
-    facts: facts(program, evaluation, profile),
+    summary: SUMMARY_LABELS.flatMap((label) => all.find((f) => f.label === label) ?? []),
+    facts: all,
     checks: evaluation.checks.map((c) => checkLine(c, profile)),
     fit: fitLines(evaluation),
     confidence: {
