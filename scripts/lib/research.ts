@@ -143,6 +143,7 @@ const normalizeSourceField = (field: string) =>
 // Facts the research got wrong or left out that later school material settles (a brochure, the
 // published schedule). Each one needs its own entry in extraSources.
 const SOURCED_OVERRIDE_KEYS = [
+  "format",
   "workCompatible",
   "cohortMedianExperienceYears",
   "onsiteDaysPerYear",
@@ -303,7 +304,8 @@ export function convertResearch(input: {
   }
   if (raw.nextStartDate != null) notes.push("nextStartDate dropped (DQ7).");
 
-  const online = raw.format === "online";
+  // An overridden format decides the online rules too (attendance none, no lodging).
+  const online = (overrides.format ?? raw.format) === "online";
   const rawSources = (Array.isArray(raw.sources) ? raw.sources : []).filter(isObject);
 
   // Payment options: fixed values only, an unknown string is a hard error.

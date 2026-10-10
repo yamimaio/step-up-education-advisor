@@ -19,7 +19,7 @@ Choices made while building, where the approved docs were silent. Each links to 
 - B3: the research-to-record converter (`scripts/draft-records.ts`) is built in this step, as `docs/build-steps.md` says.
 - The converter sets `cohortExperienceBasis` to `unspecified` and leaves `figureNotes`, `onsiteNote`, `metro`, `durationMaxMonths`, `tuitionPerCourseUsd`, `courseCount`, `lodgingIncluded` and `attendance` (unless residencies or online) to the overrides file. It turns a lone GSA number into a range by reading the dollar amounts in the GSA quote, and refuses if the quote has none.
 - `validate-data` also fails on a `checkedOn` later than today. `fake-` ids pass only through `FixtureDatasetSchema`.
-- The overrides file may set only an allow-list of keys (never `id`, `sources`, `ratings` or `verification`), plus `extraSources` to append sources the research kept in its Part 2 tables. A lodging quote that mentions meals or totals is refused unless the overrides give `lodgingPerNightUsd`. A source with no URL converts as `school_correspondence`. Five facts (`workCompatible`, `cohortMedianExperienceYears`, `onsiteDaysPerYear`, `longestStretchDays`, `hoursPerWeek`) may also be set there when later school material (a brochure, a published schedule) settles them, and only with an `extraSources` entry for the same field; the converter refuses one without it. When newer school material supersedes the research's quote for a field, `replaceSources` in the overrides file lists that field: its research sources are dropped and only the `extraSources` entries stay (the converter refuses a listed field with no `extraSources` entry).
+- The overrides file may set only an allow-list of keys (never `id`, `sources`, `ratings` or `verification`), plus `extraSources` to append sources the research kept in its Part 2 tables. A lodging quote that mentions meals or totals is refused unless the overrides give `lodgingPerNightUsd`. A source with no URL converts as `school_correspondence`. Six facts (`format`, `workCompatible`, `cohortMedianExperienceYears`, `onsiteDaysPerYear`, `longestStretchDays`, `hoursPerWeek`) may also be set there when later school material (a brochure, a published schedule) settles them, and only with an `extraSources` entry for the same field; the converter refuses one without it. When newer school material supersedes the research's quote for a field, `replaceSources` in the overrides file lists that field: its research sources are dropped and only the `extraSources` entries stay (the converter refuses a listed field with no `extraSources` entry).
 
 ## Step 3
 
@@ -163,6 +163,12 @@ Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM 
 - Each correction Yami makes becomes a ruling and bumps the skill version. The block heading names the skill version and the reviewer ("reviewed by: pending" until Yami approves).
 - Yami, Oct 9: no rating provenance field in the schema (no `ratingVerification`). Provenance lives only in the block heading: the skill version and the reviewer.
 
+
+## Rating skill, version 3 (issue #134, Oct 10)
+
+- `format` joins the facts the overrides file may set with an `extraSources` entry (Northwestern MEM: the research left it null, and the official page settles it). An overridden format also drives the online rules (attendance `none`, no lodging).
+- A rating can turn on a fact that has no record field, such as career services. The skill verifies it on an official page and records it in the overrides file as an `extraSources` entry with field `ratingNotes`, holding the URL and verbatim quote. A card note may state the fact; the record carries its source. No new schema field.
+- R10: an open-enrollment program with classmates in every course but no fixed cohort is not "no cohort" for senior_network (Harvard Extension, agreed by Yami; applies to Northwestern MEM).
 
 ## Step 5
 

@@ -66,3 +66,10 @@ A ruling that generalizes also changes `rating-prompt.md`; the ruling stays here
 - **Facts:** the July 2026 brochure states "an average of 19 years of professional experience" and publishes the split 25+ years 21%, 20-25 years 29%, 15-20 years 26%, 10-15 years 17%, less than 10 years 7%. Exactly half the participants have 20+ years, so the median is 20. The record stores 20 with `cohortExperienceBasis: median`, and `figureNotes` gives the stated average.
 - **Why:** the rubric is built on medians, and a breakdown shows where the middle participant sits. An average is used only when no median or breakdown is published. Taking the higher of several figures was considered and rejected: it only ever moves ratings up and favours programs with more sources.
 - **Applies when:** a school publishes an experience breakdown by bands, with or without an average. Store the lower edge of the band holding the middle participant. This supersedes R1 for MIT TLP; R1 still covers programs with no class profile.
+
+## R10. Open enrollment with classmates in every course is not "no cohort"
+
+- **Program:** Harvard Extension Organizational Behavior certificate (`harvard-ext-org-behavior`), certificate. **Need:** senior_network. **Rating:** 3 (Oct 9).
+- **Facts:** "There is no formal application required. You simply register for each course."; the 2024 fast facts give the students' years of employment by band (median 11).
+- **Why:** classmates change course by course, but every course has classmates, and the school publishes who they are. The rubric's "no cohort" level is for programs with no classmates at all (self-paced, individual study). Agreed by Yami in the Harvard review.
+- **Applies when:** a program has no fixed cohort ("Program is not a cohort format", open enrollment), but courses have classmates. Rate the published experience figure, and say in `reasoning` that there is no fixed cohort.
