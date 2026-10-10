@@ -1,18 +1,26 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { CHIPS, type ChipField } from "../core/advisor/chips";
+import { pickOf } from "../core/advisor/fields";
 import type { Direction } from "../core/advisor/tools";
-import type { DirectionResult } from "../core/engine/types";
+import type { DirectionResult, SearchResult } from "../core/engine/types";
+import type { Profile } from "../core/schema/profile";
 import type { Program } from "../core/schema/program";
-import { fallbackExplanation, NOTICE_MESSAGES, type NoticeKind } from "./fallback";
+import {
+  fallbackExplanation,
+  fallbackSearchExplanation,
+  NOTICE_MESSAGES,
+  type NoticeKind,
+} from "./fallback";
 import {
   BadRequest,
+  checkAskChoice,
   EmptyInput,
-  pickOf,
   rewriteChipAnswer,
   rewriteConfirm,
+  rewriteSearchConfirm,
   runCheckContradictions,
-  validateAskChoice,
   validateProposeDirection,
+  validateProposeSearch,
 } from "./handlers";
 import {
   blocksOf,
@@ -44,7 +52,12 @@ export type PendingChips = {
   pick: number;
 };
 
-export type PendingConfirm = { toolUseId: string; direction: Direction };
+// The stage 1 card holds the direction; the stage 2 card holds the profile the engine will run
+// on (the stage 1 answers from the confirmed direction, the rest from the card). Exactly one of
+// the two is set.
+export type PendingConfirm =
+  | { toolUseId: string; direction: Direction; profile?: never }
+  | { toolUseId: string; profile: Profile; direction?: never };
 
 export type ChatResponse = {
   replaceLastUserMessage: Message | null;
@@ -53,6 +66,8 @@ export type ChatResponse = {
   chips: PendingChips | null;
   confirm: PendingConfirm | null;
   direction: DirectionResult | null;
+  // Set only on the turn right after the user confirms the stage 2 card: evaluatePrograms's result.
+  programs: SearchResult | null;
   counter: { remaining: number } | null;
   notice: { kind: NoticeKind; message: string } | null;
 };
@@ -61,6 +76,8 @@ export type ChatDeps = {
   model: ModelClient;
   programs: Program[];
   log?: (entry: RequestLog) => void;
+  // The date stage 2 checks how recently each record was verified against; tests fix it.
+  today?: Date;
 };
 
 const notice = (kind: NoticeKind) => ({ kind, message: NOTICE_MESSAGES[kind] });
@@ -72,16 +89,23 @@ const errorResult = (id: string, content: string): Anthropic.ToolResultBlockPara
   is_error: true,
 });
 
+type Resolved = {
+  message: Message;
+  direction: DirectionResult | null;
+  programs: SearchResult | null;
+};
+
 // The answer to the pending tool, rewritten for the model, or the typed message as posted.
 // Throws BadRequest when the posted message doesn't fit what is pending.
-function resolveLastMessage(posted: Message[], programs: Program[]) {
+function resolveLastMessage(posted: Message[], programs: Program[], today: Date): Resolved {
   const last = posted.at(-1)!;
   const blocks = blocksOf(last);
   const pending = pendingTool(posted);
+  const asPosted = { message: last, direction: null, programs: null };
   if (!pending) {
     if (!blocks.every((b) => b.type === "text")) throw new BadRequest("nothing is pending");
     if (isEmptyInput(last)) throw new EmptyInput();
-    return { message: last, direction: null };
+    return asPosted;
   }
   const [result, ...rest] = blocks;
   if (
@@ -97,23 +121,31 @@ function resolveLastMessage(posted: Message[], programs: Program[]) {
     role: "user",
     content: [{ ...result, content }],
   });
+  const callAt = posted.findIndex((m) => toolUsesOf(m).some((u) => u.id === pending.use.id));
+  const before = posted.slice(0, callAt);
   if (pending.use.name === "ask_choice") {
-    const ask = validateAskChoice(pending.use.input);
+    const ask = checkAskChoice(pending.use.input, before);
     if (!ask.ok) throw new BadRequest("pending ask_choice is invalid");
     const content = rewriteChipAnswer(ask.input.field, result.content);
-    return { message: content === null ? last : rewrite(content), direction: null };
+    return content === null ? asPosted : { ...asPosted, message: rewrite(content) };
   }
-  // propose_direction: check the call against the history before it, then run the engine.
-  const callAt = posted.findIndex((m) => toolUsesOf(m).some((u) => u.id === pending.use.id));
-  const confirmed = rewriteConfirm(
-    result.content,
-    pending.use.input,
-    posted.slice(0, callAt),
-    programs,
-  );
+  // A card: check the call against the history before it, then run the engine.
+  if (pending.use.name === "propose_search") {
+    const confirmed = rewriteSearchConfirm(
+      result.content,
+      pending.use.input,
+      before,
+      programs,
+      today,
+    );
+    return confirmed
+      ? { ...asPosted, message: rewrite(confirmed.content), programs: confirmed.result }
+      : asPosted;
+  }
+  const confirmed = rewriteConfirm(result.content, pending.use.input, before, programs);
   return confirmed
-    ? { message: rewrite(confirmed.content), direction: confirmed.result }
-    : { message: last, direction: null };
+    ? { ...asPosted, message: rewrite(confirmed.content), direction: confirmed.result }
+    : asPosted;
 }
 
 const hasWrapUpNote = (history: Message[]) =>
@@ -143,13 +175,14 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
     chips: null,
     confirm: null,
     direction: null,
+    programs: null,
     counter: null,
     notice: null,
   };
 
-  let resolved: { message: Message; direction: DirectionResult | null };
+  let resolved: Resolved;
   try {
-    resolved = resolveLastMessage(posted, deps.programs);
+    resolved = resolveLastMessage(posted, deps.programs, deps.today ?? new Date());
   } catch (error) {
     if (error instanceof EmptyInput) {
       done("empty_input");
@@ -158,16 +191,21 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
     if (error instanceof BadRequest) done("bad_request");
     throw error;
   }
-  const { direction } = resolved;
+  const { direction, programs } = resolved;
   let lastMessage = resolved.message;
 
   const turns = userTurns(posted);
   const counter = turns >= COUNTER_FROM ? { remaining: Math.max(0, MESSAGE_CAP - turns) } : null;
-  // On a failure the verdict still shows, with the template explanation (DQ3).
+  // On a failure the verdict or the programs still show, with the template explanation (DQ3).
   const failed = (kind: NoticeKind): ChatResponse => ({
     ...empty,
-    text: direction ? fallbackExplanation(direction) : "",
+    text: direction
+      ? fallbackExplanation(direction)
+      : programs
+        ? fallbackSearchExplanation(programs, deps.programs)
+        : "",
     direction,
+    programs,
     counter,
     notice: notice(kind),
   });
@@ -224,7 +262,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
           errorResult(u.id, "Call one tool at a time, then wait for its result."),
         );
       } else if (use.name === "ask_choice") {
-        const ask = validateAskChoice(use.input);
+        const ask = checkAskChoice(use.input, [...history, ...added.slice(0, -1)]);
         if (ask.ok) {
           const field = ask.input.field;
           chips = {
@@ -246,6 +284,14 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
           break;
         }
         results = [errorResult(use.id, checked.problems)];
+      } else if (use.name === "propose_search") {
+        const checked = validateProposeSearch(use.input, [...history, ...added.slice(0, -1)]);
+        if (checked.ok) {
+          confirm = { toolUseId: use.id, profile: checked.profile };
+          shown.push(said);
+          break;
+        }
+        results = [errorResult(use.id, checked.problems)];
       } else if (use.name === "check_contradictions") {
         const ran = runCheckContradictions(use.input, deps.programs);
         results = [
@@ -254,7 +300,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
             : { type: "tool_result", tool_use_id: use.id, content: ran.content },
         ];
       } else {
-        results = [errorResult(use.id, `There is no tool named ${use.name} in this stage.`)];
+        results = [errorResult(use.id, `There is no tool named ${use.name}.`)];
       }
       if (!results.every((r) => r.is_error)) shown.push(said);
       // Each answered round costs a model call; the loop stops a model that never settles.
@@ -275,6 +321,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
     chips,
     confirm,
     direction,
+    programs,
     counter,
     notice: null,
   };

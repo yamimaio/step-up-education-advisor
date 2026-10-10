@@ -59,7 +59,7 @@ describe.each(IDS)("Persona %s", (id) => {
   it("gives the stage 1 answers first, in the order the advisor asks them", () => {
     const all = section(text, "##", "True answers");
     expect(all.indexOf("### Stage 1")).toBeGreaterThan(-1);
-    expect(all.indexOf("### Stage 1")).toBeLessThan(all.indexOf("### Stage 2 (not wired yet)"));
+    expect(all.indexOf("### Stage 1")).toBeLessThan(all.indexOf("### Stage 2"));
     expect(Object.keys(answers(text, "Stage 1"))).toEqual(STAGE_1_CHECKLIST.map((e) => e.id));
     expect(Object.keys(answers(text, "Stage 2"))).toEqual(STAGE_2_CHECKLIST.map((e) => e.id));
   });

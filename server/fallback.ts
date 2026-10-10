@@ -1,5 +1,6 @@
-import type { DirectionResult } from "../core/engine/types";
+import type { CheckId, DirectionResult, RankedProgram, SearchResult } from "../core/engine/types";
 import type { Category, Need } from "../core/schema/enums";
+import type { Program } from "../core/schema/program";
 
 // What the user reads when the model can't answer (docs/chat-api.md, "After a notice"). The
 // verdict explanation is a template over the engine's result only, so a confirmed card still
@@ -78,5 +79,72 @@ export function fallbackExplanation(result: DirectionResult): string {
     "The advisor can't add its explanation right now; the verdict above comes from the scoring engine.",
   );
   lines.push(CLOSING);
+  return lines.join("\n\n");
+}
+
+const PROGRAMS_OF: Record<Category, string> = {
+  mba: "full-time MBA programs",
+  emba: "executive MBA programs",
+  specialized_masters: "specialized master's programs",
+  executive: "executive programs",
+  certificate: "graduate certificates",
+  short_course: "short courses",
+};
+
+const CHECK: Record<CheckId, string> = {
+  tuition: "tuition",
+  travelBudget: "the travel budget",
+  onsiteDays: "days on site",
+  longestStretch: "the longest stretch away",
+  length: "program length",
+  hours: "hours per week",
+  workCompatible: "keeping your job",
+  location: "location",
+};
+
+// The stage 2 template: the engine's ranked list with program names from the records, for when
+// the model fails after the user confirms the stage 2 card. Never model text.
+export function fallbackSearchExplanation(result: SearchResult, programs: Program[]): string {
+  const records = new Map(programs.map((p) => [p.id, p]));
+  const statuses = new Map(result.programs.map((e) => [e.id, e.status]));
+  const line = ({ id, why }: RankedProgram) => {
+    const record = records.get(id);
+    const name = record ? `${record.name} (${record.institution})` : id;
+    const near =
+      statuses.get(id) === "near_miss" ? " Close, but it misses one of your limits." : "";
+    return `- ${name}: ${why}${near}`;
+  };
+  const { access, ranking, noProgram, profileGaps } = result;
+  const lines: string[] = [];
+  const alternative = access.alternative
+    ? ` The closest type with one is ${CATEGORY[access.alternative]}.`
+    : "";
+  if (access.status === "no_winner") {
+    lines.push("There's no single type of program to search yet, so there's no list.");
+  } else if (access.category && access.status === "no_programs") {
+    lines.push(`There are no ${PROGRAMS_OF[access.category]} in the data yet.${alternative}`);
+  } else if (access.category && access.status === "none_within_limits") {
+    const blocked = access.blockedBy.length
+      ? ` (mostly ${list(access.blockedBy.map((c) => CHECK[c]))})`
+      : "";
+    lines.push(
+      `None of the ${PROGRAMS_OF[access.category]} in the data fits all your limits${blocked}.${alternative} Your verdict stands.`,
+    );
+  }
+  if (noProgram.triggered) {
+    lines.push("Nothing in the data fits within all your limits yet.");
+  }
+  if (ranking.ranked.length) {
+    lines.push(["Programs that fit, best first:", ...ranking.ranked.map(line)].join("\n"));
+  }
+  if (ranking.alsoWorthALook.length) {
+    lines.push(["Also worth a look:", ...ranking.alsoWorthALook.map(line)].join("\n"));
+  }
+  if (profileGaps.length) {
+    lines.push(`Answers you chose not to give, so the list leaves them out: ${list(profileGaps)}.`);
+  }
+  lines.push(
+    "The advisor can't add its explanation right now; the list above comes from the scoring engine and the program records.",
+  );
   return lines.join("\n\n");
 }

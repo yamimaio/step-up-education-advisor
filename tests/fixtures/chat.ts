@@ -3,7 +3,11 @@ import { chatLoop, type ChatResponse } from "../../server/chatLoop";
 import type { Message } from "../../server/history";
 import type { RequestLog } from "../../server/log";
 import type { ModelClient } from "../../server/model/adapter";
-import { PERSONA_A_GOAL } from "../../server/model/personaA";
+import {
+  PERSONA_A_BACKGROUND_ANSWER,
+  PERSONA_A_GOAL,
+  PERSONA_A_PROGRAMS_YES,
+} from "../../server/model/personaA";
 
 // The page's side of /api/chat for server tests: it keeps the history, posts it whole, swaps in
 // replaceLastUserMessage and appends the returned messages (docs/chat-api.md).
@@ -11,7 +15,10 @@ import { PERSONA_A_GOAL } from "../../server/model/personaA";
 export const PERSONA_A_OPENING =
   "I've led engineering teams for twelve years and I'm working out my next step.";
 
-// Persona A's taps, by chip label exactly as in personas/A.md.
+// The date stage 2 runs on in server tests (record freshness counts in confidence).
+export const TODAY = new Date("2026-10-10T00:00:00Z");
+
+// Persona A's taps, by chip label exactly as in personas/A.md, both stages.
 export const PERSONA_A_TAPS: Record<string, string[]> = {
   careerGoalKind: ["Step up to a bigger leadership role"],
   needs: ["A senior network", "Leadership skills", "Deep expertise in a field"],
@@ -20,6 +27,18 @@ export const PERSONA_A_TAPS: Record<string, string[]> = {
   hoursPerWeek: ["5 to 10"],
   keepWorking: ["Yes, I keep working"],
   degreeRequired: ["Not needed"],
+  tuitionBudgetUsd: ["$40k to $80k"],
+  paymentPlan: ["Installments"],
+  travelBudgetUsd: ["$5k to $10k"],
+  travelComfort: ["Part of the appeal"],
+  formatPreference: ["Blended"],
+  maxOnsiteDays: ["Up to 20"],
+  maxStretchDays: ["About a week"],
+  relocate: ["No, I would not"],
+  airfareRange: ["$1,000 to $1,500"],
+  locationValues: ["Immersion", "Network density"],
+  degreeLevel: ["Bachelor's"],
+  currentRole: ["Manager"],
 };
 
 export const textMessage = (text: string): Message => ({
@@ -55,6 +74,7 @@ export class Page {
       model: this.model,
       programs: this.programs,
       log: this.realLogger ? undefined : (e) => this.logs.push(e),
+      today: TODAY,
     });
     this.last = response;
     if (response.notice?.kind === "empty_input") return response;
@@ -105,5 +125,33 @@ export async function walkToLastTap(page: Page) {
     await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
   }
   if (page.last?.chips?.field !== "degreeRequired") throw new Error("walk lost its way");
+  return page.last.chips.toolUseId;
+}
+
+// Runs persona A from the first message to the stage 2 card: the verdict, the yes to programs,
+// the home and background, every stage 2 tap. The history then ends on the propose_search card.
+export async function walkToSearchCard(page: Page) {
+  await walkToLastTap(page);
+  await page.tap(...PERSONA_A_TAPS.degreeRequired!);
+  await page.confirm();
+  await page.type(PERSONA_A_PROGRAMS_YES);
+  await page.type(PERSONA_A_BACKGROUND_ANSWER);
+  while (page.last?.chips) await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+  if (!page.last?.confirm?.profile) throw new Error("walk lost its way");
+  return page.last.confirm.toolUseId;
+}
+
+// Runs persona A up to, not including, the last stage 2 tap (currentRole): a test can post that
+// tap against its own script.
+export async function walkToLastStage2Tap(page: Page) {
+  await walkToLastTap(page);
+  await page.tap(...PERSONA_A_TAPS.degreeRequired!);
+  await page.confirm();
+  await page.type(PERSONA_A_PROGRAMS_YES);
+  await page.type(PERSONA_A_BACKGROUND_ANSWER);
+  while (page.last?.chips && page.last.chips.field !== "currentRole") {
+    await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+  }
+  if (page.last?.chips?.field !== "currentRole") throw new Error("walk lost its way");
   return page.last.chips.toolUseId;
 }

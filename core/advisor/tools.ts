@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { PartialProfileSchema, ProfileSchema } from "../schema/profile";
+import { PartialProfileSchema, ProfileSchema, type Profile } from "../schema/profile";
 import type { ChipField } from "./chips";
 
-// The advisor's tools for the two-stage flow (docs/ux-two-stage.md). Stage 1 is wired: the
-// server (step 6) sends only STAGE_1_TOOL_NAMES to the model and turns each input schema into a
-// strict JSON schema. propose_search is a stub until stage 2 is wired. advisor.md names exactly
-// these tools; a test keeps the two in step. Descriptions are frozen strings (cached prefix).
+// The advisor's tools for the two-stage flow (docs/ux-two-stage.md). The server (step 6) sends
+// every tool to the model, in this order, and turns each input schema into a strict JSON schema.
+// advisor.md names exactly these tools; a test keeps the two in step. Descriptions are frozen
+// strings (cached prefix).
 
 const full = ProfileSchema.shape;
 const partial = PartialProfileSchema.shape;
@@ -19,6 +19,23 @@ export const STAGE_1_CHIP_FIELDS = [
   "hoursPerWeek",
   "keepWorking",
   "degreeRequired",
+] as const satisfies readonly ChipField[];
+
+// The chip sets of the stage 2 checklist entries. The server shows them only once a direction
+// is confirmed.
+export const STAGE_2_CHIP_FIELDS = [
+  "tuitionBudgetUsd",
+  "paymentPlan",
+  "travelBudgetUsd",
+  "travelComfort",
+  "formatPreference",
+  "maxOnsiteDays",
+  "maxStretchDays",
+  "relocate",
+  "airfareRange",
+  "locationValues",
+  "degreeLevel",
+  "currentRole",
 ] as const satisfies readonly ChipField[];
 
 // Stage 1 fields the user may decline. goalClarity is the advisor's call, never declined.
@@ -104,7 +121,43 @@ export function toEngineDirection(d: Direction) {
   };
 }
 
-// The stage 1 answers so far: every field optional, and needs may still be short.
+// The profile stage 2 runs on (evaluatePrograms): the stage 1 answers from the confirmed
+// direction, never from the propose_search card, and the stage 2 answers from the card. A
+// declined stage 1 field gets its placeholder and stays named in `declined`, so the engine
+// ignores it. Tensions resolved on either card are kept, the direction's first.
+export function toEngineProfile(direction: Direction, profile: Profile): Profile {
+  const { declined, tieBreaker, ...stage1 } = toEngineDirection(direction);
+  const rules = new Set(direction.resolvedTensions.map((t) => t.rule));
+  // The tie-breaker belongs to stage 1: only the direction's counts.
+  const stage2: Profile = { ...profile };
+  delete stage2.tieBreaker;
+  return {
+    ...stage2,
+    ...stage1,
+    peerPreference: direction.peerPreference ?? DECLINED_PLACEHOLDERS.peerPreference,
+    resolvedTensions: [
+      ...direction.resolvedTensions,
+      ...profile.resolvedTensions.filter((t) => !rules.has(t.rule)),
+    ],
+    ...(tieBreaker ? { tieBreaker } : {}),
+    declined: [...new Set([...declined, ...profile.declined])],
+  };
+}
+
+// The stage 2 fields the contradiction rules read (R1, R2, R3, R5, R6). check_contradictions
+// takes only these on top of the stage 1 answers: the API caps optional parameters across the
+// strict tool schemas of a request at 24 (decisions.md, Step 6).
+export const TENSION_FIELDS_STAGE_2 = [
+  "tuitionBudgetUsd",
+  "travelComfort",
+  "maxOnsiteDays",
+  "maxStretchDays",
+  "relocate",
+  "locationValues",
+] as const;
+
+// The answers so far: every field optional, and needs may still be short. Stage 1 sends the
+// stage 1 answers; stage 2 adds the stage 2 answers the rules read.
 export const DirectionDraftSchema = z.strictObject({
   careerGoal: partial.careerGoal,
   goalClarity: partial.goalClarity,
@@ -114,13 +167,21 @@ export const DirectionDraftSchema = z.strictObject({
   hoursPerWeek: partial.hoursPerWeek,
   keepWorking: partial.keepWorking,
   degreeRequired: partial.degreeRequired,
+  tuitionBudgetUsd: partial.tuitionBudgetUsd,
+  travelComfort: partial.travelComfort,
+  maxOnsiteDays: partial.maxOnsiteDays,
+  maxStretchDays: partial.maxStretchDays,
+  relocate: partial.relocate,
+  locationValues: partial.locationValues,
   resolvedTensions: partial.resolvedTensions,
-  declined: z.array(z.enum(DIRECTION_DECLINABLE)).optional(),
+  declined: z.array(z.enum([...DIRECTION_DECLINABLE, ...TENSION_FIELDS_STAGE_2])).optional(),
 });
 export type DirectionDraft = z.infer<typeof DirectionDraftSchema>;
 
+export const ASK_CHOICE_FIELDS = [...STAGE_1_CHIP_FIELDS, ...STAGE_2_CHIP_FIELDS] as const;
+
 export const AskChoiceInput = z.strictObject({
-  field: z.enum(STAGE_1_CHIP_FIELDS),
+  field: z.enum(ASK_CHOICE_FIELDS),
   // The question in the advisor's words, shown above the chips.
   question: z.string().min(1),
 });
@@ -129,13 +190,16 @@ export const CheckContradictionsInput = z.strictObject({ profile: DirectionDraft
 
 export const ProposeDirectionInput = z.strictObject({ direction: DirectionSchema });
 
+// The stage 2 card: the full profile. Its stage 1 answers must equal the confirmed direction;
+// the server checks that and runs the engine on toEngineProfile.
+export const ProposeSearchInput = z.strictObject({ profile: ProfileSchema });
+
 type ToolSpec = {
   stage: 1 | 2;
   // True when the server stops and waits for the user (a chip tap or the confirm card).
   pauses: boolean;
   description: string;
-  // null: not wired yet, so the tool is never sent to the model.
-  input: z.ZodType | null;
+  input: z.ZodType;
 };
 
 export const ADVISOR_TOOLS = {
@@ -150,7 +214,7 @@ export const ADVISOR_TOOLS = {
     stage: 1,
     pauses: false,
     description:
-      "Send the stage 1 answers so far. Returns the tensions that fire, each with an id, a plain sentence and whether the user already resolved it.",
+      "Send the answers so far: the stage 1 answers, and in stage 2 the stage 2 answers it takes too. Returns the tensions that fire, each with an id, a plain sentence and whether the user already resolved it.",
     input: CheckContradictionsInput,
   },
   propose_direction: {
@@ -160,22 +224,15 @@ export const ADVISOR_TOOLS = {
       "Show the stage 1 confirm card. If the user confirms, the result holds the category verdict; otherwise it holds their corrections.",
     input: ProposeDirectionInput,
   },
-  // Stage 2, not wired yet: its input (the stage 2 answers) lands with the stage 2 server work.
   propose_search: {
     stage: 2,
     pauses: true,
     description:
-      "Show the stage 2 confirm card. If the user confirms, the result holds the ranked programs.",
-    input: null,
+      "Show the stage 2 confirm card with the full profile. If the user confirms, the result holds the ranked programs; otherwise it holds their corrections.",
+    input: ProposeSearchInput,
   },
 } as const satisfies Record<string, ToolSpec>;
 
 export type AdvisorToolName = keyof typeof ADVISOR_TOOLS;
+// Every tool, in a fixed order: the server sends them all on every request (cached prefix).
 export const ADVISOR_TOOL_NAMES = Object.keys(ADVISOR_TOOLS) as AdvisorToolName[];
-// The tools the server sends to the model today. Listed, not filtered, so their inputs type as
-// zod schemas (never null); a test checks the list against `stage`.
-export const STAGE_1_TOOL_NAMES = [
-  "ask_choice",
-  "check_contradictions",
-  "propose_direction",
-] as const satisfies readonly AdvisorToolName[];

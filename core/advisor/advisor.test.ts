@@ -20,7 +20,7 @@ function section(heading: string) {
   return advisor.split(/^## /m).find((s) => s.startsWith(`${heading}\n`)) ?? "";
 }
 
-const STAGE_2 = "Stage 2, not wired yet";
+const STAGE_2 = "Stage 2: show me programs";
 
 describe("advisor.md is a valid SKILL.md", () => {
   it("has frontmatter with a name and a description", () => {
@@ -41,8 +41,8 @@ describe("advisor.md names the tools that exist", () => {
     for (const name of named) expect(ADVISOR_TOOL_NAMES as readonly string[]).toContain(name);
   });
 
-  it("mentions the stage 2 tool only in the stage 2 section", () => {
-    const stage1 = advisor.replace(section(STAGE_2), "");
+  it("mentions the stage 2 tool only in the tool list and the stage 2 section", () => {
+    const stage1 = advisor.replace(section(STAGE_2), "").replace(section("The tools"), "");
     expect(stage1).not.toContain("propose_search");
   });
 });
@@ -55,7 +55,7 @@ describe("advisor.md is a frozen prompt prefix", () => {
   });
 });
 
-describe("advisor.md runs stage 1 and stops", () => {
+describe("advisor.md runs stage 1, then stage 2 on request", () => {
   it("lists every stage 1 field in the stage 1 checklist", () => {
     const checklist = section("How stage 1 runs");
     for (const entry of STAGE_1_CHECKLIST) {
@@ -79,7 +79,7 @@ describe("advisor.md runs stage 1 and stops", () => {
     expect(section("Deliver the verdict")).toContain('"Want to see programs that fit?"');
   });
 
-  it("writes the stage 2 questions as the last section, marked not wired", () => {
+  it("writes stage 2 as the last section, with every stage 2 field", () => {
     const headings = [...advisor.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
     expect(headings.at(-1)).toBe(STAGE_2);
     const stage2 = section(STAGE_2);
@@ -141,5 +141,40 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
     expect(verdict).toMatch(
       /never give a type a length, hours or work reason that its reasons don't state/,
     );
+  });
+});
+
+// The server's checks on propose_search (docs/chat-api.md, "Stage 2"): a rule that leads the
+// model past them costs a round.
+describe("advisor.md leads stage 2 to a card the server accepts", () => {
+  const stage2 = () => section(STAGE_2);
+
+  it("starts stage 2 only after the direction is confirmed and the user opts in", () => {
+    expect(stage2()).toContain("only after the user confirms the direction card");
+    expect(section("The tools")).toContain("Stage 2 chips only after the direction is confirmed");
+  });
+
+  it("calls check_contradictions again before propose_search", () => {
+    expect(section("The tools")).toMatch(/again in stage 2, before `propose_search`/);
+    const confirm = stage2().split("### ")[1] ?? "";
+    expect(confirm.indexOf("`check_contradictions`")).toBeLessThan(
+      confirm.indexOf("`propose_search`"),
+    );
+  });
+
+  it("copies the stage 1 answers from the confirmed card, and goes back to it when one changes", () => {
+    expect(stage2()).toContain("Copy every stage 1 answer from the confirmed direction card");
+    expect(stage2()).toMatch(/call `propose_direction` again and let them confirm the new verdict/);
+  });
+
+  it("asks for the home in words and turns it into an ISO code and coordinates", () => {
+    expect(stage2()).toContain("two-letter ISO 3166 code in capitals");
+    expect(stage2()).toContain("latitude −90 to 90, longitude −180 to 180");
+    expect(stage2()).toContain("never with chips");
+  });
+
+  it("explains the programs from the result only", () => {
+    expect(stage2()).toContain("never reorder the list");
+    expect(stage2()).toContain('If `access.status` is not "available"');
   });
 });

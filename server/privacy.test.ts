@@ -1,16 +1,22 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CHIPS } from "../core/advisor/chips";
 import { fixtureDataset } from "../tests/fixtures/dataset";
-import { Page, PERSONA_A_OPENING, PERSONA_A_TAPS, walkToLastTap } from "../tests/fixtures/chat";
+import { Page, PERSONA_A_OPENING, PERSONA_A_TAPS, walkToSearchCard } from "../tests/fixtures/chat";
 import { logRequest } from "./log";
 import { FakeModelClient } from "./model/fake";
-import { PERSONA_A_GOAL, personaAScript, VERDICT_TEXT } from "./model/personaA";
+import {
+  PERSONA_A_BACKGROUND_ANSWER,
+  PERSONA_A_GOAL,
+  personaAScript,
+  RESULTS_TEXT,
+  VERDICT_TEXT,
+} from "./model/personaA";
 
 // CLAUDE.md rule 4: the server logs counts, statuses and error kinds, never message content.
 
 afterEach(() => vi.restoreAllMocks());
 
-describe("logging during persona A's run", () => {
+describe("logging during persona A's run, both stages", () => {
   it("holds no message text, profile value or tool input", async () => {
     const lines: string[] = [];
     for (const method of ["log", "info", "warn", "error", "debug"] as const) {
@@ -20,22 +26,31 @@ describe("logging during persona A's run", () => {
     }
     const page = new Page(new FakeModelClient(personaAScript), fixtureDataset());
     page.realLogger = true;
-    await walkToLastTap(page);
-    await page.tap(...PERSONA_A_TAPS.degreeRequired!);
-    await page.confirm();
+    await walkToSearchCard(page);
+    const r = await page.confirm();
+    expect(r.programs).not.toBeNull();
 
     expect(lines.length).toBeGreaterThan(0);
     const secrets = [
       PERSONA_A_OPENING,
       PERSONA_A_GOAL,
+      PERSONA_A_BACKGROUND_ANSWER,
       VERDICT_TEXT.slice(0, 30),
+      RESULTS_TEXT.slice(0, 30),
       ...Object.values(PERSONA_A_TAPS).flat(),
       ...CHIPS.needs.map((c) => c.value),
       "step_up",
       "more_senior",
       "executive",
+      "Buenos Aires",
+      "AR",
+      "-34.6",
+      "80000",
+      "blended",
+      "fake-",
       "toolu_",
       "check_contradictions",
+      "propose_search",
     ];
     for (const line of lines) {
       for (const secret of secrets) expect(line).not.toContain(secret);

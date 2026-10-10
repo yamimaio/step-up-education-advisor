@@ -1,9 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import { recommendCategory } from "../core/index";
+import { evaluatePrograms, recommendCategory } from "../core/index";
 import { toEngineDirection } from "../core/advisor/tools";
 import { fixtureDataset } from "../tests/fixtures/dataset";
-import { Page, PERSONA_A_OPENING, PERSONA_A_TAPS, walkToLastTap } from "../tests/fixtures/chat";
-import { fallbackExplanation, NOTICE_MESSAGES } from "./fallback";
+import {
+  Page,
+  PERSONA_A_OPENING,
+  PERSONA_A_TAPS,
+  TODAY,
+  walkToLastTap,
+  walkToSearchCard,
+} from "../tests/fixtures/chat";
+import { fallbackExplanation, fallbackSearchExplanation, NOTICE_MESSAGES } from "./fallback";
 import { ModelError } from "./model/adapter";
 import { createAnthropicClient } from "./model/anthropic";
 import { FakeModelClient } from "./model/fake";
@@ -90,5 +97,29 @@ describe("the template explanation", () => {
       "Ruled out: an executive program (you need a degree and this type does not award one).",
     );
     expect(text).not.toMatch(/Strong for|Some help with|Little help with/);
+  });
+});
+
+describe("the programs survive a failed model call after the stage 2 confirm", () => {
+  it("returns the engine's programs with the template explanation", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await walkToSearchCard(page);
+    const profile = page.last!.confirm!.profile!;
+    const before = page.history;
+    page.model = new FakeModelClient([new ModelError("auth_or_credit")]);
+    const r = await page.confirm();
+
+    const { category } = recommendCategory(
+      toEngineDirection(PERSONA_A_DIRECTION as never),
+      programs,
+    );
+    const expected = evaluatePrograms(profile, category, programs, TODAY);
+    expect(r.programs).toEqual(expected);
+    expect(r.direction).toBeNull();
+    expect(r.text).toBe(fallbackSearchExplanation(expected, programs));
+    expect(r.notice).toEqual({ kind: "auth_or_credit", message: NOTICE_MESSAGES.auth_or_credit });
+    expect(r.messages).toEqual([]);
+    expect(r.replaceLastUserMessage).toBeNull();
+    expect(page.history.slice(0, before.length)).toEqual(before);
   });
 });

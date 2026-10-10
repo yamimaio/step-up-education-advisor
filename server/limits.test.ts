@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { fixtureDataset } from "../tests/fixtures/dataset";
-import { answer, Page, textMessage, walkToLastTap, PERSONA_A_TAPS } from "../tests/fixtures/chat";
+import {
+  answer,
+  Page,
+  PERSONA_A_TAPS,
+  textMessage,
+  walkToLastTap,
+  walkToSearchCard,
+} from "../tests/fixtures/chat";
 import { chatLoop } from "./chatLoop";
 import type { Message } from "./history";
 import { COUNTER_FROM, MESSAGE_CAP, WRAP_UP_AT, WRAP_UP_NOTE } from "./limits";
@@ -142,6 +149,20 @@ describe(`message ${MESSAGE_CAP + 1}`, () => {
     expect(r.notice?.kind).toBe("limit");
     expect(r.direction?.category.winner).toBe("executive");
     expect(r.text.endsWith("Want to see programs that fit?")).toBe(true);
+    expect(model.requests).toHaveLength(0);
+  });
+
+  it("still returns the programs for a confirm of the stage 2 card", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    // Persona A's walk to the stage 2 card is 24 user turns; the confirm is the 25th.
+    page.history = exchanges(MESSAGE_CAP - 24);
+    await walkToSearchCard(page);
+    const model = new FakeModelClient([]);
+    page.model = model;
+    const r = await page.confirm();
+    expect(r.notice?.kind).toBe("limit");
+    expect(r.programs?.access.category).toBe("executive");
+    expect(r.text).toContain("Programs that fit, best first:");
     expect(model.requests).toHaveLength(0);
   });
 });

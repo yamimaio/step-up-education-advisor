@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { personaAProfile } from "../../tests/fixtures/profiles";
 import { ProfileSchema } from "../schema/profile";
-import { CHIP_TARGET } from "./chips";
-import { STAGE_1_CHECKLIST } from "./fields";
+import { CHIP_FIELDS, CHIP_TARGET } from "./chips";
+import { pickOf, STAGE_1_CHECKLIST, STAGE_2_CHECKLIST } from "./fields";
 import {
   ADVISOR_TOOL_NAMES,
   ADVISOR_TOOLS,
@@ -13,13 +13,16 @@ import {
   DIRECTION_DECLINABLE,
   DirectionSchema,
   ProposeDirectionInput,
+  ProposeSearchInput,
   STAGE_1_CHIP_FIELDS,
-  STAGE_1_TOOL_NAMES,
+  STAGE_2_CHIP_FIELDS,
   toEngineDirection,
+  toEngineProfile,
   type Direction,
 } from "./tools";
 
 const stage1Fields = STAGE_1_CHECKLIST.flatMap((e) => e.fields);
+const stage2Fields = STAGE_2_CHECKLIST.flatMap((e) => e.fields);
 
 // Persona A's stage 1 answers, taken from the fixture.
 const direction: Direction = {
@@ -35,53 +38,144 @@ const direction: Direction = {
   declined: [],
 };
 
-describe("Stage 1 tools", () => {
-  it("sends ask_choice, check_contradictions and propose_direction to the model", () => {
-    expect(STAGE_1_TOOL_NAMES).toEqual(["ask_choice", "check_contradictions", "propose_direction"]);
-    expect(ADVISOR_TOOL_NAMES.filter((n) => ADVISOR_TOOLS[n].stage === 1)).toEqual([
-      ...STAGE_1_TOOL_NAMES,
+describe("the tools sent to the model", () => {
+  it("are every advisor tool, both stages, in a fixed order", () => {
+    expect(ADVISOR_TOOL_NAMES).toEqual([
+      "ask_choice",
+      "check_contradictions",
+      "propose_direction",
+      "propose_search",
     ]);
-  });
-
-  it("keeps propose_search a stub with no input schema", () => {
-    expect(ADVISOR_TOOLS.propose_search.input).toBeNull();
     expect(ADVISOR_TOOLS.propose_search.stage).toBe(2);
   });
 
-  it("pauses on ask_choice and propose_direction only", () => {
-    expect(STAGE_1_TOOL_NAMES.filter((n) => ADVISOR_TOOLS[n].pauses)).toEqual([
+  it("pause on ask_choice and the two cards only", () => {
+    expect(ADVISOR_TOOL_NAMES.filter((n) => ADVISOR_TOOLS[n].pauses)).toEqual([
       "ask_choice",
       "propose_direction",
+      "propose_search",
     ]);
   });
 
-  it("converts every wired input to JSON schema for the server", () => {
-    for (const name of STAGE_1_TOOL_NAMES) {
-      const input = ADVISOR_TOOLS[name].input;
-      expect(() => z.toJSONSchema(input), name).not.toThrow();
+  it("convert every input to JSON schema for the server", () => {
+    for (const name of ADVISOR_TOOL_NAMES) {
+      expect(() => z.toJSONSchema(ADVISOR_TOOLS[name].input), name).not.toThrow();
     }
   });
 });
 
-describe("ask_choice offers exactly the stage 1 chip sets", () => {
-  it("matches the stage 1 checklist chips", () => {
+describe("ask_choice offers every chip set, split by stage", () => {
+  it("matches the checklist chips of each stage", () => {
     expect([...STAGE_1_CHIP_FIELDS].sort()).toEqual(
       STAGE_1_CHECKLIST.flatMap((e) => e.chips).sort(),
     );
-  });
-
-  it("refuses a stage 2 chip set", () => {
-    expect(
-      AskChoiceInput.safeParse({ field: "tuitionBudgetUsd", question: "Budget?" }).success,
-    ).toBe(false);
-    expect(AskChoiceInput.safeParse({ field: "needs", question: "What is missing?" }).success).toBe(
-      true,
+    expect([...STAGE_2_CHIP_FIELDS].sort()).toEqual(
+      STAGE_2_CHECKLIST.flatMap((e) => e.chips).sort(),
+    );
+    expect([...STAGE_1_CHIP_FIELDS, ...STAGE_2_CHIP_FIELDS].sort()).toEqual(
+      [...CHIP_FIELDS].sort(),
     );
   });
 
-  it("only fills stage 1 fields", () => {
+  it("accepts a stage 2 chip set (the server keeps it for after the direction)", () => {
+    expect(
+      AskChoiceInput.safeParse({ field: "tuitionBudgetUsd", question: "Budget?" }).success,
+    ).toBe(true);
+    expect(AskChoiceInput.safeParse({ field: "homeCity", question: "Where?" }).success).toBe(false);
+  });
+
+  it("fills stage 1 fields from stage 1 chips and stage 2 fields from stage 2 chips", () => {
     for (const f of STAGE_1_CHIP_FIELDS)
       expect(stage1Fields).toContain(CHIP_TARGET[f].split(".")[0]);
+    for (const f of STAGE_2_CHIP_FIELDS)
+      expect(stage2Fields).toContain(CHIP_TARGET[f].split(".")[0]);
+  });
+
+  it("takes 3 needs and 2 location values, one of everything else", () => {
+    expect(pickOf("needs")).toBe(3);
+    expect(pickOf("locationValues")).toBe(2);
+    expect(pickOf("tuitionBudgetUsd")).toBe(1);
+    expect(pickOf("degreeLevel")).toBe(1);
+  });
+});
+
+describe("check_contradictions takes the answers its rules read", () => {
+  it("accepts stage 2 answers next to stage 1 ones", () => {
+    const profile = { needs: ["senior_network"], maxOnsiteDays: 5, travelComfort: "burden" };
+    expect(CheckContradictionsInput.safeParse({ profile }).success).toBe(true);
+  });
+
+  it("refuses a stage 2 field no rule reads", () => {
+    const profile = { paymentPlan: "loans" };
+    expect(CheckContradictionsInput.safeParse({ profile }).success).toBe(false);
+  });
+});
+
+describe("propose_search carries the full profile", () => {
+  it("accepts persona A's profile", () => {
+    expect(ProposeSearchInput.parse({ profile: personaAProfile })).toEqual({
+      profile: personaAProfile,
+    });
+  });
+
+  it("refuses a partial profile", () => {
+    const partial: Record<string, unknown> = { ...personaAProfile };
+    delete partial.tuitionBudgetUsd;
+    expect(ProposeSearchInput.safeParse({ profile: partial }).success).toBe(false);
+  });
+});
+
+describe("toEngineProfile runs stage 2 on the confirmed direction", () => {
+  it("rebuilds persona A's profile from the direction and the card", () => {
+    expect(toEngineProfile(direction, personaAProfile)).toEqual(personaAProfile);
+  });
+
+  it("takes stage 1 answers from the direction, never from the card", () => {
+    const card = {
+      ...personaAProfile,
+      maxProgramMonths: 24,
+      needs: ["graduate_degree", "deep_expertise", "senior_network"],
+    } as typeof personaAProfile;
+    const engine = toEngineProfile(direction, card);
+    expect(engine.maxProgramMonths).toBe(12);
+    expect(engine.needs).toEqual(direction.needs);
+  });
+
+  it("gives a declined stage 1 field its placeholder and keeps both declined lists", () => {
+    const declined: Direction = {
+      ...direction,
+      hoursPerWeek: null,
+      peerPreference: null,
+      declined: ["hoursPerWeek", "peerPreference"],
+    };
+    const card = { ...personaAProfile, declined: ["travelBudgetUsd", "hoursPerWeek"] };
+    const engine = toEngineProfile(declined, card);
+    expect(engine.hoursPerWeek).toEqual(DECLINED_PLACEHOLDERS.hoursPerWeek);
+    expect(engine.peerPreference).toBe(DECLINED_PLACEHOLDERS.peerPreference);
+    expect(engine.declined).toEqual(["hoursPerWeek", "peerPreference", "travelBudgetUsd"]);
+    expect(ProfileSchema.safeParse(engine).success).toBe(true);
+  });
+
+  it("keeps the direction's tie-breaker and the tensions of both cards", () => {
+    const tied: Direction = {
+      ...direction,
+      tieBreaker: "executive",
+      resolvedTensions: [{ rule: "R4", chosen: "time" }],
+    };
+    const card = {
+      ...personaAProfile,
+      tieBreaker: "emba" as const,
+      resolvedTensions: [
+        { rule: "R4", chosen: "depth" },
+        { rule: "R1", chosen: "network" },
+      ],
+    };
+    const engine = toEngineProfile(tied, card);
+    expect(engine.tieBreaker).toBe("executive");
+    expect(engine.resolvedTensions).toEqual([
+      { rule: "R4", chosen: "time" },
+      { rule: "R1", chosen: "network" },
+    ]);
   });
 });
 

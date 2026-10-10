@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { CHIPS, type ChipField } from "../core/advisor/chips";
-import { isStage1Tool, pauses } from "./tools";
+import { pickOf } from "../core/advisor/fields";
+import { isAdvisorTool, pauses } from "./tools";
 
 // Read-only helpers over the conversation history the page posts (docs/chat-api.md). The history
 // is client-held, so everything here reads it defensively: a value written next to a chip label
@@ -36,7 +37,7 @@ export function parseJson(content: Anthropic.ToolResultBlockParam["content"]): u
   }
 }
 
-const isPausing = (name: string) => isStage1Tool(name) && pauses(name);
+const isPausing = (name: string) => isAdvisorTool(name) && pauses(name);
 
 // Every tool call in the history with its answer, if any. The answer is the first tool_result
 // for that id; the API refuses a history with two.
@@ -106,7 +107,7 @@ export function latestTaps(history: Message[]): Map<string, unknown> {
     if (!labels || labels.length === 0) continue;
     const values = labels.map((l) => chipValue(field as ChipField, l));
     if (values.some((v) => !v.found)) continue;
-    const many = field === "needs";
+    const many = pickOf(field) > 1;
     taps.set(field, many ? values.map((v) => v.value) : values[0]!.value);
   }
   return taps;
@@ -118,17 +119,43 @@ export function calledBefore(history: Message[], name: string): boolean {
   );
 }
 
+const isConfirm = (result: Anthropic.ToolResultBlockParam | undefined) => {
+  if (!result || result.is_error) return false;
+  const answer = parseJson(result.content);
+  return (
+    typeof answer === "object" &&
+    answer !== null &&
+    (answer as { confirmed?: unknown }).confirmed === true
+  );
+};
+
 // True when a propose_direction card was confirmed earlier in the history.
 export function hasConfirmedDirection(history: Message[]): boolean {
-  return toolCalls(history).some(({ use, result }) => {
-    if (use.name !== "propose_direction" || !result || result.is_error) return false;
-    const answer = parseJson(result.content);
-    return (
-      typeof answer === "object" &&
-      answer !== null &&
-      (answer as { confirmed?: unknown }).confirmed === true
-    );
+  return toolCalls(history).some(
+    ({ use, result }) => use.name === "propose_direction" && isConfirm(result),
+  );
+}
+
+// The last propose_direction card the user confirmed: the call, the index of the message that
+// holds it and the index of the message that confirms it. Its input is not checked here.
+export function lastConfirmedDirectionCall(
+  history: Message[],
+): { use: Anthropic.ToolUseBlockParam; callAt: number; resultAt: number } | null {
+  let found: { use: Anthropic.ToolUseBlockParam; callAt: number; resultAt: number } | null = null;
+  history.forEach((message, callAt) => {
+    for (const use of toolUsesOf(message)) {
+      if (use.name !== "propose_direction") continue;
+      const resultAt = history.findIndex(
+        (m, i) => i > callAt && toolResultsOf(m).some((r) => r.tool_use_id === use.id),
+      );
+      if (resultAt < 0) continue;
+      const result = toolResultsOf(history[resultAt]!).find((r) => r.tool_use_id === use.id);
+      if (isConfirm(result) && (!found || resultAt > found.resultAt)) {
+        found = { use, callAt, resultAt };
+      }
+    }
   });
+  return found;
 }
 
 // User turns, which the message cap counts (DQ4): typed messages, chip taps and confirms. The

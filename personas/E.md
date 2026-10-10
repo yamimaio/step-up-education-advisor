@@ -19,7 +19,7 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 | keepWorking    | `Yes, I keep working`                                               |
 | degreeRequired | `Preferred`                                                         |
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 | Entry            | Answer                                                |
 | ---------------- | ----------------------------------------------------- |
@@ -52,7 +52,7 @@ Hand-computed on the 1 to 5 category table and the category rules on #22 (`docs/
 - Tension to raise: none yet. R1 reads on-site days, which stage 1 doesn't ask.
 - Ends with "Want to see programs that fit?"
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 - Once the on-site answers are in, and before `propose_search`, the advisor raises R1: the senior network is ranked first but the person allows fewer than 10 on-site days a year, and networks are mostly built in person. It names both sides and lets the user choose.
 - What follows depends on the choice. If they raise their on-site limit, expect the EMBA record, as a near miss on its unpublished figures. If they keep it at zero, the verdict stays an executive MBA, the card says none is within their limits (the only record is in person) and points to an alternative category, and the advisor says the network will be thinner than they want.
