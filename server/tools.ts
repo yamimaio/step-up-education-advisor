@@ -1,14 +1,15 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { ADVISOR_TOOLS, STAGE_1_TOOL_NAMES } from "../core/advisor/tools";
+import { ADVISOR_TOOL_NAMES, ADVISOR_TOOLS, type AdvisorToolName } from "../core/advisor/tools";
 
-// The tools the model sees in stage 1, built once from core/advisor/tools.ts. They are frozen
+// The tools the model sees, both stages, built once from core/advisor/tools.ts. They are frozen
 // constants in a fixed order, so the cached prefix (tools, then system) is the same bytes on
-// every request. Strict tool use needs a JSON Schema subset (DQ14): toStrictSchema adapts the
+// every request; the server, not the tool list, keeps stage 2 closed until a direction is
+// confirmed. Strict tool use needs a JSON Schema subset (DQ14): toStrictSchema adapts the
 // schema zod generates, and the server parses every input with the zod schema, which checks
 // what the subset can't express. Optional properties stay optional: the API caps strict schemas
-// at 16 union-typed and 24 optional parameters per request, so making them nullable (22 unions)
-// would fail every call (decisions.md, Step 6).
+// at 16 union-typed and 24 optional parameters per request, so making them nullable would fail
+// every call (decisions.md, Step 6).
 
 type Json = { [key: string]: unknown };
 
@@ -50,7 +51,7 @@ export function toStrictSchema(schema: Json): Json {
 }
 
 export const TOOLS: readonly Anthropic.Tool[] = Object.freeze(
-  STAGE_1_TOOL_NAMES.map((name) => {
+  ADVISOR_TOOL_NAMES.map((name) => {
     const spec = ADVISOR_TOOLS[name];
     return {
       name,
@@ -63,7 +64,6 @@ export const TOOLS: readonly Anthropic.Tool[] = Object.freeze(
   }),
 );
 
-export type Stage1ToolName = (typeof STAGE_1_TOOL_NAMES)[number];
-export const isStage1Tool = (name: string): name is Stage1ToolName =>
-  (STAGE_1_TOOL_NAMES as readonly string[]).includes(name);
-export const pauses = (name: Stage1ToolName) => ADVISOR_TOOLS[name].pauses;
+export const isAdvisorTool = (name: string): name is AdvisorToolName =>
+  (ADVISOR_TOOL_NAMES as readonly string[]).includes(name);
+export const pauses = (name: AdvisorToolName) => ADVISOR_TOOLS[name].pauses;

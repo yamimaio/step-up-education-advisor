@@ -19,7 +19,7 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 | keepWorking    | `Yes, I keep working`                                                              |
 | degreeRequired | `Not needed`                                                                       |
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 | Entry            | Answer                                                |
 | ---------------- | ----------------------------------------------------- |
@@ -53,7 +53,7 @@ Hand-computed on the 1 to 5 category table (`docs/need-based-ranking.md`), not a
 - Tension to raise: R4. Deep expertise is in the top 3 but they can give under 5 hours a week. The advisor names both sides and lets them choose.
 - The budget is not asked yet, so it can't change this verdict. Ends with "Want to see programs that fit?"
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 - The only executive record (MIT TLP, $28,000) is far over a $5k to $15k budget. The verdict stays; the card says executive programs are out of reach within their limits and points to the graduate certificate.
 

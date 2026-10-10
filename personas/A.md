@@ -19,7 +19,7 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 | keepWorking    | `Yes, I keep working`                                                |
 | degreeRequired | `Not needed`                                                         |
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 | Entry            | Answer                                                     |
 | ---------------- | ---------------------------------------------------------- |
@@ -54,7 +54,7 @@ Hand-computed on the 1 to 5 category table (`docs/need-based-ranking.md`), not a
 - Tension to raise: none. R4 is the only rule stage 1 answers can fire, and 5 to 10 hours doesn't fire it.
 - Ends with "Want to see programs that fit?"
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 - With the current draft data, the MIT TLP record is the likely first program, shown as a near miss because the school publishes no on-site day counts or weekly hours. Expect low confidence on it.
 - Tension to raise: none. The contradiction rules stay quiet on the fixed answers.

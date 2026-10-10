@@ -1,20 +1,23 @@
 "use client";
 
 import { useId, useState } from "react";
-import type { Direction } from "@core/advisor/tools";
-import { directionLines } from "@app/lib/labels";
+import type { CardLine } from "@app/lib/labels";
 
-// The stage 1 confirm card. Each line comes from the propose_direction input through the chip
-// labels; "Looks right" confirms, "Change something" asks what to change in the user's words.
-// `correction` is a refused correction coming back: the card opens with it, ready to rephrase.
-export function DirectionCard({
-  direction,
+// A confirm card: stage 1's "Here's what I understood" (propose_direction) or stage 2's search
+// card (propose_search). Each line comes from the tool input through the chip labels
+// (directionLines, searchLines); "Looks right" confirms, "Change something" asks what to change
+// in the user's words. `correction` is a refused correction coming back: the card opens with it,
+// ready to rephrase.
+export function ConfirmCard({
+  heading,
+  lines,
   correction = null,
   disabled,
   onConfirm,
   onCorrect,
 }: {
-  direction: Direction;
+  heading: string;
+  lines: CardLine[];
   correction?: string | null;
   disabled: boolean;
   onConfirm: () => void;
@@ -30,10 +33,10 @@ export function DirectionCard({
       className="rounded-lg border border-teal/40 bg-white/70 p-4 shadow-sm"
     >
       <h2 id={headingId} tabIndex={-1} className="mb-3 font-semibold text-teal outline-none">
-        Here&apos;s what I understood
+        {heading}
       </h2>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-        {directionLines(direction).map((line, i) => (
+        {lines.map((line, i) => (
           <div key={i} className="contents">
             <dt className="text-ink/70">{line.label}</dt>
             <dd>{line.value}</dd>

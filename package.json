@@ -19,7 +19,9 @@
     "ci": "npm run lint && npm run typecheck && npm run format:check && npm test && npm run validate-data",
     "validate-data": "tsx scripts/validate-data.ts",
     "draft-records": "tsx scripts/draft-records.ts",
-    "check-bundle": "tsx scripts/check-bundle.ts"
+    "check-bundle": "tsx scripts/check-bundle.ts",
+    "probe-tools": "tsx --conditions=react-server scripts/probe-tools.ts",
+    "real-run": "tsx --conditions=react-server scripts/real-run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.132.0",

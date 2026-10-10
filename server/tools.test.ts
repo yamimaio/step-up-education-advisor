@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CheckContradictionsInput, ProposeDirectionInput } from "../core/advisor/tools";
+import { ProposeDirectionInput } from "../core/advisor/tools";
 import { PERSONA_A_DIRECTION } from "./model/personaA";
 import { advisorPrompt, SYSTEM } from "./prompt";
 import { TOOLS, toStrictSchema } from "./tools";
@@ -54,13 +54,11 @@ describe("strict tool schemas (DQ14)", () => {
     });
   });
 
-  // The API's schema complexity limits, summed over every strict tool in a request
-  // (platform.claude.com/docs/en/build-with-claude/structured-outputs). Over them, every call
-  // is a 400.
-  it("stays inside the API's complexity limits", () => {
+  // Totals over every strict tool in a request.
+  function complexity(tools: readonly { input_schema: unknown }[]) {
     let optional = 0;
     let unions = 0;
-    for (const tool of TOOLS) {
+    for (const tool of tools) {
       walk(tool.input_schema, (n) => {
         if (Array.isArray(n.anyOf) || Array.isArray(n.type)) unions++;
         if (n.type === "object" && typeof n.properties === "object" && n.properties) {
@@ -69,15 +67,37 @@ describe("strict tool schemas (DQ14)", () => {
         }
       });
     }
+    return { optional, unions };
+  }
+
+  // The documented limits (platform.claude.com/docs/en/build-with-claude/structured-outputs).
+  // Over them, every call is a 400.
+  it("stays inside the API's documented complexity limits", () => {
+    const { optional, unions } = complexity(TOOLS);
     expect(TOOLS.filter((t) => t.strict).length).toBeLessThanOrEqual(20);
     expect(optional).toBeLessThanOrEqual(24);
     expect(unions).toBeLessThanOrEqual(16);
   });
 
+  // The API also caps the size of the grammar it compiles from the strict schemas, a limit no
+  // document gives and no test can check: schemas inside the documented limits were refused
+  // ("The compiled grammar is too large", decisions.md, "The real API refused the stage 2
+  // schemas"). This budget is the configuration `npm run probe-tools` saw the API accept. Raise
+  // it only after a probe of the bigger schemas passes.
+  it("stays inside the budget the real API accepted", () => {
+    const { optional, unions } = complexity(TOOLS);
+    expect(optional).toBeLessThanOrEqual(1);
+    expect(unions).toBeLessThanOrEqual(10);
+    const bytes = Object.fromEntries(
+      TOOLS.map((t) => [t.name, JSON.stringify(t.input_schema).length]),
+    );
+    expect(bytes.ask_choice).toBeLessThanOrEqual(454);
+    expect(bytes.check_contradictions).toBeLessThanOrEqual(529);
+    expect(bytes.propose_direction).toBeLessThanOrEqual(1768);
+    expect(bytes.propose_search).toBeLessThanOrEqual(1143);
+  });
+
   it("parses inputs with the zod schema, which enforces what strict mode can't", () => {
-    expect(
-      CheckContradictionsInput.safeParse({ profile: { needs: ["senior_network"] } }).success,
-    ).toBe(true);
     const short = { ...PERSONA_A_DIRECTION, needs: ["senior_network"] };
     expect(ProposeDirectionInput.safeParse({ direction: short }).success).toBe(false);
     const negative = { ...PERSONA_A_DIRECTION, maxProgramMonths: -1 };
