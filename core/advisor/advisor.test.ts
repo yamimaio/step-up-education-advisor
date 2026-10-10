@@ -112,3 +112,21 @@ describe("advisor.md only asks for tool calls the server accepts", () => {
     expect(section("The tools")).toMatch(/\*\*always\*\* before `propose_direction`/);
   });
 });
+
+describe("advisor.md explains the verdict in words, from the engine's reasons (issue #130)", () => {
+  it("forbids scores in the advisor's words", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toMatch(/Never state a score, subtotal, point, adjustment or rank number/);
+    expect(section("Facts come from tool results only")).toContain(
+      "Scores never appear in what you write.",
+    );
+  });
+
+  it("takes every loss reason from the type's reasons, so no length reason is invented", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain("only from that type's `reasons`");
+    expect(verdict).toMatch(
+      /never give a type a length, hours or work reason that its reasons don't state/,
+    );
+  });
+});

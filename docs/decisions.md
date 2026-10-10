@@ -246,3 +246,9 @@ Stage 1 only. Yami split step 6 by stage (Oct 9, on the round 1 review of PR #10
 - **Persona A's fake** (`MODEL_FAKE=1`) builds its card from the taps in the history, so page work off persona A's exact path still reaches a verdict, and after a refused call it ends its turn instead of repeating the call.
 - **Typed answers to chip fields** (`advisor.md`): the advisor asks again with `ask_choice`, unless the typed answer declines the question. Then the field is declined as usual (`needs` keeps its one re-offer).
 - **Corrections to chip fields from the card** (round 2 review): the advisor asks again with `ask_choice` on that field before the next card, unless the correction declines the field (round 3 review). Then the field is set to `null` and named in `declined`.
+
+## The verdict in words, not scores (issue #130)
+
+- The engine still ranks types by score (decisions unchanged), but each type's `reasons` are now plain words: how strongly it serves each ranked need ("Strong for a senior network and leadership skills.", "Some help with …", "Little help with …", from the 1-5 type ratings: 4-5 strong, 3 some, 1-2 little), the degree answer ("Built around a degree you said you don't need.") and growing in the role. No reason carries a number.
+- The verdict card and the transcript drop the score column ("How each type compares"); ruled-out types are marked "(ruled out)".
+- The model still receives the scores in the `propose_direction` result, so the history format and retries don't change; `advisor.md` forbids stating them and limits loss reasons to the type's own `reasons`.

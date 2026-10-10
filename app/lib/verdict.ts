@@ -5,7 +5,8 @@ import { CATEGORY_LABELS, DIRECTION_FIELD_LABELS, chipLabel } from "./labels";
 // The verdict in display form, from the engine's DirectionResult and the confirmed card only.
 // Shared by the verdict block and the transcript.
 
-export type VerdictRow = { category: Category; name: string; score: string; reasons: string[] };
+// No scores: they rank the types, but the user decides on the reasons (issue #130).
+export type VerdictRow = { category: Category; name: string; out: boolean; reasons: string[] };
 
 export type VerdictView = {
   // "not yet": the engine's stage 1 trigger, explained in plain words.
@@ -16,7 +17,7 @@ export type VerdictView = {
   tie: [string, string] | null;
   decidingNeeds: string[];
   tensions: string[];
-  // Every type, best score first and ruled-out types last, with the engine's reasons.
+  // Every type, best fit first and ruled-out types last, with the engine's reasons in words.
   rows: VerdictRow[];
   notAnswered: string[];
 };
@@ -40,11 +41,11 @@ export function verdictView({ direction, result }: Verdict): VerdictView {
     .map(({ c, s }) => ({
       category: c,
       name: CATEGORY_LABELS[c],
-      score: s === "out" ? "Ruled out" : String(s),
+      out: s === "out",
       reasons: category.reasons[c] ?? [],
     }));
   const name = (c: Category | null) => (c ? CATEGORY_LABELS[c] : null);
-  // "Not yet" replaces the pick: the engine still ranks the types (the score table shows them),
+  // "Not yet" replaces the pick: the engine still ranks the types (the comparison shows them),
   // but the verdict names no winner, runner-up, tie or deciding needs.
   const notYet = noProgram.triggered;
   return {

@@ -4,10 +4,14 @@ import {
   CATEGORY_ORDER,
   CHECK_LABELS,
   DEGREE_ADJUST,
+  DEGREE_WORDS,
   DEGREE_ADJUSTED_TYPES,
   GROW_IN_ROLE_BONUS,
   GROW_IN_ROLE_TYPES,
+  GROW_IN_ROLE_WORDS,
   NEED_WEIGHTS,
+  NEED_WORDS,
+  RATING_WORDS,
   RATING_MIN,
   REQUIRED_RULES_OUT,
   TYPE_RATINGS,
@@ -46,6 +50,19 @@ export function failedChecks(checkLists: Check[][]): CheckId[] {
     .map(([id]) => id);
 }
 
+// How a type serves the user's ranked needs, in words and in their order: "Strong for a senior
+// network and leadership skills." then "Some help with deep expertise in a field." (issue #130).
+export function needsInWords(category: Category, needs: Need[]): string[] {
+  const groups = new Map<string, string[]>();
+  for (const need of needs) {
+    const word = RATING_WORDS[TYPE_RATINGS[category][need]];
+    groups.set(word, [...(groups.get(word) ?? []), NEED_WORDS[need]]);
+  }
+  const and = (items: string[]) =>
+    items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+  return [...groups].map(([word, items]) => `${word} ${and(items)}.`);
+}
+
 // Stage 1: pick the type of program before any specific program. `evaluations` hold each
 // program's stage-1 checks (checkDirection), so a type is ruled out only by length, hours or
 // keeping a job, never by budget, travel or location.
@@ -68,9 +85,9 @@ export function categoryFit(
       0,
     );
     why.push(
-      profile.needs.length > 0
-        ? `Needs subtotal ${subtotal}.`
-        : "No ranked needs: you chose not to say.",
+      ...(profile.needs.length > 0
+        ? needsInWords(category, profile.needs)
+        : ["No ranked needs: you chose not to say."]),
     );
 
     const records = programs.filter((p) => p.category === category);
@@ -101,11 +118,11 @@ export function categoryFit(
       DEGREE_ADJUSTED_TYPES.includes(category)
     ) {
       score += DEGREE_ADJUST[degree];
-      why.push(`Degree ${degree === "no" ? "not needed" : degree}: ${DEGREE_ADJUST[degree]}.`);
+      why.push(DEGREE_WORDS[degree]);
     }
     if (profile.careerGoal.kind === "grow_in_role" && GROW_IN_ROLE_TYPES.includes(category)) {
       score += GROW_IN_ROLE_BONUS;
-      why.push(`Growing in your current role: +${GROW_IN_ROLE_BONUS}.`);
+      why.push(GROW_IN_ROLE_WORDS);
     }
     if (records.length === 0) why.push("No verified programs of this type yet.");
     scores[category] = score;

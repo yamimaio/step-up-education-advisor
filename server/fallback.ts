@@ -63,7 +63,10 @@ export function fallbackExplanation(result: DirectionResult): string {
     (c) => category.scores[c] === "out",
   );
   for (const c of out) {
-    const reasons = category.reasons[c];
+    // Only the reason that rules it out, not how it fits the needs: "(you need a degree and …)".
+    const reasons = category.reasons[c]
+      .filter((r) => r.startsWith("Out: "))
+      .map((r) => r.slice("Out: ".length).replace(/\.$/, ""));
     lines.push(`Ruled out: ${CATEGORY[c]}${reasons.length ? ` (${reasons.join("; ")})` : ""}.`);
   }
   if (profileGaps.length) {

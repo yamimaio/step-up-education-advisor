@@ -24,7 +24,16 @@ describe("VerdictBlock", () => {
     expect(text).toContain("Executive program");
     expect(text).toMatch(/Runner-up: \S/);
     expect(text).toContain("Deciding needs: A senior network");
-    expect(text).toContain(`Executive program${verdict.result.category.scores.executive}`);
+    expect(text).toContain("Executive programStrong for a senior network and leadership skills.");
+  });
+
+  it("shows no scores, subtotals or points (issue #130)", () => {
+    const verdict = verdictFor(personaADirection);
+    render(<VerdictBlock verdict={verdict} />);
+    const text = block();
+    expect(text).not.toMatch(/\d/);
+    expect(text).not.toMatch(/score|subtotal|point/i);
+    expect(text).toContain("Built around a degree you said you don't need.");
   });
 
   it("lists a ruled-out type with the engine's reason", () => {
@@ -32,7 +41,7 @@ describe("VerdictBlock", () => {
       <VerdictBlock verdict={verdictFor({ ...personaADirection, degreeRequired: "required" })} />,
     );
     const text = block();
-    expect(text).toContain("CertificateRuled out");
+    expect(text).toContain("Certificate(ruled out)");
     expect(text).toContain("Out: you need a degree and this type does not award one.");
   });
 

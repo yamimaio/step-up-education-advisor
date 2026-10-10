@@ -90,7 +90,10 @@ describe("buildTranscript", () => {
     expect(md).toContain('Step up to a bigger leadership role: "Move into an executive role"');
     expect(md).toContain("## Verdict");
     expect(md).toContain("- Best next step: Executive program");
-    expect(md).toMatch(/\| Executive program \| \d+ \|/);
+    expect(md).toContain(
+      "| Executive program | Strong for a senior network and leadership skills.",
+    );
+    expect(md).not.toMatch(/\| Score \||subtotal/);
   });
 
   it("includes the template explanation shown after a failed confirm", () => {

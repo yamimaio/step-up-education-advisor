@@ -239,3 +239,24 @@ describe("Failed checks are ordered by count, then by check order", () => {
     expect(failedChecks([a, b, a])).toEqual(["location", "tuition"]);
   });
 });
+
+describe("Reasons are in words, never scores (issue #130)", () => {
+  it("says how each type serves the ranked needs, strongest group first in the user's order", () => {
+    const { reasons } = score({
+      needs: ["senior_network", "leadership_skills", "deep_expertise"],
+      degreeRequired: "no",
+    });
+    expect(reasons.executive.slice(0, 2)).toEqual([
+      "Strong for a senior network and leadership skills.",
+      "Some help with deep expertise in a field.",
+    ]);
+    expect(reasons.emba).toContain("Built around a degree you said you don't need.");
+  });
+
+  it("puts no number in any reason", () => {
+    for (const degreeRequired of ["no", "unsure", "preferred", "required"] as const) {
+      const { reasons } = score({ ...degreeFirst, degreeRequired });
+      expect(Object.values(reasons).flat().join(" ")).not.toMatch(/\d/);
+    }
+  });
+});

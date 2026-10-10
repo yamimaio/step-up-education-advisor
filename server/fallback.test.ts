@@ -76,6 +76,10 @@ describe("the template explanation", () => {
     );
     const out = Object.entries(result.category.scores).filter(([, s]) => s === "out");
     expect(out.length).toBeGreaterThan(0);
-    expect(fallbackExplanation(result)).toContain("Ruled out:");
+    const text = fallbackExplanation(result);
+    expect(text).toContain(
+      "Ruled out: an executive program (you need a degree and this type does not award one).",
+    );
+    expect(text).not.toMatch(/Strong for|Some help with|Little help with/);
   });
 });
