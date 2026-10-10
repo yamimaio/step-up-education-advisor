@@ -214,7 +214,7 @@ describe("advisor.md reads a limit missing from issues as passed (issue #200)", 
 
   it("says every limit not in a program's issues passed", () => {
     expect(explain()).toContain(
-      "Every limit the user set that is not in a program's `issues` passed: the program is within it.",
+      "Every limit the user set that the engine checks and that is not in a program's `issues` passed: the program is within it.",
     );
     expect(explain()).toContain("a closer look at one included");
   });
@@ -225,9 +225,17 @@ describe("advisor.md reads a limit missing from issues as passed (issue #200)", 
     );
   });
 
-  it("takes questions for the school only from issues and uncovered needs", () => {
+  it("takes questions for the school only from issues, uncovered needs and unchecked answers", () => {
     expect(explain()).toContain(
-      "Questions for the school come only from `issues` (a near miss, a figure that is `unknown`, or an estimate the issue's `note` names) and from needs the result doesn't cover.",
+      "Questions for the school come only from `issues` (a near miss, a figure that is `unknown`, or an estimate the issue's `note` names), from needs the result doesn't cover, and from answers the engine doesn't check.",
+    );
+  });
+
+  // Review round 2: how they'd pay isn't an engine check, so it's never in issues, but the card
+  // shows a payment option the record doesn't publish (app/lib/programs.ts, "How you'd pay").
+  it("leaves how they'd pay to the card and the school, never to the passed-limit rule", () => {
+    expect(explain()).toContain(
+      "How they'd pay is one: the result holds no payment options, so never say whether a program offers their way of paying; point to the program card, which shows it, and suggest asking the school when the card says it isn't published.",
     );
   });
 
