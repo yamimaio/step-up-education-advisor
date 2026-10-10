@@ -3,14 +3,14 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, production]
 
 permissions:
   contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/production' }}
 
 jobs:
   check:
@@ -45,6 +45,32 @@ jobs:
           if [ "$rc" -ne 1 ]; then echo "grep failed (exit $rc)"; exit 1; fi
       # The key name and the Anthropic SDK must stay out of the browser bundle too.
       - run: npm run check-bundle
+
+  # Scans every commit the PR adds for secrets (DQ19), so a key committed and then removed in a
+  # later commit still fails. Merge commits are scanned against their first parent, so a key typed
+  # while resolving a merge is caught too. The binary is pinned by version and checksum.
+  # A hit on a real key means deleting it in the Console: rewriting the commit doesn't unpublish it.
+  secrets:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          tarball="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSLO "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${tarball}"
+          echo "${GITLEAKS_SHA256}  ${tarball}" | sha256sum -c -
+          tar -xzf "$tarball" gitleaks
+      - name: Scan the PR's commits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: ./gitleaks git --redact --verbose --log-opts="--diff-merges=first-parent ${BASE_SHA}..${HEAD_SHA}"
 
   docker:
     runs-on: ubuntu-latest

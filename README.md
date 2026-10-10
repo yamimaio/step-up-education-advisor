@@ -28,6 +28,8 @@ On Linux, files the container writes are root-owned unless you run it as yoursel
 `docker compose run --rm -u 0 dev chown -R "$UID:$GID" node_modules .next`. Docker Desktop on macOS needs nothing.
 Docker Compose 2.24 or newer is required.
 
+The public site runs on Render: see `docs/deploy.md`.
+
 ## Layout
 
 - `core/`: data, schemas, engine and advisor rules. No web or model code; it never imports `app/` or `server/` (enforced by ESLint)
