@@ -226,17 +226,17 @@ function sameCard(a: Direction, b: Direction, programs: Program[]): boolean {
 // confirmed, since showing it again only loops them through "Looks right" (issue #203). Only a
 // new call gets this check: the re-checks of calls already in the client-held history
 // (confirmedDirection, rewriteConfirm) leave it out, so a history that holds the loop still reads.
+// It runs last: a card that misses the latest tap gets the tap problem, since the user did change
+// that answer. A card that passes holds the latest taps, so equal to the confirmed one means
+// nothing changed.
 export function checkProposeDirection(input: unknown, history: Message[], programs: Program[]) {
-  const parsed = ProposeDirectionInput.safeParse(input);
-  const confirmed = parsed.success ? confirmedDirection(history) : null;
-  if (
-    parsed.success &&
-    confirmed &&
-    sameCard(confirmed.direction, parsed.data.direction, programs)
-  ) {
+  const checked = validateProposeDirection(input, history);
+  if (!checked.ok) return checked;
+  const confirmed = confirmedDirection(history);
+  if (confirmed && sameCard(confirmed.direction, checked.direction, programs)) {
     return { ok: false as const, problems: ALREADY_CONFIRMED };
   }
-  return validateProposeDirection(input, history);
+  return checked;
 }
 
 const ChipAnswer = z.strictObject({ chosen: z.array(z.string()), typed: z.string().optional() });

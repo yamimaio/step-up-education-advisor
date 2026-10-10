@@ -621,6 +621,29 @@ describe("the server shows a confirmed card only once (issue #203)", () => {
     expect(r.direction).not.toBeNull();
   });
 
+  it("answers the old card after a changed tap with the tap problem, not the repeat", async () => {
+    const { page } = await atVerdict([turn(text(VERDICT_TEXT))]);
+    page.model = new FakeModelClient([
+      turn(toolUse("ask_choice", { field: "maxProgramMonths", question: "Length?" })),
+    ]);
+    await page.type("Actually I could do two years.");
+    page.model = new FakeModelClient([
+      checkAll(),
+      propose(PERSONA_A_DIRECTION),
+      propose({ ...PERSONA_A_DIRECTION, maxProgramMonths: 24 }),
+    ]);
+    const r = await page.tap("Up to 2 years");
+    const errors = errorResultsIn(r.messages);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
+      content: expect.stringContaining("doesn't match the chip the user tapped last"),
+    });
+    expect(errors[0]).not.toMatchObject({
+      content: expect.stringContaining("already confirmed"),
+    });
+    expect(r.confirm?.direction?.maxProgramMonths).toBe(24);
+  });
+
   it("refuses the same card with a tieBreaker when the answers don't tie", async () => {
     const { page, r } = await atVerdict([turn(text(VERDICT_TEXT))]);
     expect(r.direction?.category.tie).toBeUndefined();
