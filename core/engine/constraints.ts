@@ -253,3 +253,15 @@ export function checkConstraints(
   ];
   return { checks, status: worst(checks) };
 }
+
+// A published figure past the user's limit. A near miss that is `unknown` (not published), or a
+// figure the engine can't compare (a per-course price with no published total, a lodging-only
+// travel total under the budget, a location with no home), isn't over anything. One rule for the
+// card's wording, the fallback reply and the order of the list (#247 review round 1).
+export function isOver(c: Check): boolean {
+  if (c.unknown || c.value === null || c.id === "location") return false;
+  if (c.id === "travelBudget" && typeof c.value === "number" && typeof c.limit === "number") {
+    return c.value > c.limit;
+  }
+  return true;
+}

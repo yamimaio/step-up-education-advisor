@@ -294,8 +294,20 @@ const scores = {
 const confirmed = { winner: "executive", runnerUp: "certificate", scores } as const;
 const ids = (list: { id: string }[]) => list.map((r) => r.id);
 // A near miss over a published limit, and one only on a value the school doesn't publish.
-const tuitionOver = { id: "tuition", status: "near_miss", unknown: false } as Check;
-const hoursUnpublished = { id: "hours", status: "near_miss", unknown: true } as Check;
+const tuitionOver = {
+  id: "tuition",
+  status: "near_miss",
+  value: 90000,
+  limit: 80000,
+  unknown: false,
+} as Check;
+const hoursUnpublished = {
+  id: "hours",
+  status: "near_miss",
+  value: null,
+  limit: "5 to 10",
+  unknown: true,
+} as Check;
 const overLimit = { status: "near_miss" as const, checks: [tuitionOver] };
 const unpublished = { status: "near_miss" as const, checks: [hoursUnpublished] };
 // The access card names no alternative unless a test says so.
@@ -339,6 +351,31 @@ describe("Order", () => {
       confirmed,
     );
     expect(ids(r.ranked)).toEqual(["fake-unpublished", "fake-b", "fake-a", "fake-over"]);
+  });
+
+  it("ranks a near miss on a figure it can't compare with the passes, as the card does (#247 review)", () => {
+    // Not over anything: a per-course price with no published total, and a lodging-only travel
+    // total under the budget (the user's airfare is unknown). A lodging-only total already past
+    // the budget is over.
+    const perCourse = { ...tuitionOver, value: null };
+    const lodgingUnder = { id: "travelBudget", status: "near_miss", value: 5475, limit: 10000 };
+    const lodgingOver = { ...lodgingUnder, value: 10500 };
+    const near = (c: object) => ({ status: "near_miss" as const, checks: [c as Check] });
+    const r = rank(
+      [
+        ev("fake-pass", { total: 30 }),
+        ev("fake-per-course", { total: 40, ...near(perCourse) }),
+        ev("fake-lodging-under", { total: 35, ...near({ ...lodgingUnder, unknown: false }) }),
+        ev("fake-lodging-over", { total: 45, ...near({ ...lodgingOver, unknown: false }) }),
+      ],
+      confirmed,
+    );
+    expect(ids(r.ranked)).toEqual([
+      "fake-per-course",
+      "fake-lodging-under",
+      "fake-pass",
+      "fake-lodging-over",
+    ]);
   });
 
   it("breaks ties by location fit, then lower known total cost, unknown last, then id", () => {
@@ -443,22 +480,31 @@ describe("Order", () => {
   });
 });
 
+// Only what #247 is about, so a data-only change (a re-rating, a new record) doesn't fail it.
 describe("Persona A on the real records (#247)", () => {
-  const result = evaluate(personaAProfile, loadPrograms(), today);
+  const ranked = (profile: typeof personaAProfile) => {
+    const result = evaluate(profile, loadPrograms(), today);
+    const order = ids(result.ranking.ranked);
+    return { result, order, mit: result.programs.find((p) => p.id === "mit-tlp") };
+  };
 
-  it("ranks MIT TLP first: a near miss only because its weekly hours aren't published", () => {
-    const mit = result.programs.find((p) => p.id === "mit-tlp");
-    const stanford = result.programs.find((p) => p.id === "stanford-lead");
+  it("ranks MIT TLP above Stanford LEAD: a near miss only because its weekly hours aren't published", () => {
+    const { result, order, mit } = ranked(personaAProfile);
     expect(mit?.status).toBe("near_miss");
     expect(mit?.checks.filter((c) => c.status !== "pass")).toMatchObject([
-      { id: "hours", status: "near_miss", unknown: true, note: "not published" },
+      { id: "hours", status: "near_miss", unknown: true },
     ]);
-    expect(stanford?.status).toBe("pass");
-    expect(mit?.score.total).toBeGreaterThan(stanford?.score.total ?? Infinity);
-    expect(ids(result.ranking.ranked)).toEqual(["mit-tlp", "stanford-lead"]);
-    expect(result.ranking.ranked[0]?.why).toBe(
-      "Ranked first for senior peers (cohort median 20 years) and leadership skills.",
-    );
+    expect(order.indexOf("mit-tlp")).toBeLessThan(order.indexOf("stanford-lead"));
+    expect(result.ranking.ranked[order.indexOf("mit-tlp")]?.why).toMatch(/^Ranked first\b/);
+  });
+
+  it("still does with the airfare unknown, when its travel estimate covers lodging only (#247 review)", () => {
+    const { order, mit } = ranked({ ...personaAProfile, airfareRange: "unknown" });
+    expect(mit?.checks.filter((c) => c.status !== "pass").map((c) => c.id)).toEqual([
+      "travelBudget",
+      "hours",
+    ]);
+    expect(order.indexOf("mit-tlp")).toBeLessThan(order.indexOf("stanford-lead"));
   });
 });
 

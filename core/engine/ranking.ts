@@ -13,7 +13,7 @@ import {
   TRAVEL_FIT_WEIGHT,
   type Rating,
 } from "./constants";
-import { tuitionTotal } from "./constraints";
+import { isOver, tuitionTotal } from "./constraints";
 import type {
   CategoryAccess,
   CategoryResult,
@@ -222,14 +222,15 @@ function byRank(a: ProgramEvaluation, b: ProgramEvaluation): number {
   );
 }
 
-// A near miss with a published value over a limit. A near miss only on values the school
-// doesn't publish (`unknown`) isn't over anything, so it ranks with the passes (#247).
+// A near miss with a published figure over a limit (`isOver`). A near miss only on figures the
+// school doesn't publish, or that can't be compared, isn't over anything, so it ranks with the
+// passes (#247).
 function overLimit(e: ProgramEvaluation): boolean {
-  return e.status === "near_miss" && e.checks.some((c) => c.status !== "pass" && !c.unknown);
+  return e.status === "near_miss" && e.checks.some((c) => c.status === "near_miss" && isOver(c));
 }
 
 // One list: the confirmed category's programs within or near the limits (passes and near misses
-// only on unpublished values first, by score; then near misses over a published limit), then up
+// over nothing first, by score; then near misses over a published limit), then up
 // to RUNNER_UP_LIMIT passing programs of the runner-up category. When the confirmed category has
 // nothing within or near the limits, "Also worth a look" holds the programs of the category the
 // access card names instead (`access.alternative`), in the same order, so the list never comes

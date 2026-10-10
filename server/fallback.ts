@@ -5,7 +5,7 @@ import type {
   RankedProgram,
   SearchResult,
 } from "../core/engine/types";
-import { tuitionTotal } from "../core/engine/constraints";
+import { isOver, tuitionTotal } from "../core/engine/constraints";
 import type { Category, Need } from "../core/schema/enums";
 import type { Program } from "../core/schema/program";
 
@@ -155,17 +155,6 @@ const UNCHECKED: Partial<Record<CheckId, (check: Check, record: Program | undefi
   location: () =>
     "without where you live, it can't tell whether the campus is within commuting distance",
 };
-
-// A published figure past the user's limit. Anything else that is a near miss but not
-// `unknown` is a figure the engine can't compare (a per-course price, no published total) or
-// the user's own missing answer (a lodging-only travel total under the budget, no home).
-function isOver(c: Check): boolean {
-  if (c.unknown || c.value === null || c.id === "location") return false;
-  if (c.id === "travelBudget" && typeof c.value === "number" && typeof c.limit === "number") {
-    return c.value > c.limit;
-  }
-  return true;
-}
 
 // Why a listed program is a near miss, from its checks (core/engine/constraints.ts): over a
 // published figure, a figure the school doesn't publish, or one that can't be compared. Never
