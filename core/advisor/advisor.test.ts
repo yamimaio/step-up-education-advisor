@@ -205,6 +205,33 @@ describe("advisor.md says what a passing check asks of the user", () => {
   });
 });
 
+// The summary sends only the checks that don't pass, can't be checked or carry a note
+// (server/stage2.ts). A real run read a missing trip-length check as "the result doesn't give the
+// trip lengths" and told the user to confirm it with the school, while the card said it fit
+// (issue #200).
+describe("advisor.md reads a limit missing from issues as passed (issue #200)", () => {
+  const explain = () => section(STAGE_2).split("### Explain the programs")[1] ?? "";
+
+  it("says every limit not in a program's issues passed", () => {
+    expect(explain()).toContain(
+      "Every limit the user set that is not in a program's `issues` passed: the program is within it.",
+    );
+    expect(explain()).toContain("a closer look at one included");
+  });
+
+  it("never says the result lacks a passed limit or sends it to the school", () => {
+    expect(explain()).toContain(
+      'Never say the result lacks a limit that passed ("the result doesn\'t give the trip lengths"), and never tell the user to confirm it with the school.',
+    );
+  });
+
+  it("takes questions for the school only from issues and uncovered needs", () => {
+    expect(explain()).toContain(
+      "Questions for the school come only from `issues` (a near miss, or a figure that is `unknown`) and from needs the result doesn't cover.",
+    );
+  });
+});
+
 // check_contradictions runs on the taps (decisions.md, "The real API refused the stage 2
 // schemas"): the prompt must not ask the model to send answers the tool no longer takes.
 describe("advisor.md calls check_contradictions with what the tool takes", () => {
