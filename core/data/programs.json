@@ -223,6 +223,312 @@
     "locationOffers": ["travel_ease", "affordability"]
   },
   {
+    "id": "kellogg-emba-chicago",
+    "name": "Executive MBA Program",
+    "institution": "Northwestern University",
+    "category": "emba",
+    "credential": "MBA",
+    "format": "in_person",
+    "durationMonths": 24,
+    "durationMaxMonths": null,
+    "credits": null,
+    "attendance": "recurring_weekends",
+    "onsiteNote": "Friday afternoon to Saturday evening every other week in Chicago, with some Sunday classes, plus four intensive weeks a program, including orientation and Global Network Week in Evanston.",
+    "onsiteDaysPerYear": 54,
+    "residencyCount": 17,
+    "longestStretchDays": 6,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "Chicago",
+    "state": "Illinois",
+    "campusAddress": "340 E. Superior St. Chicago, Illinois 60611",
+    "campusLat": 41.8957,
+    "campusLon": -87.6189,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 248472,
+    "tuitionPerCourseUsd": null,
+    "courseCount": null,
+    "tuitionIncludes": "Kellogg's published 2026-2027 estimated expenses for the whole two-year program: tuition $205,486 plus required food and housing $42,986. It covers classes, e-books, a room at the Omni All Suites Hotel on the Chicago campus, most meals, career services and accommodation for one global elective. Not covered: travel to and from campus and international travel for global electives.",
+    "lodgingIncluded": true,
+    "paymentOptions": ["installments", "employer_sponsorship"],
+    "minExperienceYears": 8,
+    "accreditation": null,
+    "cohortMedianExperienceYears": 15,
+    "cohortExperienceBasis": "average",
+    "cohortSeniority": null,
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "leadership_skills": 4,
+      "deep_expertise": 3,
+      "graduate_degree": 5,
+      "senior_network": 4,
+      "new_industry_or_city": 4
+    },
+    "ratingNotes": {
+      "leadership_skills": "Required core courses Leadership and Executive Perspectives on Leadership, five team workshops and an executive leadership coach.",
+      "deep_expertise": "A general MBA of 19 required core courses, including a capstone; specializations are not recorded on the diploma.",
+      "graduate_degree": "Awards an MBA after two years.",
+      "senior_network": "70% hold director, VP or C-suite roles; classmates average 15 years of experience; together every other weekend.",
+      "new_industry_or_city": "Career coaching for experienced professionals, including tools to shift to a new function or industry."
+    },
+    "ratingLowEvidence": [],
+    "figureNotes": {
+      "campusLat": "Derived from campusAddress (approximate, from the street address).",
+      "campusLon": "Derived from campusAddress (approximate, from the street address).",
+      "tuitionUsd": "Kellogg's own estimated-expenses total for 2026-2027: tuition $205,486 plus required food and housing $42,986, billed by Kellogg in six quarters of $41,412. Food and housing is required of every student. Kellogg says tuition has historically risen 3-4% a year.",
+      "cohortMedianExperienceYears": "Average published for the September 2024 and January 2025 Chicago and Miami cohorts (combined), with a mid-80% range of 9 to 23 years; no median or breakdown is published.",
+      "onsiteDaysPerYear": "Counted from the January 2027 first-year Chicago calendar: 6 days of orientation (January 19-24), 14 class sessions (10 of 3 days, 4 of 2 days: 38 days, counting every listed date), a 5-day intensive week (June 21-25) and 5 days of Global Network Week in Evanston: 54 days. Some listed Sundays may have no class. The second-year calendar is not published, so year 1 stands for both.",
+      "residencyCount": "Counted from the January 2027 first-year Chicago calendar: orientation, 14 class sessions, the intensive week and Global Network Week (17 trips).",
+      "longestStretchDays": "Orientation programming, January 19 to 24, 2027; Global Network Week is 5 days for U.S.-campus students."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/",
+        "quote": "The Kellogg Executive MBA Program",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/",
+        "quote": "Northwestern University",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/",
+        "quote": "Executive MBA",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/",
+        "quote": "earn your MBA in two years flat.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/",
+        "quote": "earn your MBA in two years flat.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "country",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/",
+        "quote": "two prime U.S. locations",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "Tuition\nFood and housing\nEstimated expenses\n$205,486\n$42,986\n$248,472",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "Tuition is billed by academic quarter. There are six academic quarters in the program and tuition is divided equally over them.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
+        "quote": "The Executive MBA Program is designed for fully-employed professionals with at least eight years of work experience.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "Tuition is billed by academic quarter.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
+        "quote": "If your organization is providing financial sponsorship, please state that in the letter as well.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "2026-2027 tuition and estimated expenses for entirety of the two-year EMBA program",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
+        "quote": "Students in our program have an average of 15 years of work experience, including military service,",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+        "quote": "15 Average years of work experience 9 23 Work experience range (mid-80%)",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+        "quote": "Students attending the Chicago campus take classes every other week, beginning Friday afternoon and ending Saturday evening",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://www.kellogg.northwestern.edu/facilities/wieboldt-hall/",
+        "quote": "340 E. Superior St. Chicago, Illinois 60611",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "Tuition and Food and Housing are both required expenses for the Kellogg EMBA program.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "Individual rooms at the Omni All Suites Hotel (Chicago campus) or Hyatt Regency Coral Gables (Miami campus)",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "campusAddress",
+        "url": "https://www.kellogg.northwestern.edu/facilities/wieboldt-hall/",
+        "quote": "340 E. Superior St. Chicago, Illinois 60611",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "attendance",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+        "quote": "Students attending the Chicago campus take classes every other week, beginning Friday afternoon and ending Saturday evening",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+        "quote": "Programming: January 19 - January 24, 2027",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+        "quote": "June 21 - 25, 2027 (Intensive week)",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/global-network-week/",
+        "quote": "Students based on U.S. campuses (Miami or Chicago) take courses for 5 days.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+        "quote": "An asterisk (*) indicates weekends that may include Sunday classes.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+        "quote": "Programming: January 19 - January 24, 2027",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+        "quote": "70% Hold senior positions (Director + VP + C-Suite)",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/core-courses/",
+        "quote": "You are required to take all core courses, which you take at the same time as other students in your cohort.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/leadership-development.aspx",
+        "quote": "The series consists of five workshops",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/core-courses/",
+        "quote": "Executive Perspectives on Leadership",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/leadership-development.aspx",
+        "quote": "receive individual coaching sessions with a Kellogg executive leadership coach",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/specializations",
+        "quote": "These specializations are not recorded on the transcript or diploma.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/",
+        "quote": "Shift to a new function or industry with tools from the CMC that help you:",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/",
+        "quote": "CMC coaching sessions are tailored to experienced professionals making high-impact decisions.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+        "quote": "Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["network_density", "industry_hub"]
+  },
+  {
     "id": "mit-tlp",
     "name": "Blended Professional Certificate: Technology Leadership Program",
     "institution": "MIT Professional Education",
