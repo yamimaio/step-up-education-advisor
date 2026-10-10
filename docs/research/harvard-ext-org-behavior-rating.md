@@ -87,7 +87,7 @@ Changes from Perplexity's answer:
 - No rating changes. leadership_skills 4 now matches a defined level (required leadership courses, not built for experienced leaders), so it leaves lowEvidence.
 - graduate_degree stays 3, not the new 4: not every certificate course counts toward the master's.
 
-## Reviewed ratings (rate-program v2, 2026-10-09; reviewed by: pending)
+## Reviewed ratings (rate-program v2, 2026-10-09; reviewed by: Yami)
 
 Full re-review of all five needs under rate-program v2, from the research, the overrides and Harvard's own pages checked on 2026-10-09: the program page, the 2024 fast facts PDF, the certificate policy page, the Extension career services page and the Leading Through Change course page. The re-check confirmed every rating; no fact a rating rests on was missing or wrong, so the overrides file gains nothing new.
 
