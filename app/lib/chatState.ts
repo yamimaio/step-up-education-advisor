@@ -31,8 +31,9 @@ type Before = {
 
 export type Verdict = { direction: Direction; result: DirectionResult };
 
-// Stage 2: the search card the user confirmed and the engine's result for it.
-export type Results = { profile: Profile; result: SearchResult };
+// Stage 2: the search card the user confirmed (its toolUseId and profile) and the engine's result
+// for it. The chat draws the programs under that card's answer, not a later one's.
+export type Results = { toolUseId: string; profile: Profile; result: SearchResult };
 
 export type ChatState = {
   history: MessageParam[];
@@ -86,23 +87,25 @@ function confirmedDirection(state: ChatState): Direction | null {
   return card && "direction" in card ? card.direction : (state.verdict?.direction ?? null);
 }
 
-// The search profile the user just confirmed, the same way.
-function confirmedProfile(state: ChatState): Profile | null {
-  const card = answeredCard(state);
-  return card && "profile" in card ? card.profile : (state.results?.profile ?? null);
-}
-
 function withVerdict(state: ChatState, result: DirectionResult | null): Verdict | null {
   if (!result) return state.verdict;
   const direction = confirmedDirection(state);
   return direction ? { direction, result } : state.verdict;
 }
 
-// `programs` is missing, not null, from a server that predates stage 2.
-function withResults(state: ChatState, result: SearchResult | null | undefined): Results | null {
-  if (!result) return state.results;
-  const profile = confirmedProfile(state);
-  return profile ? { profile, result } : state.results;
+// The programs after a response. A new verdict clears them: they were ranked for the direction it
+// replaces, and the advisor asks for a new search card before showing programs again. `programs`
+// is missing, not null, from a server that predates stage 2.
+function withResults(
+  state: ChatState,
+  r: Pick<ChatResponse, "direction" | "programs">,
+): Results | null {
+  if (r.direction) return null;
+  if (!r.programs) return state.results;
+  const card = answeredCard(state);
+  return card && "profile" in card
+    ? { toolUseId: card.toolUseId, profile: card.profile, result: r.programs }
+    : state.results;
 }
 
 export function chatReducer(state: ChatState, action: ChatAction): ChatState {
@@ -180,7 +183,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         return {
           ...state,
           verdict: withVerdict(state, r.direction),
-          results: withResults(state, r.programs),
+          results: withResults(state, r),
           fallbackText: confirmed && r.text ? r.text : state.fallbackText,
           counter,
           notice: r.notice,
@@ -196,7 +199,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         chips: r.chips,
         confirm: r.confirm,
         verdict: withVerdict(state, r.direction),
-        results: withResults(state, r.programs),
+        results: withResults(state, r),
         fallbackText: null,
         counter,
         notice: null,

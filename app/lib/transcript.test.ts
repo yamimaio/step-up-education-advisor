@@ -192,7 +192,7 @@ describe("buildTranscript, stage 2", () => {
   const md = buildTranscript({
     history: stage2,
     verdict,
-    results: { profile: personaAProfile, result },
+    results: { toolUseId: "t4", profile: personaAProfile, result },
     fallbackText: null,
     date: new Date("2026-10-10T12:00:00Z"),
     programs,
@@ -227,5 +227,44 @@ describe("buildTranscript, stage 2", () => {
     expect(md).toContain("## About this data");
     expect(md).toContain("Step Up's list holds 6 programs, in United States.");
     expect(md).toContain("2 records are drafts, not yet verified.");
+  });
+
+  it("carries each figure's caveat, and links only web pages", () => {
+    const noted = fixture("fake-executive", {
+      tuitionUsd: null,
+      tuitionPerCourseUsd: 8100,
+      courseCount: 12,
+      figureNotes: { ...fixture().figureNotes, courseCount: "A minimum; no fixed total." },
+      sources: [
+        ...fixture().sources,
+        {
+          field: "cohortSeniority",
+          url: "javascript:alert(1)",
+          quote: "Mostly directors and VPs.",
+          checkedOn: "2026-10-01",
+          kind: "official_page",
+        },
+      ],
+    });
+    const records = [...programs.filter((p) => p.id !== "fake-executive"), noted];
+    const searched = evaluatePrograms(
+      personaAProfile,
+      verdict.result.category,
+      records,
+      new Date("2026-10-10"),
+    );
+    const file = buildTranscript({
+      history: stage2,
+      verdict,
+      results: { toolUseId: "t4", profile: personaAProfile, result: searched },
+      fallbackText: null,
+      date: new Date(),
+      programs: records,
+    });
+    expect(file).toContain(
+      "- Tuition: $8,100 a course, about $97,200 for 12 courses (estimate) (A minimum; no fixed total.)",
+    );
+    expect(file).not.toContain("javascript:");
+    expect(file).toContain("- Classmates, checked 2026-10-01");
   });
 });

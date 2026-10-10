@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ChatState } from "@app/lib/chatState";
-import { toTurns } from "@app/lib/conversation";
+import { toTurns, type Turn } from "@app/lib/conversation";
 import { confirmCard } from "@app/lib/labels";
 import { ChipRow } from "./ChipRow";
 import { ConfirmCard } from "./ConfirmCard";
@@ -29,15 +29,19 @@ export type ChatHandlers = {
 export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
   const turns = toTurns(state.history);
   const busy = state.status !== "idle";
-  // Where a card's result goes: after the last confirm of that card, or at the end while the
-  // confirm is not in the history yet (a failed request shows the result it still carried).
-  const anchor = (stage: 1 | 2, shown: boolean) => {
+  // Where a card's result goes: after the confirm that produced it (the verdict: the last stage 1
+  // confirm; the programs: the confirm of their own search card, so a later card's failed confirm
+  // never looks answered by them), or at the end while that confirm is not in the history yet.
+  const anchor = (shown: boolean, match: (t: Turn) => boolean) => {
     if (!shown) return -2;
-    const at = turns.findLastIndex((t) => t.kind === "confirm" && t.stage === stage && t.confirmed);
+    const at = turns.findLastIndex((t) => t.kind === "confirm" && t.confirmed && match(t));
     return at >= 0 ? at : turns.length - 1;
   };
-  const verdictAt = anchor(1, state.verdict !== null);
-  const resultsAt = anchor(2, state.results !== null);
+  const verdictAt = anchor(state.verdict !== null, (t) => t.kind === "confirm" && t.stage === 1);
+  const resultsAt = anchor(
+    state.results !== null,
+    (t) => t.kind === "confirm" && t.toolUseId === state.results?.toolUseId,
+  );
   const endRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -68,10 +72,21 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
       <VerdictBlock verdict={state.verdict} />
     </li>
   );
+  // The cards are long, so they stay out of the log's announcements (aria-live="off"); the log
+  // announces one short line instead, and the cards are read like the rest of the page.
+  const listed = state.results
+    ? state.results.result.ranking.ranked.length +
+      state.results.result.ranking.alsoWorthALook.length
+    : 0;
   const results = state.results && (
-    <li>
-      <ProgramResults results={state.results} />
-    </li>
+    <>
+      <li className="sr-only">
+        {listed === 1 ? "1 program" : `${listed} programs`} listed below, under Programs that fit.
+      </li>
+      <li aria-live="off">
+        <ProgramResults results={state.results} verdict={state.verdict} />
+      </li>
+    </>
   );
   const fallback = state.fallbackText && (
     <Message turn={{ kind: "assistant", text: state.fallbackText }} />

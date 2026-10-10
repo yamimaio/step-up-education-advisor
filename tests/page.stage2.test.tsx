@@ -99,18 +99,39 @@ const script: ChatResponse[] = [
 ];
 
 let requests: ChatRequest[] = [];
+// What fetch answers next: a scripted response, or a raw Response (a failure).
+let queue: (ChatResponse | Response)[] = [];
 
 beforeEach(() => {
   requests = [];
-  const queue = [...script];
+  queue = [...script];
   vi.stubGlobal(
     "fetch",
     vi.fn(async (_url: string, init: RequestInit) => {
       requests.push(JSON.parse(String(init.body)) as ChatRequest);
-      return Response.json(queue.shift());
+      const next = queue.shift();
+      return next instanceof Response ? next : Response.json(next);
     }),
   );
 });
+
+// From the first message to the first search card's programs.
+async function walkToPrograms(user: ReturnType<typeof userEvent.setup>) {
+  render(<Home />);
+  const input = () => screen.getByLabelText("Your message");
+  await user.type(input(), "Hello{Enter}");
+  const first = await screen.findByRole("region", { name: "Here's what I understood" });
+  await user.click(within(first).getByRole("button", { name: "Looks right" }));
+  await screen.findByRole("region", { name: "Your verdict" });
+  await user.type(input(), "Yes please{Enter}");
+  await user.click(await screen.findByRole("button", { name: "Blended" }));
+  const card = await screen.findByRole("region", { name: "Here's what I'll search with" });
+  await user.click(within(card).getByRole("button", { name: "Looks right" }));
+  return screen.findByRole("region", { name: "Programs that fit" });
+}
+
+const follows = (a: Node, b: Node) =>
+  Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
 afterEach(() => {
   cleanup();
@@ -152,8 +173,6 @@ describe("the page, stage 2", () => {
     const log = screen.getByRole("log", { name: "Conversation" });
     const verdict = within(log).getByRole("region", { name: "Your verdict" });
     const answers = within(log).getAllByText("Looks right");
-    const follows = (a: Node, b: Node) =>
-      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
     expect(follows(answers[0]!, verdict)).toBe(true);
     expect(follows(verdict, answers[1]!)).toBe(true);
     expect(follows(answers[1]!, results)).toBe(true);
@@ -172,5 +191,47 @@ describe("the page, stage 2", () => {
     expect(md).toContain("## What you confirmed for the search");
     expect(md).toContain(`### ${top.name}`);
     expect(md).toContain("## About this data");
+  });
+
+  it("keeps the cards out of the log's announcements and announces one short line", async () => {
+    const results = await walkToPrograms(userEvent.setup());
+    const log = screen.getByRole("log", { name: "Conversation" });
+    expect(log.contains(results)).toBe(true);
+    expect(results.closest("[aria-live]")?.getAttribute("aria-live")).toBe("off");
+    const listed = search.ranking.ranked.length + search.ranking.alsoWorthALook.length;
+    const line = within(log).getByText(
+      `${listed === 1 ? "1 program" : `${listed} programs`} listed below, under Programs that fit.`,
+    );
+    // The log is live by its role; the line sits in it, outside the silenced cards.
+    expect(log.contains(line)).toBe(true);
+    expect(line.closest('[aria-live="off"]')).toBeNull();
+  });
+
+  it("keeps the programs under their own card's answer when a later search confirm fails", async () => {
+    const user = userEvent.setup();
+    const changed = { ...personaAProfile, tuitionBudgetUsd: 40000 };
+    queue.push(
+      // "Lower my budget" → a second search card.
+      {
+        ...ok,
+        messages: [assistant(toolUse("s2", "propose_search", { profile: changed }))],
+        confirm: { toolUseId: "s2", profile: changed },
+      },
+      // Its "Looks right" fails.
+      new Response("", { status: 503 }),
+    );
+    await walkToPrograms(user);
+    await user.type(screen.getByLabelText("Your message"), "Lower my budget{Enter}");
+    const second = await screen.findByRole("region", { name: "Here's what I'll search with" });
+    await user.click(within(second).getByRole("button", { name: "Looks right" }));
+    await screen.findByRole("button", { name: "Retry" });
+
+    const log = screen.getByRole("log", { name: "Conversation" });
+    const results = within(log).getByRole("region", { name: "Programs that fit" });
+    const answers = within(log).getAllByText("Looks right");
+    expect(answers).toHaveLength(3);
+    // Under the first search card's answer, before the second's.
+    expect(follows(answers[1]!, results)).toBe(true);
+    expect(follows(results, answers[2]!)).toBe(true);
   });
 });

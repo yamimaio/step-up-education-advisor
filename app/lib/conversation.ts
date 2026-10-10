@@ -9,8 +9,9 @@ export type Turn =
   | { kind: "assistant"; text: string }
   | { kind: "chips"; question: string; chosen: string[]; typed?: string }
   // stage 1: the "Here's what I understood" card (propose_direction); 2: the search card.
-  | { kind: "confirm"; stage: 1 | 2; confirmed: true }
-  | { kind: "confirm"; stage: 1 | 2; confirmed: false; corrections: string };
+  // toolUseId: the card's, so a result can be drawn under the answer to its own card.
+  | { kind: "confirm"; stage: 1 | 2; toolUseId: string; confirmed: true }
+  | { kind: "confirm"; stage: 1 | 2; toolUseId: string; confirmed: false; corrections: string };
 
 const CARD_STAGE: Record<string, 1 | 2> = { propose_direction: 1, propose_search: 2 };
 
@@ -93,12 +94,14 @@ export function toTurns(history: MessageParam[]): Turn[] {
           });
         } else if (CARD_STAGE[call.name]) {
           const stage = CARD_STAGE[call.name]!;
+          const toolUseId = block.tool_use_id;
           turns.push(
             answer.confirmed === true
-              ? { kind: "confirm", stage, confirmed: true }
+              ? { kind: "confirm", stage, toolUseId, confirmed: true }
               : {
                   kind: "confirm",
                   stage,
+                  toolUseId,
                   confirmed: false,
                   corrections: String(answer.corrections ?? ""),
                 },

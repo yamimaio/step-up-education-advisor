@@ -3,7 +3,14 @@ import type { Results, Verdict } from "./chatState";
 import type { MessageParam } from "./chatTypes";
 import { toTurns, turnText } from "./conversation";
 import { directionLines, searchLines } from "./labels";
-import { DRAFT_LABEL, dataLimits, programRecords, resultsView, type ProgramView } from "./programs";
+import {
+  DRAFT_LABEL,
+  dataLimits,
+  isWebLink,
+  programRecords,
+  resultsView,
+  type ProgramView,
+} from "./programs";
 import { verdictView } from "./verdict";
 
 // The Download transcript file: every message, the chips tapped, the confirmed cards, the
@@ -42,7 +49,7 @@ function programMarkdown(p: ProgramView): string[] {
   for (const c of p.checks)
     out.push(`- ${c.statusText}: ${c.label}${c.detail ? `: ${c.detail}` : ""}`);
   out.push("", "The program:", "");
-  for (const f of p.facts) out.push(`- ${f.label}: ${f.value}`);
+  for (const f of p.facts) out.push(`- ${f.label}: ${f.value}${f.note ? ` (${f.note})` : ""}`);
   out.push("", "How it serves what you need:", "");
   for (const line of p.fit) out.push(`- ${line}`);
   out.push("", `Confidence: ${p.confidence.level}. ${p.confidence.reasons.join(" ")}`.trim());
@@ -51,7 +58,9 @@ function programMarkdown(p: ProgramView): string[] {
   out.push("", "Sources:", "");
   for (const s of p.sources) {
     const label = linkText(s.label);
-    out.push(`- ${s.url ? `[${label}](<${s.url}>)` : label}, checked ${s.checkedOn}`);
+    // Only web links become links, as on the card; any other scheme stays text, never a link.
+    const where = s.url && isWebLink(s.url) ? `[${label}](<${s.url}>)` : label;
+    out.push(`- ${where}, checked ${s.checkedOn}`);
   }
   out.push("");
   return out;
@@ -111,7 +120,7 @@ export function buildTranscript({
     for (const line of searchLines(results.profile, verdict?.direction))
       out.push(`- ${line.label}: ${line.value}`);
 
-    const v = resultsView(results, programs);
+    const v = resultsView(results, programs, verdict);
     out.push("", "## Programs", "");
     if (v.notYet) out.push(v.notYet, "");
     if (v.access) out.push(v.access, "");

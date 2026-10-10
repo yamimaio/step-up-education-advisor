@@ -271,7 +271,7 @@ describe("chatReducer, stage 2 (the search card and the programs)", () => {
       type: "response",
       response: { ...ok, programs: search, messages: [ask], text: "Here they are." },
     });
-    expect(next.results).toEqual({ profile: personaAProfile, result: search });
+    expect(next.results).toEqual({ toolUseId: "t3", profile: personaAProfile, result: search });
     expect(next.verdict).toBe(verdict);
     expect(next.confirm).toBeNull();
   });
@@ -337,5 +337,33 @@ describe("chatReducer, stage 2 (the search card and the programs)", () => {
       response: old as ChatResponse,
     });
     expect(next.results?.result).toBe(search);
+  });
+
+  it("drops the programs when a new direction is confirmed: they were ranked for the old one", () => {
+    const shown = chatReducer(confirmed, {
+      type: "response",
+      response: { ...ok, programs: search, messages: [ask] },
+    });
+    expect(shown.results).not.toBeNull();
+    // The user changes a stage 1 answer; the advisor shows a new direction card.
+    const changed = { ...personaADirection, maxProgramMonths: 24 };
+    const card = chatReducer(chatReducer(shown, { type: "send", message: textMessage("x") }), {
+      type: "response",
+      response: { ...ok, confirm: { toolUseId: "t5", direction: changed } },
+    });
+    expect(card.results).toBe(shown.results);
+    const out = chatReducer(card, {
+      type: "send",
+      message: toolResultMessage("t5", { confirmed: true }),
+    });
+    const next = chatReducer(out, { type: "response", response: { ...ok, direction: result } });
+    expect(next.verdict?.direction).toBe(changed);
+    expect(next.results).toBeNull();
+    // The same when the new verdict comes with a failed model call.
+    const failed = chatReducer(out, {
+      type: "response",
+      response: { ...ok, direction: result, notice: { kind: "retryable", message: "x" } },
+    });
+    expect(failed.results).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 import { useId } from "react";
 import type { CheckStatus } from "@core/engine/types";
-import { DRAFT_LABEL, type ProgramView } from "@app/lib/programs";
+import { DRAFT_LABEL, isWebLink, type ProgramView } from "@app/lib/programs";
 
 // One program: facts from its record, checks, fit and confidence from the engine (programView),
 // never model text. The status of each check is written out, so it doesn't rely on colour.
@@ -10,9 +10,6 @@ const STATUS_STYLE: Record<CheckStatus, string> = {
   near_miss: "bg-amber-100 text-amber-900",
   fail: "bg-red-100 text-red-900",
 };
-
-// Records hold school pages; anything that isn't a web link shows as plain text.
-const isWebLink = (url: string) => /^https?:\/\//i.test(url);
 
 export function ProgramCard({ program: p }: { program: ProgramView }) {
   const headingId = useId();
@@ -52,7 +49,10 @@ export function ProgramCard({ program: p }: { program: ProgramView }) {
         {p.facts.map((f) => (
           <div key={f.label} className="contents">
             <dt className="text-ink/70">{f.label}</dt>
-            <dd>{f.value}</dd>
+            <dd>
+              {f.value}
+              {f.note && <span className="block text-xs text-ink/70">{f.note}</span>}
+            </dd>
           </div>
         ))}
       </dl>

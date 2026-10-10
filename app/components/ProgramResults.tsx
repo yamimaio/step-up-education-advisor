@@ -1,5 +1,5 @@
 import { useId } from "react";
-import type { Results } from "@app/lib/chatState";
+import type { Results, Verdict } from "@app/lib/chatState";
 import { programRecords, resultsView } from "@app/lib/programs";
 import type { Program } from "@core/schema/program";
 import { DataLimitsFooter } from "./DataLimitsFooter";
@@ -10,15 +10,18 @@ import { ProgramCard } from "./ProgramCard";
 // When the category has nothing within the limits, the access note says so and names the
 // alternative whose programs fill "Also worth a look".
 // `programs`: the records, loadPrograms() unless a test passes fixtures.
+// `verdict`: the confirmed stage 1 result the search ran on (it says whether two types tied).
 export function ProgramResults({
   results,
+  verdict = null,
   programs = programRecords(),
 }: {
   results: Results;
+  verdict?: Verdict | null;
   programs?: Program[];
 }) {
   const headingId = useId();
-  const v = resultsView(results, programs);
+  const v = resultsView(results, programs, verdict);
   return (
     <section
       aria-labelledby={headingId}

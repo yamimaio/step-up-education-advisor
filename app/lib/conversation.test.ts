@@ -171,9 +171,15 @@ describe("toTurns and the two cards", () => {
       answer("s2", { confirmed: true, result: {} }),
     ];
     expect(toTurns(history).slice(1)).toEqual([
-      { kind: "confirm", stage: 1, confirmed: true },
-      { kind: "confirm", stage: 2, confirmed: false, corrections: "My budget is $30k" },
-      { kind: "confirm", stage: 2, confirmed: true },
+      { kind: "confirm", stage: 1, toolUseId: "d1", confirmed: true },
+      {
+        kind: "confirm",
+        stage: 2,
+        toolUseId: "s1",
+        confirmed: false,
+        corrections: "My budget is $30k",
+      },
+      { kind: "confirm", stage: 2, toolUseId: "s2", confirmed: true },
     ]);
   });
 });
