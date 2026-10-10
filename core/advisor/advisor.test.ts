@@ -232,6 +232,97 @@ describe("advisor.md says what a passing check asks of the user", () => {
   });
 });
 
+// The summary sends only the checks that don't pass, can't be checked or carry a note
+// (server/stage2.ts). A real run read a missing trip-length check as "the result doesn't give the
+// trip lengths" and told the user to confirm it with the school, while the card said it fit
+// (issue #200).
+describe("advisor.md reads a limit missing from issues as passed (issue #200)", () => {
+  const explain = () => section(STAGE_2).split("### Explain the programs")[1] ?? "";
+
+  it("says every limit not in a program's issues passed", () => {
+    expect(explain()).toContain(
+      "Every limit the user set that the engine checks and that is not in a program's `issues` passed: the program is within it.",
+    );
+    expect(explain()).toContain("a closer look at one included");
+  });
+
+  it("never says the result lacks a passed limit or sends it to the school", () => {
+    expect(explain()).toContain(
+      'Never say the result lacks a limit that passed ("the result doesn\'t give the trip lengths"), and never tell the user to confirm it with the school.',
+    );
+  });
+
+  it("takes questions for the school only from issues, uncovered needs and unchecked answers", () => {
+    expect(explain()).toContain(
+      "Questions for the school come only from `issues` (a near miss, a figure that is `unknown`, or an estimate the issue's `note` names), from needs the result doesn't cover, and from answers the engine doesn't check.",
+    );
+  });
+
+  // Review round 2: how they'd pay isn't an engine check, so it's never in issues, but the card
+  // shows a payment option the record doesn't publish (app/lib/programs.ts, "How you'd pay").
+  it("leaves how they'd pay to the card and the school, never to the passed-limit rule", () => {
+    expect(explain()).toContain(
+      "How they'd pay is one: the result holds no payment options, so never say whether a program offers their way of paying; point to the program card, which shows it, and suggest asking the school when the card says it isn't published.",
+    );
+  });
+
+  // Review round 1: the figure of a passed check never reaches the model (server/stage2.ts).
+  it("answers a question about a passed figure from the limit and the card, not memory", () => {
+    expect(explain()).toContain(
+      "If they ask for the figure of a limit that passed, say it is within the limit they set (name it) and that the program card shows the figure; never state one from memory.",
+    );
+  });
+});
+
+// A real run answered "yes!" with the tuition chips and no text, then six more taps in a row, and
+// the typed home got chips only: stage 2 read like a form (issue #201).
+describe("advisor.md keeps stage 2 a conversation (issue #201)", () => {
+  const line = (start: string) =>
+    (section(STAGE_2).split("### ")[0] ?? "").split("\n").find((l) => l.includes(start)) ?? "";
+
+  it("opens the reply to yes with what's coming, before the first chips", () => {
+    const opener = line("**Say what's coming.**");
+    const coming = opener.indexOf(
+      "a few quick questions on budget, travel and format, then where they live",
+    );
+    expect(coming).toBeGreaterThanOrEqual(0);
+    expect(opener.indexOf("call `ask_choice` for the first missing field")).toBeGreaterThan(coming);
+  });
+
+  // Review round 1: a "yes" after a new verdict in stage 2 finds the stage 2 taps still in.
+  it("announces the questions only on the first yes", () => {
+    const opener = line("**Say what's coming.**");
+    expect(opener).toContain('Your reply to their first "yes"');
+    expect(opener).toContain(
+      "After a new verdict in stage 2, the stage 2 answers are already in: don't announce questions again",
+    );
+  });
+
+  it("bridges each new group to stage 1 in one line with no program facts", () => {
+    const bridge = line("**Bridge each new group.**");
+    expect(bridge).toContain("budget, travel, format, where they live, background");
+    expect(bridge).toContain("one short line tied to what they said in stage 1");
+    expect(bridge).toContain("One line, with no program facts or numbers.");
+    // Review round 1: the page drops the ask_choice question from the chat after the tap
+    // (app/lib/conversation.ts, turnText), so the bridge is the turn's text.
+    const text = bridge.indexOf("the turn opens with text");
+    expect(text).toBeGreaterThanOrEqual(0);
+    expect(bridge.indexOf("Then call `ask_choice`")).toBeGreaterThan(text);
+    expect(bridge).toContain("The bridge goes in the text, not in the `ask_choice` question");
+    const example = /for example "([^"]+)"/.exec(bridge)?.[1] ?? "";
+    expect(example).not.toBe("");
+    expect(example).not.toMatch(/\d/);
+  });
+
+  it("restates text after every typed message and acknowledges a typed answer", () => {
+    const typed = line("**Acknowledge a typed answer.**");
+    expect(typed).toContain("Every turn after a typed message has text: never return only chips.");
+    expect(typed).toContain(
+      "When they type an answer (where they live, the degree's field), acknowledge it in a short line before the next chips.",
+    );
+  });
+});
+
 // check_contradictions runs on the taps (decisions.md, "The real API refused the stage 2
 // schemas"): the prompt must not ask the model to send answers the tool no longer takes.
 describe("advisor.md calls check_contradictions with what the tool takes", () => {
@@ -294,6 +385,18 @@ describe("advisor.md replies to a question typed while chips are open (issue #19
   it("puts text in every turn after a typed message, and never blames the chips or the page", () => {
     expect(line("Every turn after a typed message has text")).toBe(
       "- Every turn after a typed message has text: never return only chips, and never call `ask_choice` with an empty message. Never ask the user whether to bring the chips back, and never say the chips or the page aren't working.",
+    );
+  });
+});
+
+describe("advisor.md shows the direction card once per set of answers (issue #203)", () => {
+  it("never calls propose_direction after a confirmed result unless an answer changed or it ties", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain(
+      "The verdict turn always has text. After a confirmed result, never call `propose_direction` again unless the user changed a stage 1 answer (through `ask_choice` for a chip field, in words for the goal) or the result is a tie.",
+    );
+    expect(verdict).toContain(
+      "If the user agrees with the verdict or asks about it, answer in words; the server refuses the same card twice.",
     );
   });
 });

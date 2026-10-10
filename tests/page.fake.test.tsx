@@ -25,8 +25,34 @@ import { personaAProfile } from "./fixtures/profiles";
 
 let requests: ChatRequest[] = [];
 
+// When set, persona A's fake answers "Looks right" with the same card again instead of the
+// verdict text, as the real model did in issue #203.
+const fake = vi.hoisted(() => ({ reshowCard: false }));
+vi.mock("@server/model/personaA", async (importOriginal) => {
+  const real = await importOriginal<typeof import("@server/model/personaA")>();
+  const { toolUse, turn } = await import("@server/model/fake");
+  const { toolCalls } = await import("@server/history");
+  return {
+    ...real,
+    personaAScript: (request: Parameters<typeof real.personaAScript>[0]) => {
+      const card = toolCalls(request.messages).find(
+        ({ use, result }) => use.name === "propose_direction" && result && !result.is_error,
+      );
+      const last = request.messages.at(-1);
+      const confirmLast =
+        card &&
+        typeof last?.content !== "string" &&
+        last?.content.some((b) => b.type === "tool_result" && b.tool_use_id === card.use.id);
+      return fake.reshowCard && confirmLast
+        ? turn(toolUse("propose_direction", card.use.input, "toolu_again"))
+        : real.personaAScript(request);
+    },
+  };
+});
+
 beforeEach(() => {
   requests = [];
+  fake.reshowCard = false;
   chatRateLimiter.reset();
   vi.stubEnv("MODEL_FAKE", "1");
   // The route logs one line of numbers per request; keep the test output clean.
@@ -122,6 +148,35 @@ describe("the page with the real route on the fake model", () => {
     expect(md).toContain("I've led engineering teams for twelve years.");
     expect(md).toContain("- Best next step: Executive program");
     expect(requests.length).toBe(fetches);
+  });
+
+  it("doesn't show the card again after the verdict, though the model sends it (issue #203)", async () => {
+    fake.reshowCard = true;
+    const user = userEvent.setup();
+    render(<Home />);
+    const input = () => screen.getByLabelText("Your message");
+    const tap = async (label: string) =>
+      user.click(await screen.findByRole("button", { name: label }));
+
+    await user.type(input(), "I've led engineering teams for twelve years.{Enter}");
+    await tap("Step up to a bigger leadership role");
+    await screen.findByText("In your own words, what would that step up look like?");
+    await user.type(input(), "Move into an executive role{Enter}");
+    await tap("A senior network");
+    await tap("Leadership skills");
+    await tap("Deep expertise in a field");
+    await user.click(screen.getByRole("button", { name: /^Send 3 of 3/ }));
+    for (const label of ["More senior leaders", "Up to a year", "5 to 10"]) await tap(label);
+    await tap("Yes, I keep working");
+    await tap("Not needed");
+
+    const card = await screen.findByRole("region", { name: "Here's what I understood" });
+    await user.click(within(card).getByRole("button", { name: "Looks right" }));
+
+    const verdict = await screen.findByRole("region", { name: "Your verdict" });
+    expect(verdict.textContent).toContain("Executive program");
+    expect(screen.queryByRole("region", { name: "Here's what I understood" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Looks right" })).toBeNull();
   });
 
   it("keeps the conversation going after a 429: shows the wait, then retries the same history", async () => {

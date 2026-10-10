@@ -144,14 +144,19 @@ export function checkAskChoice(input: unknown, history: Message[], programs: Pro
   return ask;
 }
 
-// Deep equality that ignores object key order ({ min, max } and { max, min } are the same).
+// Deep equality that ignores object key order ({ min, max } and { max, min } are the same) and
+// keys set to undefined (a card with no tieBreaker, whether or not the key is there).
 function same(a: unknown, b: unknown): boolean {
   if (Array.isArray(a) && Array.isArray(b)) {
     return a.length === b.length && a.every((v, i) => same(v, b[i]));
   }
   if (typeof a === "object" && a !== null && typeof b === "object" && b !== null) {
-    const ka = Object.keys(a).sort();
-    const kb = Object.keys(b).sort();
+    const keys = (o: object) =>
+      Object.keys(o)
+        .filter((k) => (o as never)[k] !== undefined)
+        .sort();
+    const ka = keys(a);
+    const kb = keys(b);
     return same(ka, kb) && ka.every((k) => same((a as never)[k], (b as never)[k]));
   }
   return a === b;
@@ -197,6 +202,53 @@ export function validateProposeDirection(
     }
   }
   return problems.length ? { ok: false, problems: problems.join("\n") } : { ok: true, direction };
+}
+
+const ALREADY_CONFIRMED =
+  "The user already confirmed these answers and saw the verdict. Don't show the card again: explain the verdict in words. Call propose_direction again only after the user changes a stage 1 answer (through ask_choice for a chip field, in words for the goal), or with tieBreaker set when the result is a tie.";
+
+// Two cards the engine reads the same: declined and resolvedTensions in any order, and the
+// tieBreaker only when the answers tie without it, since the engine ignores it otherwise.
+function sameCard(a: Direction, b: Direction, programs: Program[]): boolean {
+  const untied = recommendCategory(toEngineDirection({ ...a, tieBreaker: undefined }), programs);
+  const key = (d: Direction) => ({
+    ...d,
+    declined: [...d.declined].sort(),
+    resolvedTensions: [...d.resolvedTensions].sort(
+      (x, y) => x.rule.localeCompare(y.rule) || x.chosen.localeCompare(y.chosen),
+    ),
+    tieBreaker: untied.category.tie ? d.tieBreaker : undefined,
+  });
+  return same(key(a), key(b));
+}
+
+// The model's propose_direction call: the checks above, and not the card the user already
+// confirmed, since showing it again only loops them through "Looks right" (issue #203). Only a
+// new call gets this check: the re-checks of calls already in the client-held history
+// (confirmedDirection, rewriteConfirm) leave it out, so a history that holds the loop still reads.
+// It runs last: a card that misses the latest tap gets the tap problem, since the user did change
+// that answer. validateProposeDirection skips a declined field, so a field the user tapped after
+// the confirm and the card still declines is checked here (review round 3). A card that gets past
+// both holds the latest taps, so equal to the confirmed one means nothing changed.
+export function checkProposeDirection(input: unknown, history: Message[], programs: Program[]) {
+  const checked = validateProposeDirection(input, history);
+  if (!checked.ok) return checked;
+  const confirmed = confirmedDirection(history);
+  if (!confirmed) return checked;
+  const tapped = stage1Changes(
+    checked.direction,
+    latestTaps(history.slice(confirmed.resultAt + 1)),
+  );
+  if (tapped.length) {
+    return {
+      ok: false as const,
+      problems: `The user tapped an answer for ${tapped.join(", ")} after confirming the direction: use the tapped value and take it out of declined.`,
+    };
+  }
+  if (sameCard(confirmed.direction, checked.direction, programs)) {
+    return { ok: false as const, problems: ALREADY_CONFIRMED };
+  }
+  return checked;
 }
 
 const ChipAnswer = z.strictObject({ chosen: z.array(z.string()), typed: z.string().optional() });
