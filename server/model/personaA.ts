@@ -96,15 +96,33 @@ const check = (request: ModelRequest) =>
 export const VERDICT_TEXT =
   "An executive program is your step: you want a room of senior leaders more than a curriculum, and you can give it a year while you keep working.\n\nWant to see programs that fit?";
 
+export const SIDE_QUESTION_REPLY =
+  "Program facts like prices come from the program records once we look at programs, and admissions questions are for each school. For now, back to this one.";
+
 type Field = (typeof CHIP_ORDER)[number];
 
 const askBlock = (field: Field) =>
   toolUse("ask_choice", { field, question: QUESTIONS[field] }, `toolu_a_${field}`);
 
-// The tool call the last message answers, if it answers one, and whether the server refused it.
-function answered(
-  request: ModelRequest,
-): { name: string; input: Record<string, unknown>; isError: boolean } | null {
+// What the user typed instead of tapping, from a chip answer's `typed`.
+function typedIn(content: unknown): string | undefined {
+  if (typeof content !== "string") return undefined;
+  try {
+    const typed = (JSON.parse(content) as { typed?: unknown }).typed;
+    return typeof typed === "string" ? typed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// The tool call the last message answers, if it answers one, whether the server refused it, and
+// what the user typed instead of tapping.
+function answered(request: ModelRequest): {
+  name: string;
+  input: Record<string, unknown>;
+  isError: boolean;
+  typed?: string;
+} | null {
   const last = request.messages.at(-1);
   if (!last || typeof last.content === "string") return null;
   const result = last.content.find((b) => b.type === "tool_result");
@@ -114,19 +132,21 @@ function answered(
     if (typeof m.content === "string") continue;
     for (const b of m.content) {
       if (b.type === "tool_use" && b.id === result.tool_use_id) {
-        return { name: b.name, input: b.input as Record<string, unknown>, isError };
+        const typed = typedIn(result.content);
+        return { name: b.name, input: b.input as Record<string, unknown>, isError, typed };
       }
     }
   }
   return null;
 }
 
-// How many times the advisor has shown the chips for this field.
-const askedTimes = (request: ModelRequest, field: Field) =>
-  request.messages
-    .flatMap((m) => (typeof m.content === "string" ? [] : m.content))
-    .filter((b) => b.type === "tool_use" && (b.input as { field?: unknown }).field === field)
-    .length;
+// True when the advisor has already shown the card.
+const proposed = (request: ModelRequest) =>
+  request.messages.some(
+    (m) =>
+      typeof m.content !== "string" &&
+      m.content.some((b) => b.type === "tool_use" && b.name === "propose_direction"),
+  );
 
 // True when the advisor has already shown the chips for this field.
 const asked = (request: ModelRequest, field: Field) =>
@@ -166,11 +186,24 @@ export function personaAScript(request: ModelRequest): ModelTurn {
   }
   if (call.name === "ask_choice") {
     const field = call.input.field as Field;
+    const typed = call.typed?.trim() ?? "";
+    if (typed.endsWith("?") && !/\bskip\b|rather not/i.test(typed)) {
+      // A question typed while the chips are open: a reply in words and the same chips back, in
+      // one turn (advisor.md, issue #192). A request to skip is a decline, even with a "?".
+      return turn(
+        text(SIDE_QUESTION_REPLY),
+        toolUse(
+          "ask_choice",
+          { field, question: QUESTIONS[field] },
+          `toolu_a_${field}_${request.messages.length}`,
+        ),
+      );
+    }
     if (field === "careerGoalKind") {
       return turn(text("In your own words, what would that step up look like?"));
     }
-    // A field asked a second time is a correction from the card: go back to the card.
-    if (askedTimes(request, field) > 1) return check(request);
+    // A field asked again after the card is a correction: go back to the card.
+    if (proposed(request)) return check(request);
     const next = CHIP_ORDER[CHIP_ORDER.indexOf(field) + 1];
     return next ? turn(askBlock(next)) : check(request);
   }
