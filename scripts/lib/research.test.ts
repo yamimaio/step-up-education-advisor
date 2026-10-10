@@ -194,6 +194,64 @@ describe("failures", () => {
     expect(convertResearch(s).record.sources.at(-1)).toEqual(extra);
   });
 
+  it("lets the overrides set a fact from school material when a source backs it", () => {
+    const s = sample();
+    const extra = {
+      field: "cohortMedianExperienceYears",
+      quote: "With an average of 19 years of professional experience",
+      checkedOn: "2026-10-01",
+      kind: "school_correspondence",
+    };
+    s.overrides = {
+      ...(s.overrides as object),
+      cohortMedianExperienceYears: 19,
+      cohortExperienceBasis: "average",
+      workCompatible: false,
+    };
+    expect(() => convertResearch(s)).toThrow(
+      /sets workCompatible, cohortMedianExperienceYears without a matching extraSources entry/,
+    );
+    const base = s.overrides as { extraSources?: unknown[] };
+    s.overrides = {
+      ...base,
+      extraSources: [
+        ...(base.extraSources ?? []),
+        extra,
+        { ...extra, field: "workCompatible", quote: "Full-time study" },
+      ],
+    };
+    const { record } = convertResearch(s);
+    expect(record.cohortMedianExperienceYears).toBe(19);
+    expect(record.cohortExperienceBasis).toBe("average");
+    expect(record.workCompatible).toBe(false);
+    expect(recordProblems(record)).toEqual([]);
+  });
+
+  it("drops the research sources of a field the overrides replace", () => {
+    const s = sample();
+    const base = s.overrides as { extraSources?: unknown[] };
+    const newer = {
+      field: "durationMonths",
+      url: "https://example.edu/fake-sample/schedule.pdf",
+      quote: "Newer schedule",
+      checkedOn: "2026-10-02",
+      kind: "official_page",
+    };
+    s.overrides = { ...base, replaceSources: ["durationMonths"] };
+    expect(() => convertResearch(s)).toThrow(
+      /replaces the sources of durationMonths without a matching extraSources entry/,
+    );
+    s.overrides = {
+      ...base,
+      replaceSources: ["durationMonths"],
+      extraSources: [...(base.extraSources ?? []), newer],
+    };
+    const durationSources = convertResearch(s).record.sources.filter(
+      (x) => x.field === "durationMonths",
+    );
+    expect(durationSources).toEqual([newer]);
+  });
+
   it("marks a source with no url as school_correspondence and says so", () => {
     const s = sample();
     s.research = s.research.replace(/("field": "durationMonths",\s*)"url": "[^"]*",\s*/, "$1");

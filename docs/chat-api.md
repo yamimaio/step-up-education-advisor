@@ -35,9 +35,10 @@ The new user message at the end is one of:
 ```ts
 // The labels of the chips tapped, in order: one for a single choice, `pick` for a multi-select
 // (needs: 3). Labels only: the server looks each one up in CHIPS[field] (the field of the
-// pending ask_choice) and refuses a label that isn't in the set with a 400. The client never
-// sends a chip value. If the user types instead of tapping, `typed` holds their words and
-// `chosen` is empty.
+// pending ask_choice). The answer must hold exactly `pick` distinct labels from the set, or
+// none with `typed`; anything else gets a 400. The client never sends a chip value. If the
+// user types instead of tapping, `typed` holds their words and `chosen` is empty; the advisor
+// then asks with ask_choice again, because the card only accepts chip fields from a tap.
 type ChipAnswer = {
   chosen: string[];
   typed?: string;
@@ -76,7 +77,10 @@ type ChatResponse = {
   messages: MessageParam[];
 
   // The assistant's visible text from this turn, joined with blank lines. Empty when the model
-  // only called a tool.
+  // only called a tool. Text from a turn the server answered with is_error (a rejected tool
+  // call) is left out; it stays in `messages`. The page applies the same rule when it draws
+  // the history: an assistant message whose tool calls all got is_error shows no text, in the
+  // chat or the transcript (app/lib/conversation.ts). #110 tracks the cost of this rule.
   text: string;
 
   // At most one of these two is set: what the user must answer next.
@@ -94,7 +98,7 @@ type ChatResponse = {
   // rounds from the failed request are dropped, and a retry runs them again) and `text` is empty
   // or the post-confirm template.
   notice: {
-    kind: "retryable" | "auth_or_credit" | "refusal" | "unknown" | "empty_input";
+    kind: "retryable" | "auth_or_credit" | "refusal" | "unknown" | "empty_input" | "limit";
     message: string;
   } | null;
 };
@@ -124,7 +128,7 @@ type PendingConfirm = {
 
 When the user confirms, the page sends `{ confirmed: true }`. The server:
 
-1. finds the `propose_direction` call it answers in the history and takes its `direction` (never a direction the client sends);
+1. finds the `propose_direction` call it answers in the history and takes its `direction`, never a direction outside the validated tool call. Because the history is client-held, it runs that call's checks again (below) against the history before it, and answers 400 if they fail;
 2. turns it into the engine's stage 1 input with `toEngineDirection` (`core/advisor/tools.ts`): a declined field, which holds `null`, gets the placeholder the engine ignores, and `peerPreference` and `resolvedTensions` are dropped. Then it runs `recommendCategory`;
 3. rewrites the tool result to `{ confirmed: true, result: DirectionResult }` and returns it in `replaceLastUserMessage`, so the page stores the same bytes the model saw (one tool result, not two) and the cache stays warm;
 4. calls the model, which explains the verdict and ends with "Want to see programs that fit?";
@@ -132,7 +136,7 @@ When the user confirms, the page sends `{ confirmed: true }`. The server:
 
 If the model fails after a confirm, the response still carries `direction` and a template explanation in `text` (`server/fallback.ts`), with `notice` set, `replaceLastUserMessage` null and `messages` empty. The page shows the verdict card and the template text but does not add them to the history.
 
-On a correction, the server passes `{ confirmed: false, corrections }` through as the tool result, and the advisor updates the answers and calls `propose_direction` again (a new card, a new `toolUseId`).
+On a correction, the server passes `{ confirmed: false, corrections }` through as the tool result, and the advisor updates the answers and calls `propose_direction` again (a new card, a new `toolUseId`). A correction to a chip field goes through `ask_choice` on that field first, because the card only takes a chip field from the latest tap; a card that changes it without a new tap gets `is_error` telling the advisor to ask again.
 
 ### Validation the server does on `propose_direction`
 
@@ -140,7 +144,7 @@ The server answers with `is_error` and the problems, so the model asks again, wi
 
 - the input fails `ProposeDirectionInput`;
 - `check_contradictions` hasn't been called in the history;
-- a chip field's value doesn't match a chip the user tapped. Taps are read from the history by label, through `CHIPS[field]`; a value written next to a label is never trusted. A declined field (`null`, named in `declined`) is exempt.
+- a chip field's value doesn't equal the user's **latest** tap for that field (`needs` in the order tapped). Taps are read from the history by label, through `CHIPS[field]`; a value written next to a label is never trusted. A typed answer is not a tap. A declined field (`null`, named in `declined`) is exempt.
 
 ## Errors
 
@@ -159,10 +163,19 @@ Model failures and empty input are not HTTP errors: they return 200 with `notice
 | `refusal` | Retrying the same history would be refused again. The page drops its last message and goes back to the state before it: typed text returns to the input box, or the pending chips or confirm card show again (from the previous response). Input is enabled, so the user can rephrase or choose again. |
 | `auth_or_credit` | No retry can help. The page shows the message and disables input. A verdict card already shown, and the transcript download, keep working. |
 | `empty_input` | The text was empty or whitespace only, so no model call was made. The page drops that message from its history, clears the input and shows `notice.message` as a nudge next to it. It is never stored as a turn. |
+| `limit` | The conversation passed its message cap (see "Message cap"), so no model call was made. As for `auth_or_credit`: the page shows the message and disables input. A verdict card already shown, one that comes with this response (`direction`), and the transcript download keep working. |
 
 The page should not send an empty or whitespace-only message in the first place. `empty_input` is the server's guard, not the normal path.
 
 **Retrying** (`retryable` and `unknown` only). After a failure the history the page holds is exactly what it posted: the server returned no messages and no replacement, so the last message is still the page's own (a typed message, a label-only `ChipAnswer` or a `{ confirmed }` answer). The page's only next request is that same history, unchanged, behind a Retry button; input stays disabled until a retry succeeds. The server treats it as a first attempt: it resolves the labels or reruns `recommendCategory` (deterministic, so the verdict is the same) and, on success, returns the rewrite in `replaceLastUserMessage`. A rewritten result (`chosen` holding objects, or `confirmed` with a `result`) is valid only earlier in the history, never as the last message; as the last message it gets a 400.
+
+## Message cap
+
+The cap counts **user turns**: typed messages, chip answers and confirm answers, the new one included (DQ4). The server's own rounds (`check_contradictions` results, `is_error` answers) are not turns.
+
+- **From turn 30**, `counter` is `{ remaining: 40 - turns }`; before that it is null. The page shows it quietly ("10 messages left").
+- **At turn 35 or later**, while no `propose_direction` card has been confirmed, the server adds one text block to the posted message, after any tool result: `[Step Up note] The conversation is close to its message limit. …` It tells the advisor to wrap up and call `propose_direction`. The rewritten message comes back in `replaceLastUserMessage` like any other rewrite, so the history stays append-only. The note is added once. The page keeps the block in its history and does not show it, in the chat or the transcript. It hides only a user text block whose text equals `WRAP_UP_NOTE` (`core/advisor/wrapUp.ts`) exactly, never a prefix match, so nothing a user types is hidden or mistaken for the note.
+- **From turn 41**, the server makes no model call and answers with `notice.kind: "limit"`, `messages` empty and `replaceLastUserMessage` null. If the message confirms the card, the response still carries `direction` and the template explanation in `text`.
 
 ## Example: a chip turn
 
