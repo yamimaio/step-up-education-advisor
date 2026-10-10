@@ -6,13 +6,51 @@
   "attendance": "recurring_weekends",
   "onsiteNote": "every-other-weekend residential format",
   "lodgingIncluded": true,
+  "tuitionUsd": 243000,
+  "tuitionIncludes": "Tuition, program fees, and housing and dining for regular class weekends and required modular courses; textbooks are not included.",
+  "paymentOptions": [
+    "installments",
+    "employer_sponsorship",
+    "loans",
+    "scholarships"
+  ],
+  "cohortMedianExperienceYears": 13.5,
+  "cohortExperienceBasis": "average",
+  "campusAddress": "2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105",
+  "campusLat": 37.7916,
+  "campusLon": -122.3893,
   "figureNotes": {
     "tuitionUsd": "Price for the class entering in 2026; the 2027 price is not published.",
     "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028.",
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
     "campusLon": "Derived from campusAddress (approximate, from the street address)."
   },
+  "replaceSources": [
+    "tuitionUsd",
+    "cohortMedianExperienceYears"
+  ],
   "extraSources": [
+    {
+      "field": "tuitionUsd",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Tuition and fees for the class entering in 2026 is $243,000 or $40,500 per academic term.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Please note that this does not include the cost of textbooks.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "paymentOptions",
+      "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+      "quote": "Many of Wharton’s EMBA students receive some level of sponsorship from their employer. Others finance their degree through personal funds, loans and scholarships.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
     {
       "field": "attendance",
       "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
@@ -43,9 +81,41 @@
       "quote": "2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105",
       "checkedOn": "2026-10-08",
       "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-curriculum/",
+      "quote": "Leadership Essentials ... Foundations of Teamwork and Leadership ... Management Communication ... Responsibility in Global Management",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-curriculum/",
+      "quote": "some Wharton majors can be earned by executive students as a result of pursuing four additional credit units in a focused area.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-career-services/",
+      "quote": "Personalized 1:1 support from highly rated executive coaches",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-career-services/",
+      "quote": "CareerPath: Centralized hub with job board, resume book, board resume section, and compensation data",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://executivemba.wharton.upenn.edu/emba-career-services/",
+      "quote": "Career Changers: Pivoting into new industries or functions",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
     }
-  ],
-  "campusAddress": "2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105",
-  "campusLat": 37.7916,
-  "campusLon": -122.3893
+  ]
 }

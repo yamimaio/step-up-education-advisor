@@ -1,17 +1,17 @@
 # Review checklist: MBA Program for Executives
 
-A draft record built from `docs/research/wharton-emba-sf.md`. The first section lists what is uncertain, conflicting, assumed or set by hand; the second lists every set field with the school's verbatim quote and URL. **no quote** means the value was derived or proposed.
+A draft record built from `docs/research/wharton-emba-sf.md` and `docs/research/wharton-emba-sf-overrides.json`. The first section lists what is uncertain, conflicting, assumed or set by hand; the second lists every set field with the school's verbatim quote and URL. **no quote** means the value was derived or proposed.
 
 ## Uncertain, conflicting or set by hand
 
 **Mine (derived, assumed or set by hand):**
 
-- **Set by hand from the research's own quotes (the converter's overrides can't carry them):** `tuitionUsd 243000` (price for the class entering in **2026**; B1 says store with a caveat, see `figureNotes`), `cohortMedianExperienceYears 13.5` (midpoint of "13-14", B2; the page says average, not median; it is the **Class of 2028** profile), `paymentOptions: [installments]`, `tuitionIncludes`.
-- The research's Part 1 left all of those null because the application page is for the **2027** intake. The prices and class profile are for a different year; you decide whether to keep them.
-- `durationMonths`, on-site days, residencies, hours, accreditation, lodging rate are all null (not published for San Francisco). `lodgingIncluded: true` comes from the tuition-includes quote, so the travel estimate skips lodging.
-- All four ratings are marked low evidence by the rating run.
+- `tuitionUsd 243000`, `tuitionIncludes` and `paymentOptions` are for the class entering in **2026** (B1: stored with the caveat in `figureNotes`); the research nulled them because admissions describe the 2027 intake. They are set in the overrides file with sources re-checked on 2026-10-10 (rate-program v3, PR #135). A converter rebuild had dropped them from this record before.
+- `cohortMedianExperienceYears 13.5` is the midpoint of "13-14" (B2) for the **Class of 2028**; the page says average, so `cohortExperienceBasis: average`. Set in the overrides file; the research's bare "Class of 2028" quote is replaced by the one with the figure.
+- `paymentOptions` now lists employer sponsorship, loans and scholarships as well as installments, from the tuition page re-checked on 2026-10-10.
+- `durationMonths`, on-site days, residencies, hours, accreditation and the lodging rate are null (not published for San Francisco). `lodgingIncluded: true` comes from the tuition-includes quote, so the travel estimate skips lodging.
 - `attendance: recurring_weekends` and `onsiteNote` come from the "every-other-weekend residential format" quote; `locationOffers` is my proposal (network_density, industry_hub).
-- `workCompatible: true` rests on "required to maintain full-time employment". Several class-profile counters in the research displayed 0 and were not used.
+- `workCompatible: true` rests on "required to maintain full-time employment". The class profile's counters render as 0 and were not used.
 
 **From the research file's "uncertain or conflicting" list:**
 
@@ -23,9 +23,11 @@ A draft record built from `docs/research/wharton-emba-sf.md`. The first section 
 - **Current-year lodging:** FY2027 rates are available, but the San Francisco FY2027 amount was not established; the surfaced FY2026 rates are inapplicable. [GSA per diem](https://www.gsa.gov/travel/plan-a-trip/per-diem-rates), quote: “FY 2027 per diem rates now available.”
 - **Other unresolved fields:** Exact 2027 start date, numeric weekly workload, accreditation, alumni access/size, typical participant titles, thesis/capstone requirements, and named leadership courses remain **null — not published in the available evidence**.
 
-**Ratings marked low evidence:** network, depth, practicality, costValue.
+**Ratings marked low evidence:** none. All five needs were re-reviewed under rate-program v3 on Oct 10 with Wharton's pages: leadership_skills 5 → 4 and new_industry_or_city 3 → 4. Close calls: leadership_skills 4 or 5, new_industry_or_city 4 or 3 (see the last block of `wharton-emba-sf-rating.md`).
 
 ## Fields, quotes and URLs
+
+Every source in the record, with the value it backs. **no quote** means the value was derived or proposed. Sources with field `ratingNotes` back facts stated in the rating notes.
 
 | Field | Value | Verbatim quote | URL |
 | --- | --- | --- | --- |
@@ -35,28 +37,38 @@ A draft record built from `docs/research/wharton-emba-sf.md`. The first section 
 | credential | MBA | There is no difference in the degree earned by executive and full-time MBA students. (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-faqs/ |
 | format | in_person | every-other-weekend residential format (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-faqs/ |
 | credits | 19 course units | You must complete 19 course units at Wharton to earn your degree from our program. (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-faqs/ |
-| attendance | recurring_weekends | every-other-weekend residential format (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-faqs/ |
-| onsiteNote | every-other-weekend residential format | **no quote** | |
 | workCompatible | true | Executive MBA students are required to maintain full-time employment throughout the duration of the program. (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/class-profile/ |
 | city | San Francisco | Philadelphia and San Francisco cohort members (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-faqs/ |
-| country | US | **no quote** | |
-| tuitionUsd | 243000 | Tuition and fees for the class entering in 2026 is $243,000 or $40,500 per academic term. (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/ |
-| tuitionIncludes | Housing and dining for regular class weekends and for required modular courses; textbooks are not included. | Housing and dining for regular class weekends and for required modular courses. (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/ |
-| lodgingIncluded | true | **no quote** | |
-| paymentOptions | ["installments"] | Program tuition is due in six equal installments. (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/ |
 | minExperienceYears | 8 | at least eight (8) (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-application-requirements/ |
-| cohortMedianExperienceYears | 13.5 | Class of 2028 (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/class-profile/ |
-| cohortMedianExperienceYears | 13.5 | an average of 13-14 years of professional experience (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/class-profile/ |
-| cohortExperienceBasis | average | **no quote** | |
-| figureNotes | {"tuitionUsd":"Price for the class entering in 2026; the 2027 price is not published.","cohortMedianExperienceYears":"Midpoint of the published 13-14 years average for the Class of 2028."} | **no quote** | |
-| locationOffers | ["network_density","industry_hub"] | **no quote** | |
 | onsiteDaysPerYear | (null in the record) | ACADEMIC CALENDAR: 2026–2028 (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/03/cal_52_SF_TY_V6_03192026-1.pdf |
+| tuitionUsd | 243000 | Tuition and fees for the class entering in 2026 is $243,000 or $40,500 per academic term. (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/ |
+| tuitionIncludes | Tuition, program fees, and housing and dining for regular class weekends and required modular courses; textbooks are not included. | Please note that this does not include the cost of textbooks. (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/ |
+| paymentOptions | ["installments", "employer_sponsorship", "loans", "scholarships"] | Many of Wharton’s EMBA students receive some level of sponsorship from their employer. Others finance their degree through personal funds, loans and scholarships. (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/ |
+| attendance | recurring_weekends | every-other-weekend residential format (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-faqs/ |
+| tuitionIncludes | Tuition, program fees, and housing and dining for regular class weekends and required modular courses; textbooks are not included. | Housing and dining for regular class weekends and for required modular courses. (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/ |
+| paymentOptions | ["installments", "employer_sponsorship", "loans", "scholarships"] | Program tuition is due in six equal installments. (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/ |
+| cohortMedianExperienceYears | 13.5 | an average of 13-14 years of professional experience (checked 2026-10-08) | https://executivemba.wharton.upenn.edu/class-profile/ |
+| campusAddress | 2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105 | 2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105 (checked 2026-10-08) | https://sf.wharton.upenn.edu/connect/directions/ |
+| ratingNotes | (rating evidence) | Leadership Essentials ... Foundations of Teamwork and Leadership ... Management Communication ... Responsibility in Global Management (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-curriculum/ |
+| ratingNotes | (rating evidence) | some Wharton majors can be earned by executive students as a result of pursuing four additional credit units in a focused area. (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-curriculum/ |
+| ratingNotes | (rating evidence) | Personalized 1:1 support from highly rated executive coaches (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-career-services/ |
+| ratingNotes | (rating evidence) | CareerPath: Centralized hub with job board, resume book, board resume section, and compensation data (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-career-services/ |
+| ratingNotes | (rating evidence) | Career Changers: Pivoting into new industries or functions (checked 2026-10-10) | https://executivemba.wharton.upenn.edu/emba-career-services/ |
+| onsiteNote | every-other-weekend residential format | **no quote** | |
+| campusLat | 37.7916 | **no quote** | |
+| campusLon | -122.3893 | **no quote** | |
+| country | US | **no quote** | |
+| lodgingIncluded | true | **no quote** | |
+| cohortExperienceBasis | average | **no quote** | |
+| locationOffers | ["network_density", "industry_hub"] | **no quote** | |
+| figureNotes | {"tuitionUsd": "Price for the class entering in 2026; the 2027 price is not published.", "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028.", "campusLat": "Derived from campusAddress (approximate, from the street address).", "campusLon": "Derived from campusAddress (approximate, from the street address)."} | **no quote** | |
 
-**Ratings** (from `wharton-emba-sf-rating.md`):
+**Ratings** (from the last block of `wharton-emba-sf-rating.md`):
 
-| Rating | Score | Note |
+| Need | Score | Note |
 | --- | --- | --- |
-| network (low evidence) | 4 | Low evidence: Every-other-weekend residential attendance and an eight-year standard experience requirement support 4; incoming-cohort seniority and alumni size/access are not established, so 5 is unsupported. |
-| depth (low evidence) | 4 | Low evidence: An MBA requiring 19 course units supports a provisional master's-level 4; applied content and San Francisco faculty involvement are not established, and research/thesis evidence needed for 5 is missing. |
-| practicality (low evidence) | 3 | Low evidence: Required full-time employment and every-other-weekend attendance support a provisional 3 for work compatibility; workload, schedule flexibility and applied projects are not established. |
-| costValue (low evidence) | 3 | Low evidence: 3 is a provisional midpoint, not a verified peer-value assessment; 2027 tuition and duration and comparable-program prices are missing, while the $243,000 tuition and fees apply only to the 2026 intake. |
+| leadership_skills | 4 | Required Leadership Essentials core courses, such as Foundations of Teamwork and Leadership, plus co-curricular leadership sessions. |
+| deep_expertise | 3 | A general MBA of 19 course units; optional majors add four course units in one field. |
+| graduate_degree | 5 | Awards the Wharton MBA, the same degree as the full-time program. |
+| senior_network | 3 | Class of 2028 averages 13 to 14 years of experience; class weekends every other week. |
+| new_industry_or_city | 4 | Executive coaches, a job board and resume book, and dedicated support for career changers. |

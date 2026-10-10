@@ -92,3 +92,46 @@ Changes from Perplexity's answer:
 - senior_network 5 → 3: the most recent class profile now counts (Class of 2028, "an average of 13-14 years of professional experience"), which is level 3. The engine derives the same 3 from the record's 13.5.
 - senior_network leaves lowEvidence: it rests on a published class profile.
 - new_industry_or_city stays 3: the research has no career facts, so the rule "default or 3, whichever is lower" applies.
+
+## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: pending)
+
+Full re-review of all five needs under rate-program v3 (PR #135), from the research, the overrides and Wharton's own pages checked on 2026-10-10: the class profile, the EMBA curriculum page, the Penn catalog and the EMBA career services page. The curriculum and career facts are new in the overrides file as `ratingNotes` sources.
+
+```json
+{
+  "ratings": {
+    "leadership_skills": 4,
+    "deep_expertise": 3,
+    "graduate_degree": 5,
+    "senior_network": 3,
+    "new_industry_or_city": 4
+  },
+  "ratingNotes": {
+    "leadership_skills": "Required Leadership Essentials core courses, such as Foundations of Teamwork and Leadership, plus co-curricular leadership sessions.",
+    "deep_expertise": "A general MBA of 19 course units; optional majors add four course units in one field.",
+    "graduate_degree": "Awards the Wharton MBA, the same degree as the full-time program.",
+    "senior_network": "Class of 2028 averages 13 to 14 years of experience; class weekends every other week.",
+    "new_industry_or_city": "Executive coaches, a job board and resume book, and dedicated support for career changers."
+  },
+  "reasoning": {
+    "leadership_skills": "default 5 → 4 because leadership is a required strand but not the core of the curriculum. The core is 'The core curriculum consists of 9.5 course units.', split into 'Leadership Essentials' (Foundations of Teamwork and Leadership, Management Communication, Responsibility in Global Management) and a longer 'Analytic Foundations' list (accounting, finance, economics, statistics, operations, marketing). The Penn catalog lists MGMT 6100 Foundations of Teamwork and Leadership and WHCP 6140 Management Communication at 0.5 CU each among the core requirements. The SF calendar adds 'Required Co-curricular Leadership Sessions'. Taught to experienced professionals (eight years minimum), but level 5 needs leadership to be the core; per R3, required leadership courses in a program about something else are a 4.",
+    "deep_expertise": "Category default 3 stands: a general MBA ('You must complete 19 course units at Wharton to earn your degree from our program.', R8). The curriculum page adds that 'some Wharton majors can be earned by executive students as a result of pursuing four additional credit units in a focused area' (for example Artificial Intelligence for Business, Strategic Management): several courses in one field, level 3. Not 4: the degree as a whole spans many fields, and no capstone or thesis is required.",
+    "graduate_degree": "Factual 5: 'There is no difference in the degree earned by executive and full-time MBA students.'",
+    "senior_network": "Stays 3 per R2: the Class of 2028 profile, 'an average of 13-14 years of professional experience', midpoint 13.5, band 10 to 14. Re-checked on 2026-10-10: the profile still publishes no breakdown, median, titles or seniority mix (its counters render as 0), so R9 does not apply. The engine derives the same 3 from the record's 13.5.",
+    "new_industry_or_city": "default 3 → 4 because the EMBA career services page lists 'Personalized 1:1 support from highly rated executive coaches', 'CareerPath: Centralized hub with job board, resume book, board resume section, and compensation data' (a recruiting channel) and serves 'Career Changers: Pivoting into new industries or functions' (dedicated switcher support). Level 4 needs career services plus either. Not 5: no internships or structured switching; students must 'maintain full-time employment throughout the duration of the program'."
+  },
+  "lowEvidence": []
+}
+```
+
+Changes from the reviewed block above (Yami, Oct 9):
+
+- leadership_skills 5 → 4: the curriculum page shows leadership as one required block of the core, not the core (R3, rubric level 4). It leaves lowEvidence.
+- new_industry_or_city 3 → 4: the career services page, not in the research, shows a job board with a resume book and support for career changers. It leaves lowEvidence; R6 no longer applies because there are now career facts.
+- deep_expertise stays 3 and leaves lowEvidence: the optional majors are several courses in one field.
+- Notes for leadership_skills, deep_expertise and new_industry_or_city restate the new facts.
+
+Close calls:
+
+- leadership_skills 4 or 5: the EMBA default is 5, and the classes are taught to experienced professionals, but leadership is about one sixth of the core. Keeping 5 would rank a general EMBA above Harvard's organizational behavior certificate (4) on leadership.
+- new_industry_or_city 4 or 3: the services are for students and alumni of the whole EMBA; the page names no restriction, but it doesn't say how many career changers use them.
