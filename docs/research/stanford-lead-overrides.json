@@ -53,6 +53,14 @@
       "quote": "LEADers are selected based on professional experience, leadership potential, intellectual curiosity",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
+    },
+    {
+      "field": "cohortSeniority",
+      "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+      "quote": "LEAD is designed for mid- to senior-career professionals preparing for broader leadership responsibility",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
     }
-  ]
+  ],
+  "cohortSeniority": "Designed for mid- to senior-career professionals; the position mix is published only as a chart image."
 }

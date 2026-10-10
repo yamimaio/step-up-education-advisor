@@ -449,7 +449,7 @@
     "accreditation": null,
     "cohortMedianExperienceYears": 7.6,
     "cohortExperienceBasis": "average",
-    "cohortSeniority": null,
+    "cohortSeniority": "Experienced scientists, engineers and technical professionals from diverse corporate backgrounds; no titles are published.",
     "lodgingPerNightUsd": null,
     "ratings": {
       "leadership_skills": 4,
@@ -610,11 +610,18 @@
         "quote": "Northwestern Career Advancement offers comprehensive career services including career counseling and assessment",
         "checkedOn": "2026-10-10",
         "kind": "official_page"
+      },
+      {
+        "field": "cohortSeniority",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/student-body-profile.html",
+        "quote": "experienced scientists, engineers, and technical professionals from diverse corporate backgrounds",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
       }
     ],
     "verification": {
-      "status": "verified",
-      "verifiedBy": "Yami Maio"
+      "status": "draft",
+      "verifiedBy": null
     },
     "locationOffers": ["industry_hub"]
   },
@@ -655,7 +662,7 @@
     "accreditation": [],
     "cohortMedianExperienceYears": null,
     "cohortExperienceBasis": null,
-    "cohortSeniority": null,
+    "cohortSeniority": "Designed for mid- to senior-career professionals; the position mix is published only as a chart image.",
     "lodgingPerNightUsd": null,
     "ratings": {
       "leadership_skills": 4,
@@ -834,11 +841,18 @@
         "quote": "LEADers are selected based on professional experience, leadership potential, intellectual curiosity",
         "checkedOn": "2026-10-10",
         "kind": "official_page"
+      },
+      {
+        "field": "cohortSeniority",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+        "quote": "LEAD is designed for mid- to senior-career professionals preparing for broader leadership responsibility",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
       }
     ],
     "verification": {
-      "status": "verified",
-      "verifiedBy": "Yami Maio"
+      "status": "draft",
+      "verifiedBy": null
     },
     "locationOffers": ["travel_ease", "affordability"]
   },
@@ -873,7 +887,7 @@
     "lodgingIncluded": true,
     "paymentOptions": ["installments", "employer_sponsorship", "loans", "scholarships"],
     "minExperienceYears": 8,
-    "accreditation": null,
+    "accreditation": ["AACSB"],
     "cohortMedianExperienceYears": 13.5,
     "cohortExperienceBasis": "average",
     "cohortSeniority": null,
@@ -901,7 +915,8 @@
       "durationMonths": "The school's published length; the 2027-2029 San Francisco calendar runs from May 29, 2027 to May 15, 2029.",
       "onsiteDaysPerYear": "Counted from the highlighted dates of the 2027-2029 San Francisco calendar: 105 days over two program years (91 San Francisco class days on 41 weekends, 8 days in Philadelphia from May 29 to June 5, 2027, and 6 days of Global Business Week from January 10 to 15, 2028); 61 in the first year, 44 in the second.",
       "longestStretchDays": "The opening session in Philadelphia, May 29 to June 5, 2027, on the 2027-2029 San Francisco calendar.",
-      "residencyCount": "43 trips on the 2027-2029 San Francisco calendar (41 San Francisco class weekends, the Philadelphia opening session and Global Business Week; 23 in the first year, 20 in the second), so 21.5 a year, rounded up to 22."
+      "residencyCount": "43 trips on the 2027-2029 San Francisco calendar (41 San Francisco class weekends, the Philadelphia opening session and Global Business Week; 23 in the first year, 20 in the second), so 21.5 a year, rounded up to 22.",
+      "accreditation": "From AACSB's own directory of accredited schools (University of Pennsylvania, The Wharton School, accredited in Business); Wharton's EMBA pages do not name an accreditor."
     },
     "sources": [
       {
@@ -1167,11 +1182,25 @@
         "quote": "Career Changers: Pivoting into new industries or functions",
         "checkedOn": "2026-10-10",
         "kind": "official_page"
+      },
+      {
+        "field": "accreditation",
+        "url": "https://www.aacsb.edu/accredited/u/university-of-pennsylvania",
+        "quote": "The Wharton School 1000 Steinberg Hall-Dietrich Hall 3620 Locust Walk",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "accreditation",
+        "url": "https://www.aacsb.edu/accredited/u/university-of-pennsylvania",
+        "quote": "Accreditation Business",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
       }
     ],
     "verification": {
-      "status": "verified",
-      "verifiedBy": "Yami Maio"
+      "status": "draft",
+      "verifiedBy": null
     },
     "locationOffers": ["network_density", "industry_hub"]
   }
