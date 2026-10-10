@@ -100,6 +100,51 @@ describe("the Stage 1 page with the real route on the fake model", () => {
     expect(requests.length).toBe(fetches);
   });
 
+  // The server sends the stage 2 card ({ toolUseId, profile }) before the page can draw it
+  // (#147): the page must not draw the stage 1 card without a direction.
+  it("says the search card isn't here yet instead of crashing on it", async () => {
+    const user = userEvent.setup();
+    render(<Home />);
+    const input = () => screen.getByLabelText("Your message");
+    const tap = async (...labels: string[]) => {
+      for (const label of labels)
+        await user.click(await screen.findByRole("button", { name: label }));
+    };
+
+    await user.type(input(), "I've led engineering teams for twelve years.{Enter}");
+    await tap("Step up to a bigger leadership role");
+    await screen.findByText("In your own words, what would that step up look like?");
+    await user.type(input(), "Move into an executive role{Enter}");
+    await tap("A senior network", "Leadership skills", "Deep expertise in a field");
+    await user.click(screen.getByRole("button", { name: /^Send 3 of 3/ }));
+    await tap(
+      "More senior leaders",
+      "Up to a year",
+      "5 to 10",
+      "Yes, I keep working",
+      "Not needed",
+    );
+    const card = await screen.findByRole("region", { name: "Here's what I understood" });
+    await user.click(within(card).getByRole("button", { name: "Looks right" }));
+    await screen.findByRole("region", { name: "Your verdict" });
+
+    // Both stages take 24 requests, past the route's 20 a minute.
+    chatRateLimiter.reset();
+    await user.type(input(), "Yes, show me programs.{Enter}");
+    await screen.findByText(/^Where do you live\?/);
+    await user.type(input(), "Buenos Aires, sixteen years, twelve leading, engineering.{Enter}");
+    await tap("$40k to $80k", "Installments", "$5k to $10k", "Part of the appeal", "Blended");
+    await tap("Up to 20", "About a week", "No, I would not", "$1,000 to $1,500");
+    await tap("Immersion", "Network density");
+    await user.click(screen.getByRole("button", { name: /^Send 2 of 2/ }));
+    await tap("Bachelor's", "Manager");
+
+    const status = await screen.findByText(/The program search card isn.t on this page yet/);
+    expect(status.getAttribute("role")).toBe("status");
+    expect(screen.queryByRole("region", { name: "Here's what I understood" })).toBeNull();
+    expect(screen.getByRole("region", { name: "Your verdict" })).toBeTruthy();
+  });
+
   it("keeps the conversation going after a 429: shows the wait, then retries the same history", async () => {
     const user = userEvent.setup();
     vi.mocked(fetch).mockImplementationOnce(async (_url, init) => {

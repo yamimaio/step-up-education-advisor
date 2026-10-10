@@ -1,5 +1,6 @@
 import type { Direction } from "@core/advisor/tools";
 import type { DirectionResult } from "@core/engine/types";
+import type { Profile } from "@core/schema/profile";
 
 // The /api/chat contract, Stage 1 (docs/chat-api.md). The page can't import the Anthropic SDK
 // or server/, so messages are typed loosely here: the page passes every block back unchanged
@@ -27,7 +28,11 @@ export type PendingChips = {
   pick: number;
 };
 
-export type PendingConfirm = { toolUseId: string; direction: Direction };
+// The stage 1 card holds `direction`; the stage 2 card holds `profile` (docs/chat-api.md,
+// "Stage 2"). The page renders only the stage 1 card until #147.
+export type PendingConfirm =
+  | { toolUseId: string; direction: Direction; profile?: never }
+  | { toolUseId: string; profile: Profile; direction?: never };
 
 export type NoticeKind =
   | "retryable"

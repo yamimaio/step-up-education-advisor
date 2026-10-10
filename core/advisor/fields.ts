@@ -3,9 +3,10 @@ import type { ChipField } from "./chips";
 // The checklist (docs/build-plan.md, "Intake questions", plus format preference from
 // docs/need-based-ranking.md section 3a), split by stage
 // (docs/ux-two-stage.md). Stage 1 asks only what decides the category and ends at
-// propose_direction; stage 2 (not wired yet) asks the rest before programs are shown.
+// propose_direction; stage 2 asks the rest and ends at propose_search, before programs are shown.
 // The server's "set by chip" check uses `chips` to know which profile fields must come from a tap.
-// `pick` is how many chips a multi-select takes: needs are ranked top 3, locations up to 2.
+// `pick` is how many chips a multi-select takes, exactly: needs are ranked top 3, locations 2
+// (decisions.md, Step 6, Stage 2).
 export type ChecklistEntry = {
   id: string;
   stage: 1 | 2;
@@ -151,3 +152,8 @@ export const CHECKLIST: ChecklistEntry[] = [
 
 export const STAGE_1_CHECKLIST = CHECKLIST.filter((e) => e.stage === 1);
 export const STAGE_2_CHECKLIST = CHECKLIST.filter((e) => e.stage === 2);
+
+// How many chips a field takes: 3 for needs, 2 for location values, otherwise 1.
+export function pickOf(field: string): number {
+  return CHECKLIST.find((e) => (e.chips as string[]).includes(field))?.pick ?? 1;
+}

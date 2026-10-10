@@ -1,9 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import { recommendCategory } from "../core/index";
+import { evaluatePrograms, recommendCategory } from "../core/index";
 import { toEngineDirection } from "../core/advisor/tools";
 import { fixtureDataset } from "../tests/fixtures/dataset";
-import { Page, PERSONA_A_OPENING, PERSONA_A_TAPS, walkToLastTap } from "../tests/fixtures/chat";
-import { fallbackExplanation, NOTICE_MESSAGES } from "./fallback";
+import {
+  Page,
+  PERSONA_A_OPENING,
+  PERSONA_A_TAPS,
+  TODAY,
+  walkToLastTap,
+  walkToSearchCard,
+} from "../tests/fixtures/chat";
+import { fallbackExplanation, fallbackSearchExplanation, NOTICE_MESSAGES } from "./fallback";
 import { ModelError } from "./model/adapter";
 import { createAnthropicClient } from "./model/anthropic";
 import { FakeModelClient } from "./model/fake";
@@ -100,5 +107,44 @@ describe("the template explanation", () => {
       "Ruled out: an executive MBA. The one Executive MBA program Step Up has verified so far isn't within your limits (program length).",
     );
     expect(text).not.toMatch(/no program of this type/);
+  });
+});
+
+describe("the programs survive a failed model call after the stage 2 confirm", () => {
+  it("returns the engine's programs with the template explanation", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await walkToSearchCard(page);
+    const profile = page.last!.confirm!.profile!;
+    const before = page.history;
+    page.model = new FakeModelClient([new ModelError("auth_or_credit")]);
+    const r = await page.confirm();
+
+    const { category } = recommendCategory(
+      toEngineDirection(PERSONA_A_DIRECTION as never),
+      programs,
+    );
+    const expected = evaluatePrograms(profile, category, programs, TODAY);
+    expect(r.programs).toEqual(expected);
+    expect(r.direction).toBeNull();
+    expect(r.text).toBe(fallbackSearchExplanation(expected, programs, profile.declined));
+    expect(r.notice).toEqual({ kind: "auth_or_credit", message: NOTICE_MESSAGES.auth_or_credit });
+    expect(r.messages).toEqual([]);
+    expect(r.replaceLastUserMessage).toBeNull();
+    expect(page.history.slice(0, before.length)).toEqual(before);
+  });
+});
+
+describe("the template offers programs only for a verdict that names a type", () => {
+  it("doesn't ask about programs when the user declined what's missing", () => {
+    const declined = recommendCategory(
+      toEngineDirection({ ...PERSONA_A_DIRECTION, needs: null, declined: ["needs"] } as never),
+      programs,
+    );
+    expect(declined.category.winner).toBeNull();
+    const text = fallbackExplanation(declined);
+    expect(text).not.toContain("Want to see programs that fit?");
+    expect(
+      text.endsWith("A list of programs needs a settled type first, so that's the next step."),
+    ).toBe(true);
   });
 });
