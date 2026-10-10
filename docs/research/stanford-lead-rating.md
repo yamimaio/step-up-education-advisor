@@ -134,3 +134,9 @@ Claude's independent rating under rate-program v3, from Claude's own official-pa
   "lowEvidence": ["senior_network", "new_industry_or_city"]
 }
 ```
+
+Changes from Perplexity's answer:
+
+- leadership_skills 3 → 4: Perplexity rated 3 because its research named no leadership courses. The courses page names the two leadership core courses and about half the electives are leadership courses (Leadership Agility, Building Power to Lead, Leading with Insight, The Friction Project: Leading Successful Change), so leadership is a major strand with a required, named course (per R3). Close call between 4 and 5.
+- lowEvidence: Perplexity also listed deep_expertise. The course list settles the structure (8 courses, no capstone), so deep_expertise is not on thin evidence.
+- deep_expertise, graduate_degree, senior_network and new_industry_or_city agree (3, 2, 3, 2).
