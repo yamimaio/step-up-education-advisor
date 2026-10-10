@@ -1,0 +1,166 @@
+{
+  "locationOffers": [
+    "network_density",
+    "industry_hub"
+  ],
+  "attendance": "recurring_weekends",
+  "onsiteNote": "Friday afternoon to Saturday evening every other week in Chicago, with some Sunday classes, plus four intensive weeks a program, including orientation and Global Network Week in Evanston.",
+  "state": "Illinois",
+  "campusAddress": "340 E. Superior St. Chicago, Illinois 60611",
+  "campusLat": 41.8957,
+  "campusLon": -87.6189,
+  "onsiteDaysPerYear": 54,
+  "residencyCount": 17,
+  "longestStretchDays": 6,
+  "lodgingIncluded": true,
+  "cohortExperienceBasis": "average",
+  "figureNotes": {
+    "campusLat": "Derived from campusAddress (approximate, from the street address).",
+    "campusLon": "Derived from campusAddress (approximate, from the street address).",
+    "tuitionUsd": "Kellogg's own estimated-expenses total for 2026-2027: tuition $205,486 plus required food and housing $42,986, billed by Kellogg in six quarters of $41,412. Food and housing is required of every student. Kellogg says tuition has historically risen 3-4% a year.",
+    "cohortMedianExperienceYears": "Average published for the September 2024 and January 2025 Chicago and Miami cohorts (combined), with a mid-80% range of 9 to 23 years; no median or breakdown is published.",
+    "onsiteDaysPerYear": "Counted from the January 2027 first-year Chicago calendar: 6 days of orientation (January 19-24), 14 class sessions (10 of 3 days, 4 of 2 days: 38 days, counting every listed date), a 5-day intensive week (June 21-25) and 5 days of Global Network Week in Evanston: 54 days. Some listed Sundays may have no class. The second-year calendar is not published, so year 1 stands for both.",
+    "residencyCount": "Counted from the January 2027 first-year Chicago calendar: orientation, 14 class sessions, the intensive week and Global Network Week (17 trips).",
+    "longestStretchDays": "Orientation programming, January 19 to 24, 2027; Global Network Week is 5 days for U.S.-campus students."
+  },
+  "extraSources": [
+    {
+      "field": "campusAddress",
+      "url": "https://www.kellogg.northwestern.edu/facilities/wieboldt-hall/",
+      "quote": "340 E. Superior St. Chicago, Illinois 60611",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "attendance",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+      "quote": "Students attending the Chicago campus take classes every other week, beginning Friday afternoon and ending Saturday evening",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+      "quote": "Programming: January 19 - January 24, 2027",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+      "quote": "June 21 - 25, 2027 (Intensive week)",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/global-network-week/",
+      "quote": "Students based on U.S. campuses (Miami or Chicago) take courses for 5 days.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "residencyCount",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+      "quote": "An asterisk (*) indicates weekends that may include Sunday classes.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "longestStretchDays",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/chicago-twice-monthly/",
+      "quote": "Programming: January 19 - January 24, 2027",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+      "quote": "70% Hold senior positions (Director + VP + C-Suite)",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/core-courses/",
+      "quote": "You are required to take all core courses, which you take at the same time as other students in your cohort.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/leadership-development.aspx",
+      "quote": "The series consists of five workshops",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/core-courses/",
+      "quote": "Executive Perspectives on Leadership",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/leadership-development.aspx",
+      "quote": "receive individual coaching sessions with a Kellogg executive leadership coach",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/specializations",
+      "quote": "These specializations are not recorded on the transcript or diploma.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/",
+      "quote": "Shift to a new function or industry with tools from the CMC that help you:",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/",
+      "quote": "CMC coaching sessions are tailored to experienced professionals making high-impact decisions.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+      "quote": "Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "minExperienceYears",
+      "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
+      "quote": "The Executive MBA Program is designed for fully-employed professionals with at least eight years of work experience.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "accreditation",
+      "url": "https://www.northwestern.edu/provost/about/university-accreditation/specialized-accreditation.html",
+      "quote": "Association to Advance Collegiate Schools of Business",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "cohortSeniority",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+      "quote": "Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    }
+  ],
+  "minExperienceYears": 8,
+  "accreditation": [
+    "AACSB"
+  ],
+  "cohortSeniority": "Career levels: 32% director, 20% VP and 18% C-suite (70% director or above), 25% manager, 5% other."
+}

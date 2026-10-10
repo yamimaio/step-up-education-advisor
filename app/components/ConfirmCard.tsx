@@ -28,17 +28,18 @@ export function ConfirmCard({
   const [corrections, setCorrections] = useState(correction ?? "");
 
   return (
-    <section
-      aria-labelledby={headingId}
-      className="rounded-lg border border-teal/40 bg-white/70 p-4 shadow-sm"
-    >
-      <h2 id={headingId} tabIndex={-1} className="mb-3 font-semibold text-teal outline-none">
+    <section aria-labelledby={headingId} className="rounded-xl border border-line bg-card p-4">
+      <h2
+        id={headingId}
+        tabIndex={-1}
+        className="mb-3 font-display text-lg font-semibold outline-none"
+      >
         {heading}
       </h2>
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
         {lines.map((line, i) => (
           <div key={i} className="contents">
-            <dt className="text-ink/70">{line.label}</dt>
+            <dt className="text-muted">{line.label}</dt>
             <dd>{line.value}</dd>
           </div>
         ))}
@@ -60,20 +61,20 @@ export function ConfirmCard({
             maxLength={4000}
             rows={3}
             onChange={(e) => setCorrections(e.target.value)}
-            className="rounded border border-ink/30 bg-white p-2 text-sm"
+            className="rounded-lg border border-muted bg-card p-2 text-sm"
           />
           <div className="flex gap-2">
             <button
               type="submit"
               disabled={disabled || !corrections.trim()}
-              className="rounded bg-teal px-4 py-1.5 text-sm text-paper disabled:opacity-50"
+              className="rounded-lg bg-teal px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
             >
               Send changes
             </button>
             <button
               type="button"
               onClick={() => setEditing(false)}
-              className="rounded border border-ink/30 px-4 py-1.5 text-sm"
+              className="rounded-lg border border-line bg-card px-4 py-1.5 text-sm"
             >
               Cancel
             </button>
@@ -85,7 +86,7 @@ export function ConfirmCard({
             type="button"
             disabled={disabled}
             onClick={onConfirm}
-            className="rounded bg-teal px-4 py-1.5 text-sm text-paper disabled:opacity-50"
+            className="rounded-lg bg-teal px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
           >
             Looks right
           </button>
@@ -93,7 +94,7 @@ export function ConfirmCard({
             type="button"
             disabled={disabled}
             onClick={() => setEditing(true)}
-            className="rounded border border-teal px-4 py-1.5 text-sm text-teal disabled:opacity-50"
+            className="rounded-lg border border-teal bg-card px-4 py-1.5 text-sm font-medium text-teal hover:bg-teal-soft disabled:opacity-50"
           >
             Change something
           </button>

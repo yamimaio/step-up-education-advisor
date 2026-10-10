@@ -1,14 +1,36 @@
 @import "tailwindcss";
 
+/* Brand tokens from the check-in cards (issue #158). Warm is an accent only, never body text. */
 @theme {
-  --color-paper: #faf6ee;
-  --color-ink: #1f2a2a;
-  --color-teal: #0f5c5c;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-paper: #f6f3ec;
+  --color-card: #ffffff;
+  --color-ink: #16202e;
+  --color-muted: #5a6472;
+  --color-line: #e3ded3;
+  --color-teal: #0e6e64;
+  --color-teal-soft: #e2f0ec;
+  --color-warm: #c2611f;
+}
+
+/* Fraunces and Inter come from next/font in app/layout.tsx, which sets these variables. */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+}
+
+/* Keeps what scrollIntoView or focus brings into view clear of the sticky progress line. */
+html {
+  scroll-padding-top: 4rem;
 }
 
 body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+/* One visible keyboard focus ring for every control. */
+:where(button, textarea, input, select, summary, a):focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
 }

@@ -154,6 +154,9 @@ const SOURCED_OVERRIDE_KEYS = [
   "residencyCount",
   "longestStretchDays",
   "hoursPerWeek",
+  "minExperienceYears",
+  "accreditation",
+  "cohortSeniority",
 ] as const;
 
 // The only keys an overrides file may set: facts the research JSON doesn't produce, plus hand
