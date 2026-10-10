@@ -10,7 +10,7 @@ import type { Program } from "@core/schema/program";
 import { programView } from "@app/lib/programs";
 import { fixture } from "../../tests/fixtures/dataset";
 import { personaADirection } from "../../tests/fixtures/directions";
-import { NO_HOME, NO_HOME_DECLINED, personaAProfile } from "../../tests/fixtures/profiles";
+import { CHICAGO, NO_HOME, NO_HOME_DECLINED, personaAProfile } from "../../tests/fixtures/profiles";
 import { ProgramCard } from "./ProgramCard";
 
 afterEach(cleanup);
@@ -205,5 +205,17 @@ describe("ProgramCard", () => {
       const card = text(renderCard(fixture(), { ...personaAProfile, tuitionBudgetUsd: 27000 }));
       expect(card).toContain("Near missTuition: $30,000; your limit $27,000");
     });
+  });
+
+  it("shows a passing check's note, such as a move the program needs", () => {
+    // An evening program needs the student nearby; persona A would relocate from Chicago.
+    const card = text(
+      renderCard(fixture("fake-executive", { attendance: "recurring_evenings" }), {
+        ...personaAProfile,
+        ...CHICAGO,
+        relocate: true,
+      }),
+    );
+    expect(card).toContain("FitsLocation: Boston; requires relocating");
   });
 });
