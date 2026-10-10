@@ -126,3 +126,27 @@ describe("ConfirmCard, stage 2 (propose_search)", () => {
     expect(onCorrect).toHaveBeenCalledWith("My budget is $30k");
   });
 });
+
+describe("ConfirmCard, stage 2 tensions", () => {
+  it("lists the tensions resolved in stage 2, not those already on the direction card", () => {
+    const fromStage1 = { rule: "R4", chosen: "Keep the hours, go deep later" };
+    const fromStage2 = { rule: "R1", chosen: "A few days on site is enough for now" };
+    render(
+      <ConfirmCard
+        {...confirmCard(
+          {
+            toolUseId: "t2",
+            profile: { ...personaAProfile, resolvedTensions: [fromStage1, fromStage2] },
+          },
+          { ...personaADirection, resolvedTensions: [fromStage1] },
+        )}
+        disabled={false}
+        onConfirm={() => {}}
+        onCorrect={() => {}}
+      />,
+    );
+    const text = screen.getByRole("region").textContent ?? "";
+    expect(text).toContain("You decidedA few days on site is enough for now");
+    expect(text).not.toContain("Keep the hours, go deep later");
+  });
+});

@@ -150,8 +150,10 @@ const years = (n: number) => `${n} ${n === 1 ? "year" : "years"}`;
 
 // The search card's lines (stage 2 answers only; stage 1 is in the verdict), shared by the card
 // and the transcript. Chip labels or the user's own figures; a declined field is "Not answered".
-// The home coordinates are the model's estimate for the engine and are never shown.
-export function searchLines(p: Profile): CardLine[] {
+// The home coordinates are the model's estimate for the engine and are never shown. The profile's
+// resolvedTensions holds the direction card's, then any resolved in stage 2 (docs/chat-api.md,
+// "The search card"); only those not already on `direction`, the confirmed card, are listed.
+export function searchLines(p: Profile, direction: Direction | null = null): CardLine[] {
   const declined = new Set(p.declined);
   const line = (field: string, value: () => string): CardLine => ({
     label: SEARCH_FIELD_LABELS[field]!,
@@ -162,7 +164,9 @@ export function searchLines(p: Profile): CardLine[] {
     declined.has("homeRegion") ? "" : (p.homeRegion ?? ""),
     declined.has("homeCountry") ? "" : p.homeCountry,
   ].filter((part) => part.trim() !== "");
-  return [
+  const seen = new Set(direction?.resolvedTensions.map((t) => `${t.rule}\n${t.chosen}`));
+  const tensions = p.resolvedTensions.filter((t) => !seen.has(`${t.rule}\n${t.chosen}`));
+  const lines: CardLine[] = [
     line("tuitionBudgetUsd", () => chipLabel("tuitionBudgetUsd", p.tuitionBudgetUsd, money)),
     line("paymentPlan", () => chipLabel("paymentPlan", p.paymentPlan)),
     line("travelBudgetUsd", () => chipLabel("travelBudgetUsd", p.travelBudgetUsd, money)),
@@ -186,14 +190,20 @@ export function searchLines(p: Profile): CardLine[] {
     }),
     line("currentRole", () => chipLabel("currentRole", p.currentRole)),
   ];
+  for (const t of tensions) lines.push({ label: "You decided", value: t.chosen });
+  return lines;
 }
 
 export const DIRECTION_CARD_HEADING = "Here's what I understood";
 export const SEARCH_CARD_HEADING = "Here's what I'll search with";
 
-// The pending card's heading and lines, by which tool it answers.
-export function confirmCard(confirm: PendingConfirm): { heading: string; lines: CardLine[] } {
+// The pending card's heading and lines, by which tool it answers. `direction`: the confirmed
+// stage 1 card, whose tensions the search card doesn't repeat.
+export function confirmCard(
+  confirm: PendingConfirm,
+  direction: Direction | null = null,
+): { heading: string; lines: CardLine[] } {
   return "profile" in confirm
-    ? { heading: SEARCH_CARD_HEADING, lines: searchLines(confirm.profile) }
+    ? { heading: SEARCH_CARD_HEADING, lines: searchLines(confirm.profile, direction) }
     : { heading: DIRECTION_CARD_HEADING, lines: directionLines(confirm.direction) };
 }

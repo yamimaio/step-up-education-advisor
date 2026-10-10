@@ -117,7 +117,7 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
         {state.confirm && (
           <ConfirmCard
             key={state.confirm.toolUseId}
-            {...confirmCard(state.confirm)}
+            {...confirmCard(state.confirm, state.verdict?.direction)}
             correction={state.correction}
             disabled={busy}
             onConfirm={on.onConfirm}

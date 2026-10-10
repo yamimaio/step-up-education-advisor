@@ -108,7 +108,8 @@ export function buildTranscript({
 
   if (results) {
     out.push("## What you confirmed for the search", "");
-    for (const line of searchLines(results.profile)) out.push(`- ${line.label}: ${line.value}`);
+    for (const line of searchLines(results.profile, verdict?.direction))
+      out.push(`- ${line.label}: ${line.value}`);
 
     const v = resultsView(results, programs);
     out.push("", "## Programs", "");
