@@ -150,6 +150,33 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
       /never give a type a length, hours or work reason that its reasons don't state/,
     );
   });
+
+  // T2 run 1 called the certificate "a lighter and cheaper option"; its reasons said neither (issue #193).
+  it("reads cost as what the type asks against the user's needs and limits, never price", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain(
+      '"What it costs them" means what the type asks of this person against their needs and limits, exactly as its `reasons` state',
+    );
+    expect(verdict).toContain(
+      'never a price or tuition, and never "cheaper", "more expensive" or "lighter" unless its reasons say so',
+    );
+    expect(verdict).toContain("Stage 1 never compares types by price");
+    expect(verdict).toContain("what it would cost them in their needs and limits");
+  });
+
+  it("reads cost the same way when it names a tension (PR #205 review)", () => {
+    expect(section("Name the tension")).toContain(
+      "what each would cost them in their needs and limits. In stage 1 that is never a price or tuition: stage 1 never compares types by price.",
+    );
+  });
+
+  // Stage 2 raises tensions "exactly as in stage 1", and R2 is a tuition tension (PR #205 review 2).
+  it("lets a stage 2 tension name tuition, but only from the tool or the records", () => {
+    expect(section("Name the tension")).toContain(
+      "In stage 2 a tension may name tuition or a price, but only as the tool's sentence or the program records state it.",
+    );
+    expect(advisor).toContain("raise what fires exactly as in stage 1");
+  });
 });
 
 // The server's checks on propose_search (docs/chat-api.md, "Stage 2"): a rule that leads the
