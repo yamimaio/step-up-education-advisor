@@ -103,3 +103,34 @@ Research attached
 
 [^1]: stanford-lead.md
 
+
+## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: pending)
+
+Claude's independent rating under rate-program v3, from Claude's own official-page research (`stanford-lead-claude-check.md`) and Perplexity's research file, written before reading Perplexity's rating answer above.
+
+```json
+{
+  "ratings": {
+    "leadership_skills": 4,
+    "deep_expertise": 3,
+    "graduate_degree": 2,
+    "senior_network": 3,
+    "new_industry_or_city": 2
+  },
+  "ratingNotes": {
+    "leadership_skills": "One required leadership core course, plus leadership electives such as Leadership Agility and Building Power to Lead.",
+    "deep_expertise": "Eight online courses: two required foundations, one leadership core course and five electives from sixteen.",
+    "graduate_degree": "A Stanford GSB professional certificate and 24 CEUs; no academic credit is published.",
+    "senior_network": "Fully online, for mid- to senior-career professionals selected by application; live sessions and group projects.",
+    "new_industry_or_city": "A community of nearly 7,000 past participants; no career services published."
+  },
+  "reasoning": {
+    "leadership_skills": "default 5 → 4 because the required courses are Critical Analytical Thinking, Financing Innovation and 'Leadership Core (Select 1 of 2 Courses)' (Intentional Leadership: A 360 Approach; Strategic Leadership): leadership is a major strand with a required, named course, but one of several in a general business program (per R3). Close call: about half the electives are leadership courses (A New Type of Leader, Building Power to Lead, Leadership Agility, Leading with Insight, The Friction Project: Leading Successful Change) and the audience is 'mid- to senior-career professionals preparing for broader leadership responsibility', which argues for 5.",
+    "deep_expertise": "default 3 stands: 'a custom combination of 8 courses' across leadership, strategy, innovation, finance and critical thinking; a participant can take up to six leadership courses, which is 'several courses in one field'. No capstone or thesis. Close call with 2 for someone who picks broadly.",
+    "graduate_degree": "default 1 → 2 because it awards 'a Stanford GSB Professional Certificate' and '24 Continuing Education Units (CEUs)'; no academic credit or path to a degree is published (level 2).",
+    "senior_network": "default 5 → 3 because no median or average is published (the participant profile's figures are images) and the program is fully online. The target audience is 'mid- to senior-career professionals' and admission is selective ('LEADers are selected based on professional experience, leadership potential'), so per R1 the audience counts as the cohort; 'mid- to senior' reads as mostly managers (level 3). 4 and 5 need directors and VPs or sustained in-person time, which the facts don't show.",
+    "new_industry_or_city": "default 3 → 2 because the only career-related facts are a community ('nearly 7,000 LEADers', 'a lifelong community of accomplished professionals'); no career services are published for LEAD (per R5)."
+  },
+  "lowEvidence": ["senior_network", "new_industry_or_city"]
+}
+```

@@ -658,20 +658,20 @@
     "cohortSeniority": null,
     "lodgingPerNightUsd": null,
     "ratings": {
-      "leadership_skills": 3,
+      "leadership_skills": 4,
       "deep_expertise": 3,
       "graduate_degree": 2,
       "senior_network": 3,
       "new_industry_or_city": 2
     },
     "ratingNotes": {
-      "leadership_skills": "One required leadership course plus electives spanning leadership, innovation, communication, strategy, organizational design, and decision-making.",
-      "deep_expertise": "Eight courses cover business and leadership; specialized study depth, academic credit hours, and capstone requirements are not published.",
-      "graduate_degree": "Awards a Stanford GSB Professional Certificate and 24 CEUs; graduate-degree credit applicability is not published.",
-      "senior_network": "Designed for mid- to senior-career professionals, with online peer interaction; cohort experience and title distribution are not published.",
-      "new_industry_or_city": "Offers a lifelong professional community; career services, recruiting, internships, and relocation support are not published for LEAD."
+      "leadership_skills": "One required leadership core course, plus leadership electives such as Leadership Agility and Building Power to Lead.",
+      "deep_expertise": "Eight online courses: two required foundations, one leadership core course and five electives from sixteen.",
+      "graduate_degree": "A Stanford GSB professional certificate and 24 CEUs; no academic credit is published.",
+      "senior_network": "Fully online, for mid- to senior-career professionals selected by application; live sessions and group projects.",
+      "new_industry_or_city": "A community of nearly 7,000 past participants; no career services published."
     },
-    "ratingLowEvidence": ["deep_expertise", "senior_network", "new_industry_or_city"],
+    "ratingLowEvidence": ["senior_network", "new_industry_or_city"],
     "figureNotes": {},
     "sources": [
       {
@@ -790,6 +790,48 @@
         "field": "longestStretchDays",
         "url": "https://www.gsb.stanford.edu/exec-ed/admission/faq",
         "quote": "This program is designed to be completed fully online",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead/curriculum/courses",
+        "quote": "Leadership Core (Select 1 of 2 Courses) Intentional Leadership: A 360 Approach Strategic Leadership",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead/curriculum/courses",
+        "quote": "Building Power to Lead",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead/curriculum/courses",
+        "quote": "Leadership Agility",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead/curriculum/courses",
+        "quote": "Electives (Select 5 of 16*)",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program/curriculum",
+        "quote": "Join a worldwide community, 10+ years in the making, of nearly 7,000 LEADers across industries, functions, and regions",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program/participant-profile",
+        "quote": "LEADers are selected based on professional experience, leadership potential, intellectual curiosity",
         "checkedOn": "2026-10-10",
         "kind": "official_page"
       }
