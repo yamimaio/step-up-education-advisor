@@ -2,11 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import type { ChatState } from "@app/lib/chatState";
-import { toTurns } from "@app/lib/conversation";
+import { toTurns, type Turn } from "@app/lib/conversation";
+import { confirmCard } from "@app/lib/labels";
 import { ChipRow } from "./ChipRow";
-import { DirectionCard } from "./DirectionCard";
+import { ConfirmCard } from "./ConfirmCard";
 import { Message } from "./Message";
 import { MessageCounter } from "./MessageCounter";
+import { ProgramResults } from "./ProgramResults";
 import { VerdictBlock } from "./VerdictBlock";
 
 export const GREETING =
@@ -22,12 +24,24 @@ export type ChatHandlers = {
 };
 
 // The chat column: messages, then the pending chips or card, the notice and the input box.
-// The verdict shows right after the user's "Looks right", before the advisor explains it.
+// The verdict shows right after the user's "Looks right" on the first card, and the programs
+// right after it on the search card, each before the advisor explains it.
 export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
   const turns = toTurns(state.history);
   const busy = state.status !== "idle";
-  const confirmedAt = turns.findLastIndex((t) => t.kind === "confirm" && t.confirmed);
-  const verdictAt = state.verdict ? (confirmedAt >= 0 ? confirmedAt : turns.length - 1) : -2;
+  // Where a card's result goes: after the confirm that produced it (the verdict: the last stage 1
+  // confirm; the programs: the confirm of their own search card, so a later card's failed confirm
+  // never looks answered by them), or at the end while that confirm is not in the history yet.
+  const anchor = (shown: boolean, match: (t: Turn) => boolean) => {
+    if (!shown) return -2;
+    const at = turns.findLastIndex((t) => t.kind === "confirm" && t.confirmed && match(t));
+    return at >= 0 ? at : turns.length - 1;
+  };
+  const verdictAt = anchor(state.verdict !== null, (t) => t.kind === "confirm" && t.stage === 1);
+  const resultsAt = anchor(
+    state.results !== null,
+    (t) => t.kind === "confirm" && t.toolUseId === state.results?.toolUseId,
+  );
   const endRef = useRef<HTMLDivElement>(null);
   const pendingRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -58,6 +72,22 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
       <VerdictBlock verdict={state.verdict} />
     </li>
   );
+  // The cards are long, so they stay out of the log's announcements (aria-live="off"); the log
+  // announces one short line instead, and the cards are read like the rest of the page.
+  const listed = state.results
+    ? state.results.result.ranking.ranked.length +
+      state.results.result.ranking.alsoWorthALook.length
+    : 0;
+  const results = state.results && (
+    <>
+      <li className="sr-only">
+        {listed === 1 ? "1 program" : `${listed} programs`} listed below, under Programs that fit.
+      </li>
+      <li aria-live="off">
+        <ProgramResults results={state.results} verdict={state.verdict} />
+      </li>
+    </>
+  );
   const fallback = state.fallbackText && (
     <Message turn={{ kind: "assistant", text: state.fallbackText }} />
   );
@@ -69,8 +99,18 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
         <ol className="flex flex-col gap-3">
           <Message turn={{ kind: "assistant", text: GREETING }} />
           {verdictAt === -1 && verdict}
+          {resultsAt === -1 && results}
           {turns.map((turn, i) => (
-            <MessageWithVerdict key={i} turn={turn} after={i === verdictAt ? verdict : null} />
+            <MessageThen
+              key={i}
+              turn={turn}
+              after={
+                <>
+                  {i === verdictAt && verdict}
+                  {i === resultsAt && results}
+                </>
+              }
+            />
           ))}
           {fallback}
         </ol>
@@ -89,22 +129,15 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
             onSend={on.onChips}
           />
         )}
-        {state.confirm?.direction && (
-          <DirectionCard
+        {state.confirm && (
+          <ConfirmCard
             key={state.confirm.toolUseId}
-            direction={state.confirm.direction}
+            {...confirmCard(state.confirm, state.verdict?.direction)}
             correction={state.correction}
             disabled={busy}
             onConfirm={on.onConfirm}
             onCorrect={on.onCorrect}
           />
-        )}
-        {/* The stage 2 card (docs/chat-api.md, "Stage 2") renders with #147; until then the
-            page says so instead of drawing the stage 1 card without a direction. */}
-        {state.confirm?.profile && (
-          <p role="status" className="text-sm text-neutral-600">
-            The program search card isn&apos;t on this page yet. Your verdict stands.
-          </p>
         )}
       </div>
 
@@ -167,7 +200,7 @@ export function Chat({ state, ...on }: { state: ChatState } & ChatHandlers) {
   );
 }
 
-function MessageWithVerdict({
+function MessageThen({
   turn,
   after,
 }: {

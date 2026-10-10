@@ -80,3 +80,39 @@ describe("ChipRow", () => {
     expect(onSend).not.toHaveBeenCalled();
   });
 });
+
+describe("ChipRow, stage 2 chip sets", () => {
+  const set = (field: "formatPreference" | "travelComfort" | "locationValues", pick = 1) => ({
+    toolUseId: `toolu_${field}`,
+    field,
+    question: `Question for ${field}`,
+    options: CHIPS[field].map((c) => ({ ...c })),
+    pick,
+  });
+
+  it.each(["formatPreference", "travelComfort"] as const)(
+    "shows %s as labelled buttons and sends the tapped label",
+    async (field) => {
+      const onSend = vi.fn();
+      render(<ChipRow chips={set(field)} disabled={false} onSend={onSend} />);
+      expect(screen.getByRole("group", { name: `Question for ${field}` })).toBeTruthy();
+      for (const { label } of CHIPS[field]) {
+        expect(screen.getByRole("button", { name: label }).textContent).toBe(label);
+      }
+      const first = CHIPS[field][0].label;
+      await userEvent.setup().click(screen.getByRole("button", { name: first }));
+      expect(onSend).toHaveBeenCalledWith([first]);
+    },
+  );
+
+  it("takes two location values in order", async () => {
+    const onSend = vi.fn();
+    const user = userEvent.setup();
+    render(<ChipRow chips={set("locationValues", 2)} disabled={false} onSend={onSend} />);
+    expect(screen.getByText("(pick 2, most important first)")).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Immersion" }));
+    await user.click(screen.getByRole("button", { name: "Network density" }));
+    await user.click(screen.getByRole("button", { name: /^Send 2 of 2/ }));
+    expect(onSend).toHaveBeenCalledWith(["Immersion", "Network density"]);
+  });
+});

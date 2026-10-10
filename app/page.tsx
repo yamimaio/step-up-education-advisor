@@ -8,9 +8,9 @@ import { postChat } from "@app/lib/chatClient";
 import { chatReducer, initialChatState } from "@app/lib/chatState";
 import { textMessage, toolResultMessage, type MessageParam } from "@app/lib/chatTypes";
 
-// The Stage 1 page: chat, chips, the confirm card and the verdict. State lives in memory only
-// (D3); every turn posts the whole history to /api/chat (docs/chat-api.md). Sends and retries
-// only start while idle or failed, so state.history is the history the server last answered.
+// The page: chat, chips, the two confirm cards, the verdict and the program cards. State lives in
+// memory only (D3); every turn posts the whole history to /api/chat (docs/chat-api.md). Sends and
+// retries only start while idle or failed, so state.history is the history the server last answered.
 export default function Home() {
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
 
@@ -32,6 +32,7 @@ export default function Home() {
           input={{
             history: state.history,
             verdict: state.verdict,
+            results: state.results,
             fallbackText: state.fallbackText,
           }}
         />
