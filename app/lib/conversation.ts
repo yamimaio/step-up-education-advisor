@@ -1,5 +1,6 @@
 import { WRAP_UP_NOTE } from "@core/advisor/wrapUp";
 import { blocksOf, type MessageParam } from "./chatTypes";
+import { chipFieldLabel, type CardLine } from "./labels";
 
 // What the user sees of the history: the user's words, the chips they tapped, their answer to
 // the card and the advisor's text. Thinking, tool calls and server-tool results stay hidden.
@@ -7,13 +8,22 @@ import { blocksOf, type MessageParam } from "./chatTypes";
 export type Turn =
   | { kind: "user"; text: string }
   | { kind: "assistant"; text: string }
-  | { kind: "chips"; question: string; chosen: string[]; typed?: string }
+  | ChipsTurn
   // stage 1: the "Here's what I understood" card (propose_direction); 2: the search card.
   // toolUseId: the card's, so a result can be drawn under the answer to its own card.
   | { kind: "confirm"; stage: 1 | 2; toolUseId: string; confirmed: true }
   | { kind: "confirm"; stage: 1 | 2; toolUseId: string; confirmed: false; corrections: string };
 
 const CARD_STAGE: Record<string, 1 | 2> = { propose_direction: 1, propose_search: 2 };
+
+// `field` is the ask_choice input's field, so the chat can label the answer without model text.
+export type ChipsTurn = {
+  kind: "chips";
+  field: string;
+  question: string;
+  chosen: string[];
+  typed?: string;
+};
 
 type ToolCall = { name: string; input: Record<string, unknown> };
 
@@ -88,6 +98,7 @@ export function toTurns(history: MessageParam[]): Turn[] {
           const typed = typeof answer.typed === "string" ? answer.typed : undefined;
           turns.push({
             kind: "chips",
+            field: String(call.input.field ?? ""),
             question: String(call.input.question ?? ""),
             chosen: labelsOf(answer.chosen),
             ...(typed ? { typed } : {}),
@@ -124,4 +135,24 @@ export function turnText(turn: Turn): string {
     case "confirm":
       return turn.confirmed ? "Looks right" : `Change something: ${turn.corrections}`;
   }
+}
+
+// A tapped chip answer as one "question: answer" line. The label is the field's fixed name, stage
+// 1 or 2, or the asked question (without its closing "?") for a field with none. A typed reply to
+// chips isn't an answer line: the advisor replies or asks again (advisor.md), so the chat shows
+// it as the user's own message.
+export function answerLine(turn: ChipsTurn): CardLine {
+  let label = chipFieldLabel(turn.field);
+  if (label === null) {
+    label = turn.question.trim();
+    while (/[?.:!]$/.test(label)) label = label.slice(0, -1).trimEnd();
+  }
+  return { label, value: chipAnswerText(turn) };
+}
+
+// The tapped labels. A multi-pick (needs, location values) is asked "most important first", so
+// its picks are numbered in the order tapped.
+export function chipAnswerText(turn: ChipsTurn): string {
+  if (turn.chosen.length > 1) return turn.chosen.map((c, i) => `${i + 1}. ${c}`).join(", ");
+  return turn.chosen.join(", ");
 }

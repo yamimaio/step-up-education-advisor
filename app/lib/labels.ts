@@ -1,5 +1,5 @@
 import { CHIPS, type ChipField } from "@core/advisor/chips";
-import type { Direction } from "@core/advisor/tools";
+import type { Direction, STAGE_1_CHIP_FIELDS } from "@core/advisor/tools";
 import type { Category, Format, PaymentOption } from "@core/schema/enums";
 import type { Profile } from "@core/schema/profile";
 import type { PendingConfirm } from "./chatTypes";
@@ -68,6 +68,18 @@ export const DIRECTION_FIELD_LABELS: Record<string, string> = {
   keepWorking: "Keep working",
   degreeRequired: "Degree",
 };
+
+// The label of each Stage 1 chip field, for the "question: answer" lines in the chat and the
+// "What I've understood" panel. The goal's chips are its kind.
+export const CHIP_FIELD_LABELS: Record<string, string> = {
+  careerGoalKind: DIRECTION_FIELD_LABELS.careerGoal!,
+  needs: DIRECTION_FIELD_LABELS.needs!,
+  peerPreference: DIRECTION_FIELD_LABELS.peerPreference!,
+  maxProgramMonths: DIRECTION_FIELD_LABELS.maxProgramMonths!,
+  hoursPerWeek: DIRECTION_FIELD_LABELS.hoursPerWeek!,
+  keepWorking: DIRECTION_FIELD_LABELS.keepWorking!,
+  degreeRequired: DIRECTION_FIELD_LABELS.degreeRequired!,
+} satisfies Record<(typeof STAGE_1_CHIP_FIELDS)[number], string>;
 
 export type CardLine = { label: string; value: string };
 
@@ -142,6 +154,16 @@ export const SEARCH_FIELD_LABELS: Record<string, string> = {
   degree: "Highest degree",
   currentRole: "Current role",
 };
+
+// The ask_choice fields whose profile key differs: degreeLevel's chips fill `degree`.
+const PROFILE_KEY: Record<string, string> = { degreeLevel: "degree" };
+
+// The fixed name of a chip field, stage 1 or 2, for its answer line; null for a field with none.
+export function chipFieldLabel(field: string): string | null {
+  if (Object.hasOwn(CHIP_FIELD_LABELS, field)) return CHIP_FIELD_LABELS[field]!;
+  const key = Object.hasOwn(PROFILE_KEY, field) ? PROFILE_KEY[field]! : field;
+  return Object.hasOwn(SEARCH_FIELD_LABELS, key) ? SEARCH_FIELD_LABELS[key]! : null;
+}
 
 // Any profile field's name, stage 1 or 2, without repeats (the home parts share one name).
 export function fieldNames(fields: string[]): string[] {

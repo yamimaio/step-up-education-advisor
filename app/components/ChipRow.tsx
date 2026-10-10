@@ -41,7 +41,7 @@ export function ChipRow({
               disabled={disabled}
               aria-pressed={multi ? order >= 0 : undefined}
               onClick={() => tap(label)}
-              className="rounded-full border border-teal px-3 py-1.5 text-sm text-teal hover:bg-teal/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal disabled:opacity-50 aria-pressed:bg-teal aria-pressed:text-paper"
+              className="rounded-full border border-teal bg-card px-3 py-1.5 text-sm text-teal hover:bg-teal-soft disabled:opacity-50 aria-pressed:bg-teal aria-pressed:text-white"
             >
               {order >= 0 && <span aria-hidden="true">{order + 1}. </span>}
               {label}
@@ -56,7 +56,7 @@ export function ChipRow({
           type="button"
           disabled={disabled || picked.length !== chips.pick}
           onClick={() => onSend(picked)}
-          className="self-start rounded bg-teal px-4 py-1.5 text-sm text-paper disabled:opacity-50"
+          className="self-start rounded-lg bg-teal px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
           Send {picked.length} of {chips.pick}
         </button>
