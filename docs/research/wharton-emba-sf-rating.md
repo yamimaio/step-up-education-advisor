@@ -93,7 +93,7 @@ Changes from Perplexity's answer:
 - senior_network leaves lowEvidence: it rests on a published class profile.
 - new_industry_or_city stays 3: the research has no career facts, so the rule "default or 3, whichever is lower" applies.
 
-## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: pending)
+## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: Yami)
 
 Full re-review of all five needs under rate-program v3 (PR #135), from the research, the overrides and Wharton's own pages checked on 2026-10-10: the class profile, the EMBA curriculum page, the Penn catalog and the EMBA career services page. The curriculum and career facts are new in the overrides file as `ratingNotes` sources.
 
