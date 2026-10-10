@@ -153,20 +153,23 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
 });
 
 // Run 1 of T2 re-showed the chips with no reply; run 2 replied but asked whether to bring the
-// chips back, which cost the user a turn (issue #192).
+// chips back, then took a repeated question as a decline of needs and classmates, said the chips
+// weren't working, and ended on "not yet" (issue #192).
 describe("advisor.md replies to a question typed while chips are open (issue #192)", () => {
   const line = (start: string) =>
     section("The tools")
       .split("\n")
       .find((l) => l.includes(start)) ?? "";
+  const answerLine = () => line("**An answer to the field.**");
+  const questionLine = () => line("**A question or a side remark, not an answer.**");
 
   it("keeps a typed answer apart from a typed question", () => {
-    expect(line("**An answer to the field.**")).toContain("call `ask_choice` for that field again");
-    expect(line("**A question or a side remark, not an answer.**")).not.toBe("");
+    expect(answerLine()).toContain("call `ask_choice` for that field again");
+    expect(questionLine()).not.toBe("");
   });
 
   it("answers or declines the question, then shows the same chips in the same turn", () => {
-    const question = line("**A question or a side remark, not an answer.**");
+    const question = questionLine();
     const reply = question.indexOf("Answer or decline it in a sentence or two");
     expect(reply).toBeGreaterThanOrEqual(0);
     expect(
@@ -176,9 +179,21 @@ describe("advisor.md replies to a question typed while chips are open (issue #19
     expect(question).toContain("admissions questions go to the school");
   });
 
-  it("never re-shows the chips silently or asks whether to bring them back", () => {
-    expect(line("after a typed question")).toBe(
-      "  - Never call `ask_choice` with an empty message after a typed question, and never ask the user whether to bring the chips back.",
+  it("never takes a question or a remark as a decline, however often it repeats", () => {
+    expect(questionLine()).toContain(
+      "A question or a remark is never a decline, however often it repeats: the field stays open, so never skip it, mark it declined or move on to the next field.",
+    );
+    expect(answerLine()).toContain(
+      "If what they typed says they would rather not answer, that is a decline",
+    );
+    expect(section("How stage 1 runs")).toContain(
+      "A field is declined only when the user says they would rather not answer it; a question or a remark is never a decline.",
+    );
+  });
+
+  it("puts text in every turn after a typed message, and never blames the chips or the page", () => {
+    expect(line("Every turn after a typed message has text")).toBe(
+      "- Every turn after a typed message has text: never return only chips, and never call `ask_choice` with an empty message. Never ask the user whether to bring the chips back, and never say the chips or the page aren't working.",
     );
   });
 });

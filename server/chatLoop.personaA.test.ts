@@ -119,6 +119,28 @@ describe("persona A on the fake model", () => {
     expect(r.confirm?.direction).toEqual({ ...PERSONA_A_DIRECTION, tieBreaker: undefined });
   });
 
+  it("keeps the needs chips open through a question typed five times (issue #192)", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    const typed = "Is a senior network worth more than a degree?";
+    for (let i = 0; i < 5; i++) {
+      const r = await page.post(answer(page.last!.chips!.toolUseId, { chosen: [], typed }));
+      // Never a decline, never only chips: a reply and the same field again.
+      expect(r.text).not.toBe("");
+      expect(r.chips?.field).toBe("needs");
+    }
+
+    while (page.last?.chips) await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    expect(page.last?.confirm?.direction).toEqual({
+      ...PERSONA_A_DIRECTION,
+      tieBreaker: undefined,
+    });
+    const r = await page.confirm();
+    expect(r.direction?.category.winner).toBe("executive");
+  });
+
   it("sends the history byte for byte, and the same cached system prompt and tools", async () => {
     const model = new FakeModelClient(personaAScript);
     const page = new Page(model, programs);
