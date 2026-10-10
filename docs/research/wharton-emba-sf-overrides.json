@@ -7,6 +7,7 @@
   "onsiteNote": "Friday and Saturday classes every other week in San Francisco, with some three-day weekends; an eight-day opening session in Philadelphia and a six-day Global Business Week trip.",
   "durationMonths": 22,
   "onsiteDaysPerYear": 52.5,
+  "residencyCount": 22,
   "longestStretchDays": 8,
   "lodgingIncluded": true,
   "tuitionUsd": 243000,
@@ -30,7 +31,8 @@
     "campusLon": "Derived from campusAddress (approximate, from the street address).",
     "durationMonths": "The school's published length; the 2027-2029 San Francisco calendar runs from May 29, 2027 to May 15, 2029.",
     "onsiteDaysPerYear": "Counted from the highlighted dates of the 2027-2029 San Francisco calendar: 105 days over two program years (91 San Francisco class days on 41 weekends, 8 days in Philadelphia from May 29 to June 5, 2027, and 6 days of Global Business Week from January 10 to 15, 2028); 61 in the first year, 44 in the second.",
-    "longestStretchDays": "The opening session in Philadelphia, May 29 to June 5, 2027, on the 2027-2029 San Francisco calendar."
+    "longestStretchDays": "The opening session in Philadelphia, May 29 to June 5, 2027, on the 2027-2029 San Francisco calendar.",
+    "residencyCount": "43 trips on the 2027-2029 San Francisco calendar (41 San Francisco class weekends, the Philadelphia opening session and Global Business Week; 23 in the first year, 20 in the second), so 21.5 a year, rounded up to 22."
   },
   "replaceSources": [
     "tuitionUsd",
@@ -105,6 +107,13 @@
       "field": "onsiteDaysPerYear",
       "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
       "quote": "ATTENDANCE REQUIRED ON ALL HIGHLIGHTED DATES",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "residencyCount",
+      "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
+      "quote": "Class Sessions in San Francisco",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
     },
