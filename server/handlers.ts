@@ -52,19 +52,47 @@ export class EmptyInput extends Error {
 
 const problemsOf = (error: z.ZodError) => z.prettifyError(error);
 
-// What the rules see: the user's latest tap for each field a rule reads (every one is a chip
-// field), less the fields the user declined, and the tensions the user resolved. The model sends
-// only those last two, so it can't leave out an answer a rule needs.
+// The stage 1 fields a rule reads; the rest of TENSION_FIELDS are stage 2's.
+const STAGE_1_TENSION_FIELDS = TENSION_FIELDS.filter(
+  (f): f is "needs" | "hoursPerWeek" | "degreeRequired" =>
+    (STAGE_1_CHIP_FIELDS as readonly string[]).includes(f),
+);
+
+// What the rules see, for each field a rule reads (every one is a chip field): the user's latest
+// tap, less the fields the model says the user declined, and the tensions the user resolved.
+// The model sends only those last two, so it can't leave out an answer a rule needs. Once a
+// direction is confirmed, its card holds the stage 1 answers, as for the search profile
+// (searchProfile): its values, its declines and the tensions resolved on it. A stage 1 tap after
+// the confirm still counts, since the user changed that answer.
 export function tensionDraft(
   history: Message[],
   input: z.infer<typeof CheckContradictionsInput>,
 ): PartialProfile {
   const taps = latestTaps(history);
+  const confirmed = confirmedDirection(history);
+  const tapsAfter = confirmed ? latestTaps(history.slice(confirmed.resultAt + 1)) : null;
   const declined = new Set<string>(input.declined);
-  const draft: Record<string, unknown> = { resolvedTensions: input.resolvedTensions };
+  const draft: Record<string, unknown> = {};
   for (const field of TENSION_FIELDS) {
-    if (taps.has(field) && !declined.has(field)) draft[field] = taps.get(field);
+    if (declined.has(field)) continue;
+    const card = confirmed?.direction;
+    const fromCard =
+      card &&
+      tapsAfter &&
+      !tapsAfter.has(field) &&
+      (STAGE_1_TENSION_FIELDS as string[]).includes(field);
+    if (fromCard) {
+      const value = card[field as (typeof STAGE_1_TENSION_FIELDS)[number]];
+      if (value !== null) draft[field] = value;
+    } else if (taps.has(field)) {
+      draft[field] = taps.get(field);
+    }
   }
+  const sent = new Set<string>(input.resolvedTensions.map((t) => t.rule));
+  draft.resolvedTensions = [
+    ...(confirmed?.direction.resolvedTensions.filter((t) => !sent.has(t.rule)) ?? []),
+    ...input.resolvedTensions,
+  ];
   return draft as PartialProfile;
 }
 
@@ -85,15 +113,33 @@ export function validateAskChoice(input: unknown) {
 
 const isStage2Chip = (field: string) => (STAGE_2_CHIP_FIELDS as readonly string[]).includes(field);
 
+const NO_WINNER =
+  "The confirmed direction names no single type of program (the user declined what's missing, every type is out, or two types tie), so there are no programs to search. Don't ask the stage 2 questions: help the user settle the direction first (name the gap, or break the tie with one question and call propose_direction again with tieBreaker).";
+
+// Why stage 2 can't run on this history, or null when it can: it needs a confirmed direction
+// whose verdict names a type (docs/ux-two-stage.md). With no winner the engine lists nothing
+// (rankPrograms), so the stage 2 questions would lead nowhere.
+function stage2Closed(history: Message[], programs: Program[]): string | null {
+  const confirmed = confirmedDirection(history);
+  if (!confirmed) {
+    return "No direction is confirmed yet. Call propose_direction and wait for the user to confirm it before stage 2.";
+  }
+  const { category } = recommendCategory(toEngineDirection(confirmed.direction), programs);
+  return category.winner === null ? NO_WINNER : null;
+}
+
 // The model's ask_choice call: a valid input, and a stage 2 chip set only once the user has
-// confirmed a direction (docs/ux-two-stage.md). `history` is everything before the call.
-export function checkAskChoice(input: unknown, history: Message[]) {
+// confirmed a direction that names a type. `history` is everything before the call.
+export function checkAskChoice(input: unknown, history: Message[], programs: Program[]) {
   const ask = validateAskChoice(input);
-  if (ask.ok && isStage2Chip(ask.input.field) && !confirmedDirection(history)) {
-    return {
-      ok: false as const,
-      problems: `${ask.input.field} is a stage 2 question. Ask it only after the user confirms the direction card and says yes to seeing programs.`,
-    };
+  if (ask.ok && isStage2Chip(ask.input.field)) {
+    const closed = stage2Closed(history, programs);
+    if (closed) {
+      return {
+        ok: false as const,
+        problems: `${ask.input.field} is a stage 2 question. ${closed}`,
+      };
+    }
   }
   return ask;
 }
@@ -277,14 +323,10 @@ export function validateProposeSearch(
 ): { ok: true; direction: Direction; profile: Profile } | { ok: false; problems: string } {
   const parsed = ProposeSearchInput.safeParse(input);
   if (!parsed.success) return { ok: false, problems: problemsOf(parsed.error) };
-  const confirmed = confirmedDirection(history);
-  if (!confirmed) {
-    return {
-      ok: false,
-      problems:
-        "No direction is confirmed yet. Call propose_direction and wait for the user to confirm it before propose_search.",
-    };
-  }
+  const closed = stage2Closed(history, programs);
+  if (closed) return { ok: false, problems: closed };
+  // stage2Closed returns null only with a confirmed direction.
+  const confirmed = confirmedDirection(history)!;
   const { direction, resultAt } = confirmed;
   const afterConfirm = history.slice(resultAt + 1);
   const problems: string[] = [];

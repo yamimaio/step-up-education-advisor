@@ -350,6 +350,16 @@ Yami found that every real `/api/chat` call failed with a 400 before any token w
 
 **CI guard:** `server/tools.test.ts` pins the accepted size (1 optional parameter, 10 unions, and each tool's schema length). Raise it only after a probe of the bigger schemas passes.
 
+### Round 1 review fixes after the schema change (PR #155, head 1ff2ee7)
+
+Yami counted the review after the schema change as round 1.
+
+- **The stage 2 check reads stage 1 from the confirmed direction.** `tensionDraft` took every rule field from the taps, so in stage 2 it ignored the confirmed card. A tension resolved on it (R4) came back unresolved, and a field declined there could still fire a rule from its old tap. Now, once a direction is confirmed, `needs`, `hoursPerWeek` and `degreeRequired` come from the card: its values, its declines and its `resolvedTensions`. This is the same source `searchProfile` uses, so the check and the search card agree. A stage 1 tap after the confirm still counts, as a change the user made.
+- **Stage 2 needs a verdict that names a type.** With no winner (the user declined what's missing, every type is out, or an unbroken tie), `rankPrograms` lists nothing, yet stage 2 ran to the end and the prompt blamed the user's limits. Both of the review's options are taken:
+  - the server answers stage 2 chips and `propose_search` with `is_error` while the confirmed card has no winner (`stage2Closed`, `server/handlers.ts`), telling the advisor to settle the direction first;
+  - `advisor.md` ends a verdict with "Want to see programs that fit?" only when it names a type;
+  - the stage 1 template explanation (`server/fallback.ts`) follows the same rule.
+
 ## A ruled-out type's reason is scoped to Step Up's programs (issue #188)
 
 - The "Out:" reason for a type with records names the type and how many records were checked: "Out: none of the 2 Executive MBA programs Step Up has verified so far is within your limits (program length)", or "Out: the one Executive MBA program Step Up has verified so far isn't within your limits (…)" for one record. With one record per type, "out" rests on a single program, so the reason must not read as a claim about every program of the type.

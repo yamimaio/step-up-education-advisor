@@ -87,7 +87,12 @@ export function fallbackExplanation(result: DirectionResult): string {
   lines.push(
     "The advisor can't add its explanation right now; the verdict above comes from the scoring engine.",
   );
-  lines.push(CLOSING);
+  // Programs only for a verdict that names a type: with none, the engine lists nothing.
+  lines.push(
+    category.winner
+      ? CLOSING
+      : "A list of programs needs a settled type first, so that's the next step.",
+  );
   return lines.join("\n\n");
 }
 

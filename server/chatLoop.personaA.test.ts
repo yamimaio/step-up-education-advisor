@@ -894,3 +894,95 @@ describe("stage 2 chips in a history with no confirmed direction", () => {
     ).rejects.toThrow(BadRequest);
   });
 });
+
+// Persona A's stage 1 with some taps replaced, then a direction card the test writes, confirmed.
+async function confirmedWith(direction: object, taps: Record<string, string[]> = {}) {
+  const page = new Page(new FakeModelClient(personaAScript), programs);
+  await page.type(PERSONA_A_OPENING);
+  await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+  await page.type(PERSONA_A_GOAL);
+  while (page.last?.chips && page.last.chips.field !== "degreeRequired") {
+    const field = page.last.chips.field;
+    await page.tap(...(taps[field] ?? PERSONA_A_TAPS[field]!));
+  }
+  page.model = new FakeModelClient([checkAll(), turn(toolUse("propose_direction", { direction }))]);
+  await page.tap(...PERSONA_A_TAPS.degreeRequired!);
+  if (!page.last?.confirm?.direction) throw new Error("the card was refused");
+  page.model = new FakeModelClient([turn(text("Here's the verdict."))]);
+  await page.confirm();
+  return page;
+}
+
+const tensionsIn = (r: { messages: Message[] }) =>
+  r.messages
+    .flatMap(lastBlocks)
+    .filter((b) => b.type === "tool_result" && !b.is_error)
+    .map((b) => JSON.parse((b as { content: string }).content) as { tensions?: unknown })
+    .find((c) => c.tensions)?.tensions;
+
+// Review round 1 (head 1ff2ee7): in stage 2 the check runs on the confirmed direction card's
+// stage 1 answers, as the search profile does, not on the stage 1 taps alone.
+describe("the stage 2 check reads stage 1 from the confirmed direction", () => {
+  const underFive = { hoursPerWeek: ["Under 5"] };
+  const r4 = { rule: "R4", chosen: "depth anyway, with what time I have" };
+
+  it("keeps a tension resolved on the direction card resolved", async () => {
+    const page = await confirmedWith(
+      { ...PERSONA_A_DIRECTION, hoursPerWeek: { min: 0, max: 5 }, resolvedTensions: [r4] },
+      underFive,
+    );
+    page.model = new FakeModelClient([checkAll(), turn(text("On to programs."))]);
+    const r = await page.type("Yes, show me programs.");
+    expect(tensionsIn(r)).toEqual([expect.objectContaining({ id: "R4", resolved: true })]);
+  });
+
+  it("doesn't fire a tension on a stage 1 answer the card declined, though it was tapped", async () => {
+    const page = await confirmedWith(
+      { ...PERSONA_A_DIRECTION, hoursPerWeek: null, declined: ["hoursPerWeek"] },
+      underFive,
+    );
+    page.model = new FakeModelClient([checkAll(), turn(text("On to programs."))]);
+    const r = await page.type("Yes, show me programs.");
+    expect(tensionsIn(r)).toEqual([]);
+  });
+
+  it("counts a stage 1 answer the user changed after the confirm", async () => {
+    const page = await confirmedWith(PERSONA_A_DIRECTION);
+    page.model = new FakeModelClient([
+      turn(toolUse("ask_choice", { field: "hoursPerWeek", question: "Hours a week?" })),
+    ]);
+    await page.type("Actually I have less time than I said.");
+    page.model = new FakeModelClient([checkAll(), turn(text("That changes things."))]);
+    const r = await page.tap("Under 5");
+    expect(tensionsIn(r)).toEqual([expect.objectContaining({ id: "R4", resolved: false })]);
+  });
+});
+
+// Review round 1 (head 1ff2ee7): with no winner the engine lists nothing, so stage 2 would ask
+// about 14 questions for an empty list.
+describe("stage 2 stays closed while the verdict names no type", () => {
+  const noNeeds = { ...PERSONA_A_DIRECTION, needs: null, declined: ["needs"] };
+
+  it("has no winner when the user declined what's missing", async () => {
+    const direction = (await confirmedWith(noNeeds)).last!.direction!;
+    expect(direction.category.winner).toBeNull();
+  });
+
+  it("refuses stage 2 chips and propose_search, and says why", async () => {
+    const page = await confirmedWith(noNeeds);
+    page.model = new FakeModelClient([
+      turn(toolUse("ask_choice", { field: "tuitionBudgetUsd", question: "Budget?" })),
+      checkAll(),
+      search(answersA),
+      turn(text("Let's settle the direction first.")),
+    ]);
+    const r = await page.type("Yes, show me programs.");
+    expect(r.chips).toBeNull();
+    expect(r.confirm).toBeNull();
+    const errors = errorResultsIn(r.messages);
+    expect(errors).toHaveLength(2);
+    for (const e of errors) {
+      expect(e).toMatchObject({ content: expect.stringContaining("names no single type") });
+    }
+  });
+});

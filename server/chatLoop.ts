@@ -126,7 +126,7 @@ function resolveLastMessage(posted: Message[], programs: Program[], today: Date)
   const callAt = posted.findIndex((m) => toolUsesOf(m).some((u) => u.id === pending.use.id));
   const before = posted.slice(0, callAt);
   if (pending.use.name === "ask_choice") {
-    const ask = checkAskChoice(pending.use.input, before);
+    const ask = checkAskChoice(pending.use.input, before, programs);
     if (!ask.ok) throw new BadRequest("pending ask_choice is invalid");
     const content = rewriteChipAnswer(ask.input.field, result.content);
     return content === null ? asPosted : { ...asPosted, message: rewrite(content) };
@@ -269,7 +269,7 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
           errorResult(u.id, "Call one tool at a time, then wait for its result."),
         );
       } else if (use.name === "ask_choice") {
-        const ask = checkAskChoice(use.input, [...history, ...added.slice(0, -1)]);
+        const ask = checkAskChoice(use.input, [...history, ...added.slice(0, -1)], deps.programs);
         if (ask.ok) {
           const field = ask.input.field;
           chips = {

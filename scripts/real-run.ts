@@ -7,6 +7,7 @@
 //   ./run npm run real-run -- declined-home   the user won't say where they live
 //   ./run npm run real-run -- stage1-change   the user changes the length in stage 2
 //   ./run npm run real-run -- tension         no days on site, so a contradiction fires (R1)
+//   ./run npm run real-run -- no-winner       the user declines what's missing: no programs offered
 //
 // It prints every turn (the advisor's words included, so keep the output local), each refused
 // tool call with the server's problems, the token use and its cost, and whether the programs
@@ -31,6 +32,9 @@ type Scenario = {
   // Typed instead of the first stage 2 chips, to change a stage 1 answer, and the taps that
   // replace persona A's from then on.
   change?: { say: string; taps: Record<string, string[]> };
+  // Typed at the needs chips each time they show: a decline of what's missing, so the verdict
+  // names no type and stage 2 must stay closed (no programs expected).
+  declineNeeds?: string;
 };
 
 const BACKGROUND =
@@ -39,6 +43,10 @@ const BACKGROUND =
 const SCENARIOS: Record<string, Scenario> = {
   "persona-a": { home: `I live in Buenos Aires, Argentina. ${BACKGROUND}` },
   "declined-home": { home: `I'd rather not say where I live. ${BACKGROUND}` },
+  "no-winner": {
+    home: `I live in Buenos Aires, Argentina. ${BACKGROUND}`,
+    declineNeeds: "I'd rather not rank what's missing. Let's skip that one.",
+  },
   tension: {
     home: `I live in Buenos Aires, Argentina. ${BACKGROUND}`,
     taps: { maxOnsiteDays: ["None"] },
@@ -133,6 +141,8 @@ async function main() {
   let plainInARow = 0;
   let refusedCalls = 0;
   let result: ChatResponse | null = null;
+  let offered = false;
+  let stage2Chips = 0;
 
   console.log(`scenario ${name}\n> ${PERSONA_A_OPENING}`);
   let r = await page.type(PERSONA_A_OPENING);
@@ -146,7 +156,19 @@ async function main() {
     if (r.chips) {
       plainInARow = 0;
       const field = r.chips.field;
-      if (
+      if (scenario.declineNeeds && field === "needs") {
+        console.log(`> (typed instead of tapping) ${scenario.declineNeeds}`);
+        r = await page.post({
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: r.chips.toolUseId,
+              content: JSON.stringify({ chosen: [], typed: scenario.declineNeeds }),
+            },
+          ],
+        });
+      } else if (
         scenario.change &&
         !changed &&
         (STAGE_2_CHIP_FIELDS as readonly string[]).includes(field)
@@ -195,6 +217,14 @@ async function main() {
       r = await page.type(say);
     }
     report(r);
+    if (r.direction && r.text.includes("Want to see programs that fit?")) offered = true;
+    if (r.chips && (STAGE_2_CHIP_FIELDS as readonly string[]).includes(r.chips.field))
+      stage2Chips++;
+    // With no winner, the run ends one turn after the user asks for programs anyway.
+    if (scenario.declineNeeds && optedIn && !r.chips) {
+      result = r;
+      break;
+    }
     result = r;
   }
 
@@ -222,6 +252,18 @@ async function main() {
     `tokens: ${usage.input} input, ${usage.cacheWrite} cache write, ${usage.cacheRead} cache read, ${usage.output} output; about $${cost.toFixed(2)}`,
   );
   console.log(`statuses: ${logs.map((l) => l.status).join(", ")}`);
+  if (scenario.declineNeeds) {
+    // No winner: the verdict offers no programs and stage 2 never shows a chip.
+    const winner = direction
+      ? recommendCategory(toEngineDirection(direction), programs).category.winner
+      : "no card";
+    const ok = winner === null && !offered && stage2Chips === 0 && !r.programs;
+    console.log(
+      `winner ${winner}; verdict offered programs: ${offered}; stage 2 chips shown: ${stage2Chips}`,
+    );
+    console.log(`RESULT: ${ok ? "stage 2 stayed closed, as expected" : "UNEXPECTED"}`);
+    process.exit(ok ? 0 : 1);
+  }
   const programs_ = r.programs ?? result?.programs ?? null;
   if (!programs_ || !direction || !search) {
     console.log("RESULT: did not reach the programs");

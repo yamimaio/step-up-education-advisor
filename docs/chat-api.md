@@ -231,11 +231,11 @@ After the verdict the advisor asks "Want to see programs that fit?". On a yes, i
 
 ### Stage 2 chips
 
-`ask_choice` takes every chip set: `STAGE_1_CHIP_FIELDS` and `STAGE_2_CHIP_FIELDS` (`core/advisor/tools.ts`). A stage 2 chip set before a direction is confirmed gets `is_error` (the advisor asks again later), and a pending one in a history with no confirmed direction gets a 400. `locationValues` takes exactly 2 taps, in order; every other stage 2 set takes 1. A stage 1 chip set can still be asked in stage 2, when the user changes a stage 1 answer.
+`ask_choice` takes every chip set: `STAGE_1_CHIP_FIELDS` and `STAGE_2_CHIP_FIELDS` (`core/advisor/tools.ts`). A stage 2 chip set before a direction is confirmed, or while the confirmed direction names no type, gets `is_error` (the advisor asks again later), and a pending one in a history with no confirmed direction gets a 400. `locationValues` takes exactly 2 taps, in order; every other stage 2 set takes 1. A stage 1 chip set can still be asked in stage 2, when the user changes a stage 1 answer.
 
 ### `check_contradictions` runs on the taps
 
-The model sends `{ resolvedTensions: [{ rule, chosen }], declined: [...] }` and nothing else, in both stages. Every field a contradiction rule reads is a chip field (`TENSION_FIELDS` in `core/advisor/tools.ts`), so the server runs the rules on the user's latest tap for each of them, less the fields named in `declined`, with the tensions in `resolvedTensions` marked resolved. A field with no tap is missing, and a rule that needs it doesn't fire. The model can't leave out an answer a rule needs.
+The model sends `{ resolvedTensions: [{ rule, chosen }], declined: [...] }` and nothing else, in both stages. Every field a contradiction rule reads is a chip field (`TENSION_FIELDS` in `core/advisor/tools.ts`), so the server runs the rules on the user's latest tap for each of them, less the fields named in `declined`, with the tensions in `resolvedTensions` marked resolved. A field with no tap is missing, and a rule that needs it doesn't fire. The model can't leave out an answer a rule needs. Once a direction is confirmed, its card holds the stage 1 answers the rules read (`needs`, `hoursPerWeek`, `degreeRequired`), as for the search card: its values, its declines and the tensions resolved on it. A stage 1 tap after the confirm still counts, since the user changed that answer.
 
 ### The search card
 
@@ -253,6 +253,7 @@ The server answers with `is_error` and the problems, so the model asks again, wi
 
 - the input fails `ProposeSearchInput`, for example with a chip or stage 1 answer in it;
 - no `propose_direction` card has been confirmed, or the last confirmed one fails its own checks against the history before it;
+- the confirmed direction names no type (`category.winner` is null: the user declined what's missing, every type is out, or two types tie). The engine would list nothing, so the problem tells the advisor to settle the direction first;
 - **a stage 1 answer changed since that confirm**: the user tapped a stage 1 chip set after the confirm with another value. The problem tells the advisor to call `check_contradictions` and `propose_direction` again, and only then `propose_search`;
 - `check_contradictions` hasn't been called since that confirm;
 - a stage 2 chip field has no tap and isn't named in `declined`; the problem names the `ask_choice` field to ask;

@@ -270,3 +270,16 @@ describe("advisor.md replies to a question typed while chips are open (issue #19
     );
   });
 });
+
+// Review round 1 (head 1ff2ee7): with no winner the engine lists nothing.
+describe("advisor.md offers programs only for a verdict that names a type", () => {
+  it("drops the programs question with no winner and says the server refuses stage 2", () => {
+    expect(section('The "not yet" rule')).toContain("If it names none");
+    expect(section("Deliver the verdict")).toContain(
+      "When it names none, there is no list to search",
+    );
+    expect(section(STAGE_2)).toContain(
+      "The server refuses the stage 2 questions while the verdict names no type.",
+    );
+  });
+});

@@ -133,3 +133,18 @@ describe("the programs survive a failed model call after the stage 2 confirm", (
     expect(page.history.slice(0, before.length)).toEqual(before);
   });
 });
+
+describe("the template offers programs only for a verdict that names a type", () => {
+  it("doesn't ask about programs when the user declined what's missing", () => {
+    const declined = recommendCategory(
+      toEngineDirection({ ...PERSONA_A_DIRECTION, needs: null, declined: ["needs"] } as never),
+      programs,
+    );
+    expect(declined.category.winner).toBeNull();
+    const text = fallbackExplanation(declined);
+    expect(text).not.toContain("Want to see programs that fit?");
+    expect(
+      text.endsWith("A list of programs needs a settled type first, so that's the next step."),
+    ).toBe(true);
+  });
+});
