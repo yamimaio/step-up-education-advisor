@@ -135,6 +135,12 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
     );
   });
 
+  it("scopes a ruled-out type to the programs Step Up has verified (issue #188)", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain("say it's about the programs Step Up has verified so far");
+    expect(verdict).toContain("never that no program of that type exists or fits");
+  });
+
   it("takes every loss reason from the type's reasons, so no length reason is invented", () => {
     const verdict = section("Deliver the verdict");
     expect(verdict).toContain("only from that type's `reasons`");

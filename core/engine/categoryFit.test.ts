@@ -239,7 +239,9 @@ describe('A ruled-out type\'s reasons start with "Out:"', () => {
   it("puts the limits reason first, and only ruled-out types have one", () => {
     const profile = applyDeclinedDefaults(makeProfile({ maxProgramMonths: 3 })).profile;
     const r = categoryFit(profile, [{ id: "a", category: "mba" }], [{ id: "a", status: "fail" }]);
-    expect(r.reasons.mba[0]).toMatch(/^Out: no program of this type is within your limits/);
+    expect(r.reasons.mba[0]).toBe(
+      "Out: the one full-time MBA program Step Up has verified so far isn't within your limits.",
+    );
     for (const [c, why] of Object.entries(r.reasons)) {
       const out = r.scores[c as keyof typeof r.scores] === "out";
       expect(why[0]?.startsWith("Out:")).toBe(out);
@@ -264,6 +266,58 @@ describe("A ruled-out type says which checks ruled it out", () => {
     ];
     const r = categoryFit(profile, programs, [{ id: "a", status: "fail", checks }]);
     expect(r.reasons.mba.join(" ")).toMatch(/within your limits \(program length\)/);
+  });
+});
+
+describe("A ruled-out type speaks of the programs Step Up has verified (issue #188)", () => {
+  const profile = applyDeclinedDefaults(makeProfile({ maxProgramMonths: 3 })).profile;
+  const length = [
+    {
+      id: "length" as const,
+      status: "fail" as const,
+      value: 22,
+      limit: 3,
+      unit: "",
+      unknown: false,
+    },
+  ];
+
+  it("names the type and the one record", () => {
+    const r = categoryFit(
+      profile,
+      [{ id: "a", category: "emba" }],
+      [{ id: "a", status: "fail", checks: length }],
+    );
+    expect(r.scores.emba).toBe("out");
+    expect(r.reasons.emba[0]).toBe(
+      "Out: the one Executive MBA program Step Up has verified so far isn't within your limits (program length).",
+    );
+  });
+
+  it("names the type and how many records", () => {
+    const r = categoryFit(
+      profile,
+      [
+        { id: "a", category: "short_course" },
+        { id: "b", category: "short_course" },
+      ],
+      [
+        { id: "a", status: "fail", checks: length },
+        { id: "b", status: "fail", checks: length },
+      ],
+    );
+    expect(r.reasons.short_course[0]).toBe(
+      "Out: none of the 2 short courses Step Up has verified so far is within your limits (program length).",
+    );
+  });
+
+  it("never claims that no program of the type exists", () => {
+    const r = categoryFit(
+      profile,
+      [{ id: "a", category: "emba" }],
+      [{ id: "a", status: "fail", checks: length }],
+    );
+    expect(r.reasons.emba.join(" ")).not.toMatch(/no program of this type/);
   });
 });
 

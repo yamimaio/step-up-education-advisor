@@ -91,4 +91,14 @@ describe("the template explanation", () => {
     );
     expect(text).not.toMatch(/Strong for|Some help with|Little help with/);
   });
+
+  it("says a type out on limits is about the programs Step Up has verified (issue #188)", () => {
+    const text = fallbackExplanation(
+      recommendCategory(toEngineDirection(PERSONA_A_DIRECTION as never), programs),
+    );
+    expect(text).toContain(
+      "Ruled out: an executive MBA (the one Executive MBA program Step Up has verified so far isn't within your limits (program length)).",
+    );
+    expect(text).not.toMatch(/no program of this type/);
+  });
 });
