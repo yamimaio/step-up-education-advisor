@@ -2,11 +2,11 @@ import type { Turn } from "@app/lib/conversation";
 import { answerLine, turnText } from "@app/lib/conversation";
 import { Markdown } from "./Markdown";
 
-// One chat entry: the advisor's bubble on the left, the user's typed words or card answer on the
-// right, and a chip answer as one small "question: answer" line. Only the advisor's text is read
-// as markdown; the user's words show exactly as typed.
+// One chat entry: the advisor's bubble on the left, the user's typed words (a typed reply to chips
+// included) or card answer on the right, and a tapped chip answer as one small "question: answer"
+// line. Only the advisor's text is read as markdown; the user's words show exactly as typed.
 export function Message({ turn }: { turn: Turn }) {
-  if (turn.kind === "chips") {
+  if (turn.kind === "chips" && turn.typed === undefined) {
     const line = answerLine(turn);
     return (
       <li className="flex justify-end">

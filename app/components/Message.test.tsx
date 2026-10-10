@@ -39,15 +39,17 @@ describe("Message", () => {
     );
   });
 
-  it("shows the typed words of a typed answer to chips", () => {
+  it("shows a typed reply to chips as the user's own bubble, with no field label", () => {
+    // A typed question is never an answer (advisor.md): the advisor replies and asks again.
     const item = show({
       kind: "chips",
-      field: "hoursPerWeek",
-      question: "Hours a week",
+      field: "needs",
+      question: "Rank the top 3",
       chosen: [],
-      typed: "Weekends only",
+      typed: "What does a senior network mean?",
     });
-    expect(item.textContent).toBe("You: Hours a week: Weekends only");
+    expect(item.textContent).toBe("You: What does a senior network mean?");
+    expect(item.textContent).not.toContain("What's missing");
   });
 
   it("labels an unknown field with the question asked", () => {

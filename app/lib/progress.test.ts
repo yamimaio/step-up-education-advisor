@@ -7,9 +7,11 @@ import { answered, ask, tap } from "../../tests/fixtures/pageHistory";
 import { toolResultMessage, type MessageParam } from "./chatTypes";
 import { progressSteps, type StepState } from "./progress";
 
-const none = { history: [] as MessageParam[], confirm: null, verdict: null };
-const states = (s: Parameters<typeof progressSteps>[0]): StepState[] =>
-  progressSteps(s).map((step) => step.state);
+type Input = Parameters<typeof progressSteps>[0];
+const none = { history: [] as MessageParam[], confirm: null, verdict: null, lastCard: null };
+// lastCard defaults to null; the tie and stage 2 change cases set it.
+const states = (s: Omit<Input, "lastCard"> & Partial<Pick<Input, "lastCard">>): StepState[] =>
+  progressSteps({ lastCard: null, ...s }).map((step) => step.state);
 const card = { toolUseId: "p1", direction: personaADirection };
 const verdict = {
   direction: personaADirection,
@@ -175,5 +177,55 @@ describe("progressSteps", () => {
       "todo",
       "todo",
     ]);
+  });
+
+  describe("a new stage 1 card while an old verdict stands (a tie, or a change in stage 2)", () => {
+    const p2 = { ...personaADirection, tieBreaker: "executive" as const };
+    const propose = (id: string): MessageParam => ({
+      role: "assistant",
+      content: [{ type: "tool_use", id, name: "propose_direction", input: {} }],
+    });
+    const first = [propose("p1"), toolResultMessage("p1", { confirmed: true }), propose("p2")];
+
+    it("makes the verdict current while the new card is pending", () => {
+      const s = {
+        history: first,
+        confirm: { toolUseId: "p2", direction: p2 },
+        verdict,
+        lastCard: p2,
+      };
+      expect(states(s)).toEqual(["done", "done", "done", "current"]);
+    });
+
+    it("keeps it current after Change something and while Looks right is sending", () => {
+      const corrected = [
+        ...first,
+        toolResultMessage("p2", { confirmed: false, corrections: "No" }),
+      ];
+      expect(states({ history: corrected, confirm: null, verdict, lastCard: p2 })).toEqual([
+        "done",
+        "done",
+        "done",
+        "current",
+      ]);
+      const sending = [...first, toolResultMessage("p2", { confirmed: true })];
+      expect(states({ history: sending, confirm: null, verdict, lastCard: p2 })).toEqual([
+        "done",
+        "done",
+        "done",
+        "current",
+      ]);
+    });
+
+    it("marks the verdict done once it is the new card's", () => {
+      const sending = [...first, toolResultMessage("p2", { confirmed: true })];
+      const next = { ...verdict, direction: p2 };
+      expect(states({ history: sending, confirm: null, verdict: next, lastCard: p2 })).toEqual([
+        "done",
+        "done",
+        "done",
+        "done",
+      ]);
+    });
   });
 });

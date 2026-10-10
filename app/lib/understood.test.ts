@@ -195,4 +195,54 @@ describe("understood", () => {
     const next = respond(withCard(), { confirm: { toolUseId: "s1", profile: personaAProfile } });
     expect(next.lastCard).toEqual(personaADirection);
   });
+
+  describe("a new stage 1 card while an old verdict stands (a tie, or a change in stage 2)", () => {
+    const p2 = { ...personaADirection, hoursPerWeek: { min: 15, max: 20 } };
+    const p2Lines = directionLines(p2);
+    const hours = (u: ReturnType<typeof understood>) =>
+      u.lines.find((l) => l.label === "Hours a week")!.value;
+
+    // p1 confirmed with its verdict in, then the advisor proposes p2.
+    function withNewCard(): ChatState {
+      const sent = chatReducer(withCard(), {
+        type: "send",
+        message: toolResultMessage("p1", { confirmed: true }),
+      });
+      const result = recommendCategory(toEngineDirection(personaADirection), []);
+      const judged = respond(sent, { direction: result });
+      expect(judged.verdict?.direction).toEqual(personaADirection);
+      const proposal: MessageParam = {
+        role: "assistant",
+        content: [{ type: "tool_use", id: "p2", name: "propose_direction", input: {} }],
+      };
+      return respond(judged, { messages: [proposal], confirm: { toolUseId: "p2", direction: p2 } });
+    }
+
+    it("reads the new card while it is pending", () => {
+      expect(understood(withNewCard())).toEqual({ lines: p2Lines, note: null });
+    });
+
+    it("keeps the new card's lines and the note after Change something, not the old verdict's", () => {
+      const corrections = "Back to 5 to 10, actually";
+      const sent = chatReducer(withNewCard(), {
+        type: "send",
+        message: toolResultMessage("p2", { confirmed: false, corrections }),
+        correction: corrections,
+      });
+      const view = understood(sent);
+      expect(view.note).toBe(corrections);
+      expect(hours(view)).toBe("15 to 20");
+    });
+
+    it("keeps the new card's lines while its Looks right is sending or has failed", () => {
+      const sent = chatReducer(withNewCard(), {
+        type: "send",
+        message: toolResultMessage("p2", { confirmed: true }),
+      });
+      expect(sent.verdict?.direction).toEqual(personaADirection);
+      expect(understood(sent)).toEqual({ lines: p2Lines, note: null });
+      const failed = chatReducer(sent, { type: "failure", retry: true, message: "Try again." });
+      expect(understood(failed)).toEqual({ lines: p2Lines, note: null });
+    });
+  });
 });

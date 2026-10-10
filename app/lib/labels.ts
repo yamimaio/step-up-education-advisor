@@ -155,6 +155,16 @@ export const SEARCH_FIELD_LABELS: Record<string, string> = {
   currentRole: "Current role",
 };
 
+// The ask_choice fields whose profile key differs: degreeLevel's chips fill `degree`.
+const PROFILE_KEY: Record<string, string> = { degreeLevel: "degree" };
+
+// The fixed name of a chip field, stage 1 or 2, for its answer line; null for a field with none.
+export function chipFieldLabel(field: string): string | null {
+  if (Object.hasOwn(CHIP_FIELD_LABELS, field)) return CHIP_FIELD_LABELS[field]!;
+  const key = Object.hasOwn(PROFILE_KEY, field) ? PROFILE_KEY[field]! : field;
+  return Object.hasOwn(SEARCH_FIELD_LABELS, key) ? SEARCH_FIELD_LABELS[key]! : null;
+}
+
 // Any profile field's name, stage 1 or 2, without repeats (the home parts share one name).
 export function fieldNames(fields: string[]): string[] {
   const names = fields.map((f) => DIRECTION_FIELD_LABELS[f] ?? SEARCH_FIELD_LABELS[f] ?? f);
