@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { recommendCategory } from "@core/engine/direction";
 import { toEngineDirection } from "@core/advisor/tools";
 import { personaADirection } from "../../tests/fixtures/directions";
-import { answered, ask } from "../../tests/fixtures/pageHistory";
+import { answered, ask, tap } from "../../tests/fixtures/pageHistory";
 import type { MessageParam } from "./chatTypes";
 import { progressSteps, type StepState } from "./progress";
 
@@ -38,11 +38,42 @@ describe("progressSteps", () => {
     ]);
   });
 
-  it("moves to needs once the goal is answered, tapped or typed", () => {
+  it("moves to needs once the goal chips are tapped", () => {
     const tapped = answered("careerGoalKind", ["Step up to a bigger leadership role"]);
     expect(states({ ...none, history: tapped })).toEqual(["done", "current", "todo", "todo"]);
-    const typed = answered("careerGoalKind", [], "Something else entirely");
-    expect(states({ ...none, history: typed })).toEqual(["done", "current", "todo", "todo"]);
+  });
+
+  it("doesn't count a typed reply to chips: the advisor asks the field again", () => {
+    const typed = answered("careerGoalKind", [], "What's the difference between these two?");
+    expect(states({ ...none, history: typed })).toEqual(["current", "todo", "todo", "todo"]);
+    const askedAgain = [...typed, ask("careerGoalKind", "Which is closer?", "again")];
+    expect(states({ ...none, history: askedAgain })).toEqual(["current", "todo", "todo", "todo"]);
+    const thenTapped = [...askedAgain, tap("again", ["Lead better in my current role"])];
+    expect(states({ ...none, history: thenTapped })).toEqual(["done", "current", "todo", "todo"]);
+  });
+
+  it("follows the advisor past a field the user declined in words", () => {
+    // Needs declined by typing: the advisor moves on, so the situation is current and needs stay
+    // unchecked.
+    const history = [
+      ...answered("careerGoalKind", ["Step up to a bigger leadership role"]),
+      ...answered("needs", [], "I'd rather not rank them"),
+      ask("peerPreference", "Who do you want as classmates?"),
+    ];
+    expect(states({ ...none, history })).toEqual(["done", "todo", "current", "todo"]);
+  });
+
+  it("ignores an ask the server refused and a field outside Stage 1", () => {
+    const refused: MessageParam = {
+      role: "user",
+      content: [{ type: "tool_result", tool_use_id: "bad", content: "no", is_error: true }],
+    };
+    const history = [
+      ask("peerPreference", "Classmates?", "bad"),
+      refused,
+      ask("travelComfort", "?"),
+    ];
+    expect(states({ ...none, history })).toEqual(["current", "todo", "todo", "todo"]);
   });
 
   it("moves to the situation once needs are answered, and stays there until the card", () => {

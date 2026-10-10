@@ -42,6 +42,9 @@ export type ChatState = {
   draft: string;
   // A refused correction, put back in the card's "Change something" box.
   correction: string | null;
+  // The last card the server showed, kept after it is answered, so the "What I've understood"
+  // panel can still read it while "Looks right" is sending or after "Change something".
+  lastCard: Direction | null;
   before: Before | null;
 };
 
@@ -56,6 +59,7 @@ export const initialChatState: ChatState = {
   status: "idle",
   draft: "",
   correction: null,
+  lastCard: null,
   before: null,
 };
 
@@ -165,6 +169,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         chips: r.chips,
         confirm: r.confirm,
         verdict: withVerdict(state, r.direction),
+        lastCard: r.confirm?.direction ?? state.lastCard,
         fallbackText: null,
         counter,
         notice: null,

@@ -10,7 +10,7 @@ import { UnderstoodPanel } from "@app/components/UnderstoodPanel";
 import { postChat } from "@app/lib/chatClient";
 import { chatReducer, initialChatState } from "@app/lib/chatState";
 import { progressSteps } from "@app/lib/progress";
-import { understoodLines } from "@app/lib/understood";
+import { understood } from "@app/lib/understood";
 import { textMessage, toolResultMessage, type MessageParam } from "@app/lib/chatTypes";
 
 // The Stage 1 page: chat, chips, the confirm card and the verdict. State lives in memory only
@@ -34,7 +34,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-2xl flex-col gap-4 px-4 py-6 lg:max-w-[calc(64.5rem+4rem)] lg:px-8">
-      <header className="flex flex-col gap-3 border-b border-line pb-4">
+      <header className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <StepUpMark className="size-9 shrink-0" />
@@ -50,8 +50,11 @@ export default function Home() {
           />
         </div>
         <p className="text-sm text-muted">{TAGLINE}</p>
-        <ProgressLine steps={progressSteps(state)} />
       </header>
+      {/* Sticky, so where the interview stands stays in view as the chat scrolls to its end. */}
+      <div className="sticky top-0 z-10 -mx-4 border-b border-line bg-paper px-4 py-2 lg:-mx-8 lg:px-8">
+        <ProgressLine steps={progressSteps(state)} />
+      </div>
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-10">
         <main className="flex min-w-0 flex-col gap-4">
           <PrivacyNotice />
@@ -95,7 +98,7 @@ export default function Home() {
             }}
           />
         </main>
-        <UnderstoodPanel lines={understoodLines(state)} />
+        <UnderstoodPanel {...understood(state)} />
       </div>
     </div>
   );

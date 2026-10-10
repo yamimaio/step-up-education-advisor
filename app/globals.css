@@ -18,6 +18,11 @@
   --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
 }
 
+/* Keeps what scrollIntoView or focus brings into view clear of the sticky progress line. */
+html {
+  scroll-padding-top: 4rem;
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);
