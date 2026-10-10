@@ -155,10 +155,11 @@ export interface RankedProgram {
   why: string;
 }
 
-// One list ranked by the user's needs: the confirmed category's programs (passing, then near
-// misses). "Also worth a look" holds up to RUNNER_UP_LIMIT passing programs of the runner-up; when
-// the confirmed category has nothing to rank, it holds programs of `access.alternative` instead
-// (which may not be the runner-up), near misses included. Read each entry's status from `programs`.
+// One list ranked by the user's needs: the confirmed category's programs (passing and near misses
+// only on unpublished values, then near misses over a published limit). "Also worth a look" holds
+// up to RUNNER_UP_LIMIT passing programs of the runner-up; when the confirmed category has nothing
+// to rank, it holds programs of `access.alternative` instead (which may not be the runner-up),
+// near misses included, in the same order. Read each entry's status from `programs`.
 export interface Ranking {
   ranked: RankedProgram[];
   alsoWorthALook: RankedProgram[];

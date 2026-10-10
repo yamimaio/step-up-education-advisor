@@ -10,7 +10,8 @@ import {
   totalCost,
   travelFit,
 } from "./ranking";
-import type { ProgramEvaluation } from "./types";
+import type { Check, ProgramEvaluation } from "./types";
+import { loadPrograms } from "../data/load";
 import { fixture, fixtureDataset } from "../../tests/fixtures/dataset";
 import { BOSTON, makeProfile, personaAProfile } from "../../tests/fixtures/profiles";
 
@@ -292,6 +293,11 @@ const scores = {
 } as const;
 const confirmed = { winner: "executive", runnerUp: "certificate", scores } as const;
 const ids = (list: { id: string }[]) => list.map((r) => r.id);
+// A near miss over a published limit, and one only on a value the school doesn't publish.
+const tuitionOver = { id: "tuition", status: "near_miss", unknown: false } as Check;
+const hoursUnpublished = { id: "hours", status: "near_miss", unknown: true } as Check;
+const overLimit = { status: "near_miss" as const, checks: [tuitionOver] };
+const unpublished = { status: "near_miss" as const, checks: [hoursUnpublished] };
 // The access card names no alternative unless a test says so.
 const rank = (
   evaluations: ProgramEvaluation[],
@@ -300,11 +306,11 @@ const rank = (
 ) => rankPrograms(evaluations, category, { alternative });
 
 describe("Order", () => {
-  it("puts passing programs before near misses, then by score", () => {
+  it("puts passing programs before near misses over a published limit, then by score", () => {
     const r = rank(
       [
         ev("fake-a", { total: 25 }),
-        ev("fake-near", { total: 45, status: "near_miss" }),
+        ev("fake-near", { total: 45, ...overLimit }),
         ev("fake-b", { total: 35 }),
       ],
       confirmed,
@@ -315,6 +321,24 @@ describe("Order", () => {
       "Ranked second.",
       "Ranked third.",
     ]);
+  });
+
+  it("ranks a near miss only on unpublished values with the passes, by score (#247)", () => {
+    const r = rank(
+      [
+        ev("fake-a", { total: 25 }),
+        ev("fake-unpublished", { total: 45, ...unpublished }),
+        ev("fake-b", { total: 35 }),
+        // Unpublished hours too, but also over a published limit: still after the passes.
+        ev("fake-over", {
+          total: 50,
+          status: "near_miss",
+          checks: [hoursUnpublished, tuitionOver],
+        }),
+      ],
+      confirmed,
+    );
+    expect(ids(r.ranked)).toEqual(["fake-unpublished", "fake-b", "fake-a", "fake-over"]);
   });
 
   it("breaks ties by location fit, then lower known total cost, unknown last, then id", () => {
@@ -419,6 +443,25 @@ describe("Order", () => {
   });
 });
 
+describe("Persona A on the real records (#247)", () => {
+  const result = evaluate(personaAProfile, loadPrograms(), today);
+
+  it("ranks MIT TLP first: a near miss only because its weekly hours aren't published", () => {
+    const mit = result.programs.find((p) => p.id === "mit-tlp");
+    const stanford = result.programs.find((p) => p.id === "stanford-lead");
+    expect(mit?.status).toBe("near_miss");
+    expect(mit?.checks.filter((c) => c.status !== "pass")).toMatchObject([
+      { id: "hours", status: "near_miss", unknown: true, note: "not published" },
+    ]);
+    expect(stanford?.status).toBe("pass");
+    expect(mit?.score.total).toBeGreaterThan(stanford?.score.total ?? Infinity);
+    expect(ids(result.ranking.ranked)).toEqual(["mit-tlp", "stanford-lead"]);
+    expect(result.ranking.ranked[0]?.why).toBe(
+      "Ranked first for senior peers (cohort median 20 years) and leadership skills.",
+    );
+  });
+});
+
 describe("Also worth a look", () => {
   it("holds up to 2 passing programs of the runner-up, best first, never a near miss", () => {
     const cert = (id: string, total: number, status: "pass" | "near_miss" = "pass") =>
@@ -438,20 +481,22 @@ describe("Also worth a look", () => {
   });
 
   it("holds the access card's alternative when the confirmed category has nothing to rank", () => {
-    // A third category, not the runner-up, near misses after passes.
+    // A third category, not the runner-up, near misses over a published limit after passes; a
+    // near miss only on an unpublished value ranks with the passes (#247).
     const withShort = { ...confirmed, scores: { ...scores, short_course: 10 } };
     const r = rank(
       [
         ev("fake-exec", { status: "fail" }),
         ev("fake-cert", { category: "certificate", status: "fail" }),
-        ev("fake-s1", { category: "short_course", status: "near_miss", total: 45 }),
+        ev("fake-s1", { category: "short_course", total: 45, ...overLimit }),
         ev("fake-s2", { category: "short_course", total: 20 }),
+        ev("fake-s3", { category: "short_course", total: 30, ...unpublished }),
       ],
       withShort,
       "short_course",
     );
     expect(r.ranked).toEqual([]);
-    expect(ids(r.alsoWorthALook)).toEqual(["fake-s2", "fake-s1"]);
+    expect(ids(r.alsoWorthALook)).toEqual(["fake-s3", "fake-s2"]);
   });
 
   it("lists the runner-up's near miss when it is the only program within reach (review #86)", () => {

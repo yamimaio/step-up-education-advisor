@@ -222,11 +222,18 @@ function byRank(a: ProgramEvaluation, b: ProgramEvaluation): number {
   );
 }
 
-// One list: the confirmed category's programs within or near the limits (passes first), then up
+// A near miss with a published value over a limit. A near miss only on values the school
+// doesn't publish (`unknown`) isn't over anything, so it ranks with the passes (#247).
+function overLimit(e: ProgramEvaluation): boolean {
+  return e.status === "near_miss" && e.checks.some((c) => c.status !== "pass" && !c.unknown);
+}
+
+// One list: the confirmed category's programs within or near the limits (passes and near misses
+// only on unpublished values first, by score; then near misses over a published limit), then up
 // to RUNNER_UP_LIMIT passing programs of the runner-up category. When the confirmed category has
 // nothing within or near the limits, "Also worth a look" holds the programs of the category the
-// access card names instead (`access.alternative`), near misses after passes, so the list never
-// comes back empty while a program is within reach. A ruled-out type is never listed. With no
+// access card names instead (`access.alternative`), in the same order, so the list never comes
+// back empty while a program is within reach. A ruled-out type is never listed. With no
 // confirmed category (an unresolved tie) nothing is listed yet.
 export function rankPrograms(
   evaluations: ProgramEvaluation[],
@@ -240,7 +247,7 @@ export function rankPrograms(
       (e) => c !== null && e.category === c && e.status !== "fail" && scores[c] !== "out",
     );
   const passFirst = (a: ProgramEvaluation, b: ProgramEvaluation) =>
-    Number(a.status === "near_miss") - Number(b.status === "near_miss") || byRank(a, b);
+    Number(overLimit(a)) - Number(overLimit(b)) || byRank(a, b);
   const ranked = listed(winner)
     .sort(passFirst)
     .map((e, i): RankedProgram => ({
