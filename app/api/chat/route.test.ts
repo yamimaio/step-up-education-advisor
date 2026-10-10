@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { MAX_BODY_BYTES } from "@server/limits";
+import { MAX_BODY_BYTES, RATE_LIMIT_PER_MINUTE } from "@server/limits";
+import { chatRateLimiter } from "@server/rateLimit";
 import { DELETE, GET, POST, PUT } from "./route";
 
 const SECRET = "my employer is Initech";
@@ -14,6 +15,7 @@ const post = (body: string, headers: Record<string, string> = {}) =>
   );
 
 beforeEach(() => {
+  chatRateLimiter.reset();
   vi.stubEnv("MODEL_FAKE", "1");
   vi.spyOn(console, "info").mockImplementation(() => {});
 });
@@ -107,6 +109,36 @@ describe("POST /api/chat", () => {
     const response = await post(JSON.stringify({ messages: [{ role: "user", content: "  " }] }));
     expect(response.status).toBe(200);
     expect((await response.json()).notice.kind).toBe("empty_input");
+  });
+});
+
+describe("the per-IP rate limit", () => {
+  const hi = JSON.stringify({ messages: [{ role: "user", content: SECRET }] });
+  const from = (ip: string) => ({ "x-forwarded-for": `10.0.0.1, ${ip}` });
+
+  it("answers 429 with retryAfter past the minute limit, before reading the body", async () => {
+    for (let i = 0; i < RATE_LIMIT_PER_MINUTE; i++) {
+      expect((await post(hi, from("203.0.113.7"))).status).toBe(200);
+    }
+    const lines: string[] = [];
+    vi.spyOn(console, "info").mockImplementation((line: string) => void lines.push(line));
+    const refused = await post("not even JSON", from("203.0.113.7"));
+    expect(refused.status).toBe(429);
+    const body = await refused.json();
+    expect(body).toEqual({ error: "rate_limited", retryAfter: expect.any(Number) });
+    expect(body.retryAfter).toBeGreaterThan(0);
+    expect(refused.headers.get("Retry-After")).toBe(String(body.retryAfter));
+    // The log line names the window, never the address.
+    expect(lines).toEqual([JSON.stringify({ event: "chat_rate_limited", window: "minute" })]);
+  });
+
+  it("counts each address apart, by the proxy's entry", async () => {
+    for (let i = 0; i < RATE_LIMIT_PER_MINUTE; i++) await post(hi, from("203.0.113.7"));
+    expect((await post(hi, from("203.0.113.7"))).status).toBe(429);
+    expect((await post(hi, from("198.51.100.2"))).status).toBe(200);
+    // A forged first entry doesn't make a new client.
+    const forged = { "x-forwarded-for": "6.6.6.6, 203.0.113.7" };
+    expect((await post(hi, forged)).status).toBe(429);
   });
 });
 

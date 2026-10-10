@@ -414,5 +414,208 @@
       "verifiedBy": null
     },
     "locationOffers": ["network_density", "industry_hub"]
+  },
+  {
+    "id": "northwestern-mem-pt",
+    "name": "Master of Engineering Management",
+    "institution": "Northwestern University",
+    "category": "specialized_masters",
+    "credential": "Master of Engineering Management",
+    "format": "in_person",
+    "durationMonths": 24,
+    "durationMaxMonths": 36,
+    "credits": "A minimum number of 12 courses is required",
+    "attendance": "recurring_evenings",
+    "onsiteNote": "Classes held Monday - Thursday evenings + Saturday mornings",
+    "onsiteDaysPerYear": null,
+    "residencyCount": null,
+    "longestStretchDays": null,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "Evanston",
+    "state": "Illinois",
+    "campusAddress": "2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208",
+    "campusLat": 42.0565,
+    "campusLon": -87.6753,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": null,
+    "tuitionPerCourseUsd": 8100,
+    "courseCount": 12,
+    "tuitionIncludes": null,
+    "lodgingIncluded": null,
+    "paymentOptions": ["scholarships", "loans"],
+    "minExperienceYears": null,
+    "accreditation": null,
+    "cohortMedianExperienceYears": 7.6,
+    "cohortExperienceBasis": "average",
+    "cohortSeniority": null,
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "leadership_skills": 4,
+      "deep_expertise": 5,
+      "graduate_degree": 5,
+      "senior_network": 2,
+      "new_industry_or_city": 3
+    },
+    "ratingNotes": {
+      "leadership_skills": "Required Leadership and Organizational Behavior course and rotating leadership roles in a simulation.",
+      "deep_expertise": "Twelve-course master's in engineering management with a required strategy capstone course.",
+      "graduate_degree": "Awards the Master of Engineering Management.",
+      "senior_network": "Part-time students averaged 7.6 years of experience (Fall 2021); 20 to 30 students per course.",
+      "new_industry_or_city": "Engineering career office and Northwestern Career Advancement offer advising; access for part-time students is not stated."
+    },
+    "ratingLowEvidence": ["new_industry_or_city"],
+    "figureNotes": {
+      "tuitionPerCourseUsd": "2026-27 rate; the Fall 2027 rate is not published.",
+      "courseCount": "A minimum; the school publishes no fixed total.",
+      "durationMonths": "The school publishes a 2-3 year range for the part-time option.",
+      "campusLat": "Derived from campusAddress (approximate, from the street address).",
+      "campusLon": "Derived from campusAddress (approximate, from the street address).",
+      "cohortMedianExperienceYears": "Average for part-time students in Fall 2021, the latest student body profile the school publishes."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Master of Engineering Management",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Northwestern University’s Evanston campus",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "Master of Engineering Management degree",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "Master of Engineering Management degree",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Choose the part-time option to accommodate work or personal needs",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Northwestern University’s Evanston campus",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/financial-aid.html",
+        "quote": "The Albert H. Rubenstein Memorial Scholarship is based on merit and is awarded during the application process.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.mccormick.northwestern.edu/academics/graduate/prospective-student-resources/financial-aid.html",
+        "quote": "master’s students are provided with a variety of federal and private loan options",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Part-time option: 2-3 years",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "attendance",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Classes held Monday - Thursday evenings + Saturday mornings",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "credits",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "A minimum number of 12 courses is required",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "tuitionPerCourseUsd",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/",
+        "quote": "$8,100 per course for part-time students",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "campusAddress",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Northwestern University 2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/flexible-format.html",
+        "quote": "All courses are offered on the Evanston campus.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/student-body-profile.html",
+        "quote": "Note: Data below is from Fall 2021 ... Average Work Experience ... Part-Time Students: 7.6 years",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+        "quote": "Choose one (1) of the following Capstone courses: ... MEM 436: Technology Strategy for Products ... MEM 437: Strategic Management for Engineers",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "20-30 students in each academic course",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+        "quote": "Program is not a cohort format to allow additional flexibility",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/career-development.html",
+        "quote": "The Engineering Career Development Office helps provide career advice to engineering students",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/career-development.html",
+        "quote": "Northwestern Career Advancement offers comprehensive career services including career counseling and assessment",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "verified",
+      "verifiedBy": "Yami Maio"
+    },
+    "locationOffers": ["industry_hub"]
   }
 ]
