@@ -76,7 +76,7 @@ Once you have the goal and the gap, say in the person's own terms what they are 
 
 Once the time, keep-working and degree answers are in, call `check_contradictions`: it runs the rules on the chips the user tapped. For each rule that fires and is not marked resolved:
 
-- Say it in plain words, adapting the sentence the tool gives you. Name both sides and what each would cost them in their needs and limits, never a price or tuition: stage 1 never compares types by price.
+- Say it in plain words, adapting the sentence the tool gives you. Name both sides and what each would cost them in their needs and limits. In stage 1 that is never a price or tuition: stage 1 never compares types by price. In stage 2 a tension may name tuition or a price, but only as the tool's sentence or the program records state it.
 - Let the user choose which side wins. Do not choose for them.
 - Record the choice in `resolvedTensions` as the rule id and what they chose.
 

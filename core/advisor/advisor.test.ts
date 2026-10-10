@@ -166,8 +166,16 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
 
   it("reads cost the same way when it names a tension (PR #205 review)", () => {
     expect(section("Name the tension")).toContain(
-      "what each would cost them in their needs and limits, never a price or tuition: stage 1 never compares types by price",
+      "what each would cost them in their needs and limits. In stage 1 that is never a price or tuition: stage 1 never compares types by price.",
     );
+  });
+
+  // Stage 2 raises tensions "exactly as in stage 1", and R2 is a tuition tension (PR #205 review 2).
+  it("lets a stage 2 tension name tuition, but only from the tool or the records", () => {
+    expect(section("Name the tension")).toContain(
+      "In stage 2 a tension may name tuition or a price, but only as the tool's sentence or the program records state it.",
+    );
+    expect(advisor).toContain("raise what fires exactly as in stage 1");
   });
 });
 
