@@ -56,12 +56,14 @@ Every source in the record, with the value it backs. **no quote** means the valu
 | ratingNotes | (rating notes) | Shift to a new function or industry with tools from the CMC that help you: (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/ |
 | ratingNotes | (rating notes) | CMC coaching sessions are tailored to experienced professionals making high-impact decisions. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/ |
 | ratingNotes | (rating notes) | Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/ |
+| minExperienceYears | 8 | The Executive MBA Program is designed for fully-employed professionals with at least eight years of work experience. (checked 2026-10-10) | https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/ |
+| accreditation | ["AACSB"] | Association to Advance Collegiate Schools of Business (checked 2026-10-10) | https://www.northwestern.edu/provost/about/university-accreditation/specialized-accreditation.html |
+| cohortSeniority | Career levels: 32% director, 20% VP and 18% C-suite (70% director or above), 25% manager, 5% other. | Career levels 32% Director 25% Manager 20% VP 18% C-Suite 5% Other (checked 2026-10-10) | https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/ |
 | onsiteNote | Friday afternoon to Saturday evening every other week in Chicago, with some Sunday classes, plus four intensive weeks a program, including orientation and Global Network Week in Evanston. | **no quote** | |
 | state | Illinois | **no quote** | |
 | campusLat | 41.8957 | **no quote** | |
 | campusLon | -87.6189 | **no quote** | |
 | lodgingIncluded | true | **no quote** | |
-| minExperienceYears | 8 | **no quote** | |
 | cohortExperienceBasis | average | **no quote** | |
 | locationOffers | ["network_density", "industry_hub"] | **no quote** | |
 
