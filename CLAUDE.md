@@ -30,6 +30,8 @@ Commits end with the Co-Authored-By line given in the session; PR bodies end wit
 
 A review session follows this whatever the command arguments. The goal is a clear stop, not zero findings.
 
+**UI PRs.** UI PR reviews run `/ui-walk <PR#>` and paste its summary. Its failing checks are graded like any other finding.
+
 **Report only findings with a concrete failure scenario** (specific input or state, wrong result). No "could be hardened" without one. Start each finding's summary with its severity tag.
 
 - `[HIGH]`: breaks a rule above in practice, leaks the API key or message content, or is a correctness bug on the main path. Blocks the merge.
