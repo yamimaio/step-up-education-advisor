@@ -1,12 +1,16 @@
 import { useId } from "react";
 import type { CheckStatus } from "@core/engine/types";
 import { DRAFT_LABEL, isWebLink, type ProgramView } from "@app/lib/programs";
+import { Disclosure } from "./Disclosure";
 
 // One program: facts from its record, checks, fit and confidence from the engine (programView),
 // never model text. The status of each check is written out, so it doesn't rely on colour.
 
+// The pill shape and padding of the chips, at badge size.
+const PILL = "inline-block whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium";
+
 const STATUS_STYLE: Record<CheckStatus, string> = {
-  pass: "bg-teal/10 text-teal",
+  pass: "bg-teal-soft text-teal",
   near_miss: "bg-amber-100 text-amber-900",
   fail: "bg-red-100 text-red-900",
 };
@@ -16,30 +20,24 @@ export function ProgramCard({ program: p }: { program: ProgramView }) {
   return (
     <article
       aria-labelledby={headingId}
-      className="rounded-lg border border-teal/40 bg-white/80 p-4 text-sm shadow-sm"
+      className="rounded-xl border border-line bg-card p-4 text-sm"
     >
-      <h3 id={headingId} className="text-lg font-semibold text-teal">
+      <h3 id={headingId} className="font-display text-lg font-semibold">
         {p.name}
       </h3>
-      <p className="text-ink/70">{p.institution}</p>
-      {p.draft && (
-        <p className="mt-1 inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
-          {DRAFT_LABEL}
-        </p>
-      )}
-      <p className="mt-2 font-medium">{p.why}</p>
+      <p className="text-muted">{p.institution}</p>
+      {p.draft && <p className={`mt-2 ${PILL} bg-amber-100 text-amber-900`}>{DRAFT_LABEL}</p>}
+      <p className="mt-3 font-medium">{p.why}</p>
 
       <h4 className="mt-3 font-semibold">Your limits</h4>
-      <ul className="mt-1 space-y-1">
+      <ul className="mt-1 space-y-1.5">
         {p.checks.map((c) => (
-          <li key={c.label}>
-            <span
-              className={`mr-2 rounded px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLE[c.status]}`}
-            >
-              {c.statusText}
+          <li key={c.label} className="flex items-baseline gap-2">
+            <span className={`${PILL} ${STATUS_STYLE[c.status]}`}>{c.statusText}</span>
+            <span className="min-w-0">
+              {c.label}
+              {c.detail && <span className="text-muted">: {c.detail}</span>}
             </span>
-            {c.label}
-            {c.detail && <span className="text-ink/80">: {c.detail}</span>}
           </li>
         ))}
       </ul>
@@ -48,10 +46,10 @@ export function ProgramCard({ program: p }: { program: ProgramView }) {
       <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
         {p.facts.map((f) => (
           <div key={f.label} className="contents">
-            <dt className="text-ink/70">{f.label}</dt>
+            <dt className="text-muted">{f.label}</dt>
             <dd>
               {f.value}
-              {f.note && <span className="block text-xs text-ink/70">{f.note}</span>}
+              {f.note && <span className="block text-xs text-muted">{f.note}</span>}
             </dd>
           </div>
         ))}
@@ -69,12 +67,11 @@ export function ProgramCard({ program: p }: { program: ProgramView }) {
         {p.confidence.reasons.join(" ")}
       </p>
       {p.checkedOn && (
-        <p className="mt-1 text-ink/70">
+        <p className="mt-1 text-muted">
           {p.draft ? "Sources checked on" : "Verified on"} {p.checkedOn}
         </p>
       )}
-      <details className="mt-2">
-        <summary className="cursor-pointer text-teal">Sources ({p.sources.length})</summary>
+      <Disclosure className="mt-2" summary={`Sources (${p.sources.length})`}>
         <ul className="mt-1 space-y-1">
           {p.sources.map((s, i) => (
             <li key={i}>
@@ -90,11 +87,11 @@ export function ProgramCard({ program: p }: { program: ProgramView }) {
               ) : (
                 s.label
               )}
-              <span className="text-ink/70">, checked {s.checkedOn}</span>
+              <span className="text-muted">, checked {s.checkedOn}</span>
             </li>
           ))}
         </ul>
-      </details>
+      </Disclosure>
     </article>
   );
 }
