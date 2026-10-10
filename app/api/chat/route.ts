@@ -52,7 +52,8 @@ async function readBody(request: Request): Promise<unknown> {
 }
 
 export async function POST(request: Request) {
-  // Temporary (#186, removed by #190): which address headers arrive on the host. Counts and booleans.
+  // Temporary (#186, removed by #190): which address headers arrive on the host. Counts and
+  // booleans only.
   logClientHeaders(clientHeaderShape(request.headers));
   // Before the body is read, so a refused request costs nothing.
   const rate = chatRateLimiter.take(clientAddress(request.headers));
