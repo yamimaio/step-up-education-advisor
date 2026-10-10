@@ -47,7 +47,9 @@ jobs:
       - run: npm run check-bundle
 
   # Scans every commit the PR adds for secrets (DQ19), so a key committed and then removed in a
-  # later commit still fails. The binary is pinned by version and checksum.
+  # later commit still fails. Merge commits are scanned against their first parent, so a key typed
+  # while resolving a merge is caught too. The binary is pinned by version and checksum.
+  # A hit on a real key means deleting it in the Console: rewriting the commit doesn't unpublish it.
   secrets:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -68,7 +70,7 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: ./gitleaks git --redact --verbose --log-opts="${BASE_SHA}..${HEAD_SHA}"
+        run: ./gitleaks git --redact --verbose --log-opts="--diff-merges=first-parent ${BASE_SHA}..${HEAD_SHA}"
 
   docker:
     runs-on: ubuntu-latest

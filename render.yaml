@@ -11,7 +11,7 @@ services:
     region: oregon
     # One instance: the per-IP rate limit (#122) lives in memory.
     numInstances: 1
-    # Releases only: `git push origin origin/main:production` (docs/deploy.md, "Releasing").
+    # Releases only: `git push origin origin/main:refs/heads/production` (docs/deploy.md, "Releasing").
     branch: production
     # Deploys each commit pushed to production once its CI checks pass.
     autoDeployTrigger: checksPass
