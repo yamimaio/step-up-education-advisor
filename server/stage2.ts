@@ -33,6 +33,9 @@ export function searchSummary(result: SearchResult, programs: Program[]) {
           limit: c.limit,
           unit: c.unit,
           unknown: c.unknown,
+          // The engine's own words on the check: a per-course estimate, a lodging-only travel
+          // total, a distance it can't tell. Without it a near miss reads as an overshoot.
+          ...(c.note ? { note: c.note } : {}),
         })),
       fit: [e?.score.format.text, e?.score.travel.text].filter((t): t is string => !!t),
       totalCostUsd: e?.totalCostUsd ?? null,

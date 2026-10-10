@@ -5,6 +5,7 @@ import type {
   RankedProgram,
   SearchResult,
 } from "../core/engine/types";
+import { tuitionTotal } from "../core/engine/constraints";
 import type { Category, Need } from "../core/schema/enums";
 import type { Program } from "../core/schema/program";
 
@@ -132,28 +133,41 @@ const UNPUBLISHED: Record<CheckId, string> = {
   location: "where its campus is",
 };
 
-// A near miss because of the user's own missing answer: the program isn't over anything.
-const UNCHECKED: Partial<Record<CheckId, string>> = {
-  travelBudget: "the travel estimate covers lodging only, because the airfare isn't known",
-  location: "without where you live, it can't tell whether the campus is within commuting distance",
+// A near miss because a figure can't be compared as published, or the user's own answer is
+// missing: the program isn't over anything.
+const UNCHECKED: Partial<Record<CheckId, (check: Check, record: Program | undefined) => string>> = {
+  // checkTuition: a per-course price is published but the total isn't, and the engine decides
+  // on the total (core/engine/constraints.ts).
+  tuition: (check, record) => {
+    const total = record ? tuitionTotal(record) : null;
+    return total?.estimated && record?.courseCount
+      ? `it's priced per course, about $${total.usd.toLocaleString("en-US")} for ${record.courseCount} ${record.courseCount === 1 ? "course" : "courses"} (an estimate), so its total tuition isn't published`
+      : `its tuition can't be compared with your budget${check.note ? ` (${check.note})` : ""}`;
+  },
+  travelBudget: () => "the travel estimate covers lodging only, because the airfare isn't known",
+  location: () =>
+    "without where you live, it can't tell whether the campus is within commuting distance",
 };
 
+// A published figure past the user's limit. Anything else that is a near miss but not
+// `unknown` is a figure the engine can't compare (a per-course price, no published total) or
+// the user's own missing answer (a lodging-only travel total under the budget, no home).
+function isOver(c: Check): boolean {
+  if (c.unknown || c.value === null || c.id === "location") return false;
+  if (c.id === "travelBudget" && typeof c.value === "number" && typeof c.limit === "number") {
+    return c.value > c.limit;
+  }
+  return true;
+}
+
 // Why a listed program is a near miss, from its checks (core/engine/constraints.ts): over a
-// published figure, a figure the school doesn't publish, or an answer of the user's that's
-// missing. Never "misses your limit" for a figure nobody knows.
-function nearMissNote(checks: Check[]): string {
+// published figure, a figure the school doesn't publish, or one that can't be compared. Never
+// "over your limit" for a figure that isn't past it.
+function nearMissNote(checks: Check[], record: Program | undefined): string {
   const near = checks.filter((c) => c.status === "near_miss");
+  const over = near.filter(isOver);
   const unpublished = near.filter((c) => c.unknown);
-  const unchecked = near.filter(
-    (c) =>
-      !c.unknown &&
-      (c.id === "location" ||
-        (c.id === "travelBudget" &&
-          typeof c.value === "number" &&
-          typeof c.limit === "number" &&
-          c.value <= c.limit)),
-  );
-  const over = near.filter((c) => !unpublished.includes(c) && !unchecked.includes(c));
+  const unchecked = near.filter((c) => !c.unknown && !isOver(c));
   const parts: string[] = [];
   if (over.length) parts.push(`Close: it's slightly over ${list(over.map((c) => OVER[c.id]))}.`);
   if (unpublished.length) {
@@ -162,7 +176,8 @@ function nearMissNote(checks: Check[]): string {
     );
   }
   for (const c of unchecked) {
-    parts.push(`Not fully checked: ${UNCHECKED[c.id] ?? `${CHECK[c.id]} can't be checked`}.`);
+    const why = UNCHECKED[c.id]?.(c, record) ?? `${CHECK[c.id]} can't be fully checked`;
+    parts.push(`Not fully checked: ${why}.`);
   }
   return parts.join(" ");
 }
@@ -214,7 +229,7 @@ export function fallbackSearchExplanation(
     const record = records.get(id);
     const name = record ? `${record.name} (${record.institution})` : id;
     const e = evaluations.get(id);
-    const near = e?.status === "near_miss" ? nearMissNote(e.checks) : "";
+    const near = e?.status === "near_miss" ? nearMissNote(e.checks, record) : "";
     return `- ${name}: ${why}${near ? ` ${near}` : ""}`;
   };
   const { access, ranking, noProgram, profileGaps } = result;

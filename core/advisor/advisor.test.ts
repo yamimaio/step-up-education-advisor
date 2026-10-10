@@ -178,3 +178,11 @@ describe("advisor.md leads stage 2 to a card the server accepts", () => {
     expect(stage2()).toContain('If `access.status` is not "available"');
   });
 });
+
+describe("advisor.md explains a near miss from the issue, not as an overshoot", () => {
+  it("reads the issue's note and never says a program misses a limit it's within", () => {
+    const stage2 = section("Stage 2: show me programs");
+    expect(stage2).toContain("as the issue's `note` says");
+    expect(stage2).toContain("Never say a program misses a limit its figure is within.");
+  });
+});

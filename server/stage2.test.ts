@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evaluatePrograms, recommendCategory } from "../core/index";
 import { fixture, fixtureDataset } from "../tests/fixtures/dataset";
-import { personaAProfile } from "../tests/fixtures/profiles";
+import { makeProfile, personaAProfile } from "../tests/fixtures/profiles";
 import { TODAY } from "../tests/fixtures/chat";
 import type { Program } from "../core/schema/program";
 import { fallbackExplanation, fallbackSearchExplanation } from "./fallback";
@@ -190,5 +190,43 @@ describe("the stage 1 template explanation", () => {
     expect(fallbackExplanation(result)).toContain(
       "Answers you chose not to give, so the verdict leaves them out: hours a week",
     );
+  });
+});
+
+// Review round 2 on PR #155: the fixtures' specialized master's is priced per course, so its
+// total tuition isn't published. The engine makes that a near miss with `unknown: false` and an
+// estimate in the note; it is far under a $250,000 budget.
+describe("a per-course price", () => {
+  const masters = fixture("fake-specialized-masters");
+  const profile = makeProfile({
+    needs: ["deep_expertise", "graduate_degree", "leadership_skills"],
+    degreeRequired: "required",
+    tuitionBudgetUsd: 250000,
+    maxProgramMonths: 24,
+  });
+  const { programs, result } = search(fixtureDataset(), profile);
+
+  it("is a near miss on tuition that isn't over the budget", () => {
+    expect(result.ranking.ranked[0]!.id).toBe(masters.id);
+    const tuition = result.programs
+      .find((e) => e.id === masters.id)!
+      .checks.find((c) => c.id === "tuition")!;
+    expect(tuition).toMatchObject({ status: "near_miss", value: null, unknown: false });
+  });
+
+  it("reaches the model with the engine's note", () => {
+    const [entry] = searchSummary(result, programs).ranked;
+    expect(entry!.issues.find((i) => i.check === "tuition")).toMatchObject({
+      note: "priced per course; about $50,000 at 10 courses (estimate)",
+    });
+  });
+
+  it("reads as an estimate in the template, never as over the budget", () => {
+    const text = fallbackSearchExplanation(result, programs, profile.declined);
+    const line = text.split("\n").find((l) => l.startsWith(`- ${masters.name} (`))!;
+    expect(line).toContain(
+      "Not fully checked: it's priced per course, about $50,000 for 10 courses (an estimate), so its total tuition isn't published.",
+    );
+    expect(line).not.toContain("over your tuition budget");
   });
 });
