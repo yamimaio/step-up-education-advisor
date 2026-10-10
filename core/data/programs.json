@@ -1,5 +1,228 @@
 [
   {
+    "id": "harvard-ext-org-behavior",
+    "name": "Organizational Behavior Graduate Certificate (Online)",
+    "institution": "Harvard Extension School",
+    "category": "certificate",
+    "credential": "Graduate Certificate",
+    "format": "online",
+    "durationMonths": 8,
+    "durationMaxMonths": 36,
+    "credits": null,
+    "attendance": "none",
+    "onsiteNote": null,
+    "onsiteDaysPerYear": 0,
+    "residencyCount": 0,
+    "longestStretchDays": 0,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": null,
+    "state": null,
+    "campusAddress": null,
+    "campusLat": null,
+    "campusLon": null,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 14320,
+    "tuitionPerCourseUsd": 3580,
+    "courseCount": 4,
+    "tuitionIncludes": "Tuition for four courses at the published 2026–27 rate of $3,580 per course. Harvard states that books, course materials, supplies, equipment, and certain transaction-related fees may be additional; lodging and meals are not included.",
+    "lodgingIncluded": null,
+    "paymentOptions": ["installments", "employer_sponsorship", "loans", "scholarships"],
+    "minExperienceYears": null,
+    "accreditation": [],
+    "cohortMedianExperienceYears": 11,
+    "cohortExperienceBasis": "median",
+    "cohortSeniority": "Select certificate-earner titles published by the school: Business Analyst, Customer Success Manager, Director of Operations, Program Manager, Principal, and Vice President; the school does not say these titles represent a majority.",
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "leadership_skills": 4,
+      "deep_expertise": 3,
+      "graduate_degree": 3,
+      "senior_network": 3,
+      "new_industry_or_city": 3
+    },
+    "ratingNotes": {
+      "leadership_skills": "Required organizational behavior and conflict management courses, with electives such as Leading Through Change.",
+      "deep_expertise": "Four graduate-credit courses in organizational behavior, without a capstone.",
+      "graduate_degree": "Courses can count toward a Harvard Extension master's in management or industrial-organizational psychology.",
+      "senior_network": "In 2024, over half of students had 11+ years of employment; online, with no required time together.",
+      "new_industry_or_city": "Career webinars, advising and career fairs are open to certificate students."
+    },
+    "ratingLowEvidence": [],
+    "figureNotes": {
+      "cohortMedianExperienceYears": "Median from Harvard's 2024 fast facts for students pursuing this certificate (years of employment by band); the middle student falls in the 11-20 band, stored at its lower edge."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Organizational Behavior Graduate Certificate (Online)",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Institution Harvard Extension School",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Program Type Graduate Certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Program Type Graduate Certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Format Online",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Finish in 8 Months – 3 Years",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Complete the four certificate courses for graduate credit.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://extension.harvard.edu/about/faq/",
+        "quote": "All graduate certificates may be completed entirely through online education.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://extension.harvard.edu/about/faq/",
+        "quote": "All graduate certificates may be completed entirely through online education.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "The Organizational Behavior Graduate Certificate includes four online courses",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://extension.harvard.edu/academics/graduate-certificates/",
+        "quote": "The courses can be completed on a part-time basis, allowing many to continue working full time.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "country",
+        "url": "https://extension.harvard.edu/registration-admissions/for-students/support-and-services/sexual-assault-and-harassment-resources/",
+        "quote": "51 Brattle Street Cambridge, MA 02138",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "Tuition $14,320",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://extension.harvard.edu/paying-for-school/",
+        "quote": "some courses may require additional lab fees or the purchase of specific books and materials relevant to that class",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/",
+        "quote": "These interest-free plans allow you to pay your tuition in four installments.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/harvard-employees/",
+        "quote": "You can use TAP to pursue an undergraduate or graduate degree or certificate",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/",
+        "quote": "You may consider applying for a credit-based private student loan",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://extension.harvard.edu/paying-for-school/payment-options/financing-options-for-nonadmitted-students/",
+        "quote": "Limited scholarship funds are available for non-admitted students at Harvard Extension School.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortSeniority",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "They hold such titles as: Business Analyst ... Director of Operations ... Principal ... Vice President",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "courseCount",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "The Organizational Behavior Graduate Certificate includes four online courses",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionPerCourseUsd",
+        "url": "https://coursebrowser.dce.harvard.edu/program/organizational-behavior-graduate-certificate/",
+        "quote": "Tuition $3,580 per course",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://extension.harvard.edu/wp-content/uploads/sites/8/2024/05/HES-Fast-Facts-Certificates-Organizational-Behavior.pdf",
+        "quote": "Years of employment 0–4 years 14% 5–10 years 30% 11–20 years 34% 21+ years 22% ... Data pertains to academic year 2024.",
+        "checkedOn": "2026-10-09",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMaxMonths",
+        "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+        "quote": "If you prefer a more flexible pace, you have up to three years to finish.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["travel_ease", "affordability"]
+  },
+  {
     "id": "mit-tlp",
     "name": "Blended Professional Certificate: Technology Leadership Program",
     "institution": "MIT Professional Education",
