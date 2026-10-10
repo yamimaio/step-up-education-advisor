@@ -135,3 +135,11 @@ Claude's independent rating under rate-program v3, from Claude's own official-pa
   "lowEvidence": []
 }
 ```
+
+Changes from Perplexity's answer:
+
+- leadership_skills 5 → 4: Perplexity kept the default because its research had no curriculum facts (and listed it as low evidence). The core courses page names the required leadership courses inside a general MBA core of 19, the same case as Wharton EMBA SF (R3). Close call between 4 and 5.
+- senior_network 3 → 4: Perplexity's research had no experience figure. The admissions page gives "an average of 15 years of work experience" (band 15 to 19), and the class profile says students hold director, VP and C-suite positions.
+- new_industry_or_city 3 → 4: Perplexity's research had no career facts (missing-evidence rule). The career services page offers CMC coaching to EMBA students and tools to "Shift to a new function or industry".
+- lowEvidence: Perplexity listed four needs; with the curriculum, profile and career facts found, none is on thin evidence.
+- deep_expertise and graduate_degree agree (3, 5).
