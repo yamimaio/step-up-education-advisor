@@ -65,6 +65,7 @@ describe("toTurns and the wrap-up note", () => {
       chips: null,
       confirm: null,
       direction: null,
+      programs: null,
       counter: { remaining: 5 },
       notice: null,
     };
@@ -73,6 +74,7 @@ describe("toTurns and the wrap-up note", () => {
     const md = buildTranscript({
       history: next.history,
       verdict: null,
+      results: null,
       fallbackText: null,
       date: new Date(),
     });
@@ -84,7 +86,13 @@ describe("toTurns and the wrap-up note", () => {
     const typed = "[Step Up note] I prefer evenings";
     const history: MessageParam[] = [{ role: "user", content: [{ type: "text", text: typed }] }];
     expect(toTurns(history)).toEqual([{ kind: "user", text: typed }]);
-    const md = buildTranscript({ history, verdict: null, fallbackText: null, date: new Date() });
+    const md = buildTranscript({
+      history,
+      verdict: null,
+      results: null,
+      fallbackText: null,
+      date: new Date(),
+    });
     expect(md).toContain(typed);
   });
 });
@@ -120,7 +128,13 @@ describe("toTurns and turns the server rejected", () => {
       { kind: "user", text: "hi" },
       { kind: "assistant", text: "Quick one first: how many hours a week?" },
     ]);
-    const md = buildTranscript({ history, verdict: null, fallbackText: null, date: new Date() });
+    const md = buildTranscript({
+      history,
+      verdict: null,
+      results: null,
+      fallbackText: null,
+      date: new Date(),
+    });
     expect(md).not.toContain("Here's what I understood.");
   });
 
@@ -133,5 +147,33 @@ describe("toTurns and turns the server rejected", () => {
       kind: "assistant",
       text: "Here's what I understood.",
     });
+  });
+});
+
+describe("toTurns and the two cards", () => {
+  const card = (id: string, name: string): MessageParam => ({
+    role: "assistant",
+    content: [{ type: "tool_use", id, name, input: {} }],
+  });
+  const answer = (id: string, body: unknown): MessageParam => ({
+    role: "user",
+    content: [{ type: "tool_result", tool_use_id: id, content: JSON.stringify(body) }],
+  });
+
+  it("tags each card's answer with its stage", () => {
+    const history = [
+      { role: "user" as const, content: "hi" },
+      card("d1", "propose_direction"),
+      answer("d1", { confirmed: true, result: {} }),
+      card("s1", "propose_search"),
+      answer("s1", { confirmed: false, corrections: "My budget is $30k" }),
+      card("s2", "propose_search"),
+      answer("s2", { confirmed: true, result: {} }),
+    ];
+    expect(toTurns(history).slice(1)).toEqual([
+      { kind: "confirm", stage: 1, confirmed: true },
+      { kind: "confirm", stage: 2, confirmed: false, corrections: "My budget is $30k" },
+      { kind: "confirm", stage: 2, confirmed: true },
+    ]);
   });
 });
