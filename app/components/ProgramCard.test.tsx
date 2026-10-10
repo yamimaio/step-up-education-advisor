@@ -56,6 +56,24 @@ describe("ProgramCard", () => {
     expect(card).not.toContain("Draft, not yet verified");
   });
 
+  it("repeats format, length, place and total cost under the name, with the confidence level", () => {
+    const card = renderCard();
+    const summary = within(card).getAllByRole("definition")[0]!.closest("dl")!;
+    expect(
+      within(summary)
+        .getAllByRole("term")
+        .map((dt) => dt.textContent),
+    ).toEqual(["Format", "Length", "Where", "Tuition plus travel"]);
+    expect(summary.textContent).toContain("FormatBlended");
+    expect(summary.textContent).toContain("Length8 months");
+    // The same values as the full list below.
+    const below = text(card).slice(text(card).indexOf("The program"));
+    for (const dt of within(summary).getAllByRole("term")) {
+      expect(below).toContain(`${dt.textContent}${dt.nextElementSibling!.textContent}`);
+    }
+    expect(within(card).getByText("Confidence: High")).toBeTruthy();
+  });
+
   it("numbers a ranked card before its name, hidden from screen readers", () => {
     const card = renderCard(fixture(), personaAProfile, 2);
     const marker = within(card).getByText("2");
@@ -116,9 +134,13 @@ describe("ProgramCard", () => {
       "https://www.gsa.gov/travel/plan-book/per-diem-rates",
     ]);
     // One line per page, naming every fact it backs.
-    expect(links[0]!.textContent).toBe("Campus address, format, length, tuition, class experience");
+    // The link says it opens a new tab, to screen readers only.
+    expect(links[0]!.textContent).toBe(
+      "Campus address, format, length, tuition, class experience (opens in a new tab)",
+    );
+    expect(within(links[0]!).getByText("(opens in a new tab)").className).toBe("sr-only");
     expect(links[0]!.getAttribute("rel")).toBe("noopener noreferrer");
-    expect(text(card)).toContain("Lodging rate, checked 2026-10-01");
+    expect(text(card)).toContain("Lodging rate (opens in a new tab), checked 2026-10-01");
   });
 
   it("shows a fact the school gave directly without a link", () => {
@@ -143,8 +165,10 @@ describe("ProgramCard", () => {
   it("shows each figure's caveat next to it (Northwestern's real record)", () => {
     const northwestern = loadPrograms().find((p) => p.id === "northwestern-mem-pt")!;
     const card = renderCard(northwestern);
+    // The last line with the label: the summary row at the top repeats four of them, without notes.
     const fact = (label: string) =>
-      within(card).getByText(label, { selector: "dt" }).nextElementSibling?.textContent ?? "";
+      within(card).getAllByText(label, { selector: "dt" }).at(-1)?.nextElementSibling
+        ?.textContent ?? "";
     expect(fact("Tuition")).toContain("2026-27 rate; the Fall 2027 rate is not published.");
     expect(fact("Tuition")).toContain("A minimum; the school publishes no fixed total.");
     expect(fact("Length")).toContain("The school publishes a 2-3 year range");

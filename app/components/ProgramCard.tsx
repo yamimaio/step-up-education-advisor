@@ -34,13 +34,28 @@ export function ProgramCard({ program: p, rank }: { program: ProgramView; rank?:
           </span>
         )}
         <div className="min-w-0">
-          <h3 id={headingId} className="font-display text-lg font-semibold">
+          <h3 id={headingId} className="font-display text-lg font-semibold wrap-anywhere">
             {p.name}
           </h3>
           <p className="text-muted">{p.institution}</p>
         </div>
       </div>
       {p.draft && <p className={`mt-2 ${PILL} bg-amber-100 text-amber-900`}>{DRAFT_LABEL}</p>}
+
+      {/* Four facts repeated from "The program" below, and the confidence level, to compare
+          cards at a glance. */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1">
+          {p.summary.map((f) => (
+            <div key={f.label} className="flex min-w-0 gap-1 wrap-anywhere">
+              <dt className="text-muted">{f.label}</dt>
+              <dd className="font-medium">{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className={`${PILL} border border-line`}>Confidence: {p.confidence.level}</p>
+      </div>
+
       <p className="mt-3 font-medium">{p.why}</p>
 
       <h4 className="mt-3 font-semibold">Your limits</h4>
@@ -48,7 +63,7 @@ export function ProgramCard({ program: p, rank }: { program: ProgramView; rank?:
         {p.checks.map((c) => (
           <li key={c.label} className="flex items-baseline gap-2">
             <span className={`${PILL} ${STATUS_STYLE[c.status]}`}>{c.statusText}</span>
-            <span className="min-w-0">
+            <span className="min-w-0 wrap-anywhere">
               {c.label}
               {c.detail && <span className="text-muted">: {c.detail}</span>}
             </span>
@@ -61,7 +76,7 @@ export function ProgramCard({ program: p, rank }: { program: ProgramView; rank?:
         {p.facts.map((f) => (
           <div key={f.label} className="contents">
             <dt className="text-muted">{f.label}</dt>
-            <dd>
+            <dd className="min-w-0 wrap-anywhere">
               {f.value}
               {f.note && <span className="block text-xs text-muted">{f.note}</span>}
             </dd>
@@ -88,7 +103,7 @@ export function ProgramCard({ program: p, rank }: { program: ProgramView; rank?:
       <Disclosure className="mt-2" summary={`Sources (${p.sources.length})`}>
         <ul className="mt-1 space-y-1">
           {p.sources.map((s, i) => (
-            <li key={i}>
+            <li key={i} className="wrap-anywhere">
               {s.url && isWebLink(s.url) ? (
                 <a
                   href={s.url}
@@ -97,6 +112,7 @@ export function ProgramCard({ program: p, rank }: { program: ProgramView; rank?:
                   className="text-teal underline"
                 >
                   {s.label}
+                  <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               ) : (
                 s.label
