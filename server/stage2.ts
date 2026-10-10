@@ -21,11 +21,15 @@ export function searchSummary(result: SearchResult, programs: Program[]) {
       name: record?.name ?? id,
       institution: record?.institution ?? null,
       category: e?.category ?? record?.category ?? null,
+      // Where it's taught (null for an online program), for what a location note asks.
+      city: record?.city ?? null,
       status: e?.status ?? null,
       why,
-      // The limits the program misses or can't be checked on, as the card shows them.
+      // The limits the program misses or can't be checked on, and every passing check the
+      // engine has a note on ("requires relocating", "no time away: you'd attend from near
+      // campus"), as the card shows them: what the program asks of the user.
       issues: (e?.checks ?? [])
-        .filter((c) => c.status !== "pass" || c.unknown)
+        .filter((c) => c.status !== "pass" || c.unknown || c.note)
         .map((c) => ({
           check: c.id,
           status: c.status,

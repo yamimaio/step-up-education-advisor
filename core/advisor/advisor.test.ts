@@ -186,3 +186,11 @@ describe("advisor.md explains a near miss from the issue, not as an overshoot", 
     expect(stage2).toContain("Never say a program misses a limit its figure is within.");
   });
 });
+
+describe("advisor.md says what a passing check asks of the user", () => {
+  it("tells the model to mention a passing issue's note, such as relocating", () => {
+    expect(section("Stage 2: show me programs")).toContain(
+      "An issue that passes but has a `note` is something the program asks of them",
+    );
+  });
+});

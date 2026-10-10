@@ -314,3 +314,7 @@ Stage 2 on `/api/chat`: `propose_search`, the stage 2 chips and the programs. Th
 - **"Over" only for a published figure past the limit** (`isOver`, `server/fallback.ts`). A near miss that isn't `unknown` but has no comparable figure is not an overshoot: a per-course price with no published total (`checkTuition` decides on the total) reads "Not fully checked: it's priced per course, about $97,200 for 12 courses (an estimate), so its total tuition isn't published.", as do a lodging-only travel total under the budget and a location without a home.
 - **The model sees each check's `note`** in `SearchSummary`, so it can tell an estimate or a lodging-only total from an overshoot. `advisor.md` ("Explain the programs") says to read the note and never to say a program misses a limit its figure is within.
 - The unknown-airfare line printing for a user with no travel at all is #159 (Low, round 2), not fixed here.
+
+### Round 3 review fixes (PR #155)
+
+- **The model sees passing checks that carry a note**, and each program's `city`, in `SearchSummary`: a pass can still ask something of the user ("requires relocating", "may require relocating", "no time away: you'd attend from near campus"). `advisor.md` ("Explain the programs") says to mention them. The stage 2 template still notes only near misses (#162, Low), and a per-course estimate far over the budget still reads only as an estimate there (#163, Low).

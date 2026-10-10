@@ -44,13 +44,42 @@ describe("what the model sees of the stage 2 result", () => {
     );
   });
 
-  it("lists only the checks a program misses or can't be checked on", () => {
+  it("lists the checks a program misses, can't be checked on, or passes with a note", () => {
     const { programs, result } = search();
     for (const entry of searchSummary(result, programs).ranked) {
       for (const issue of entry.issues) {
-        expect(issue.status !== "pass" || issue.unknown, issue.check).toBe(true);
+        expect(issue.status !== "pass" || issue.unknown || !!issue.note, issue.check).toBe(true);
       }
+      const evaluation = result.programs.find((e) => e.id === entry.id)!;
+      const silentPasses = evaluation.checks.filter(
+        (c) => c.status === "pass" && !c.unknown && !c.note,
+      );
+      expect(entry.issues.length).toBe(evaluation.checks.length - silentPasses.length);
     }
+  });
+
+  // Review round 3 on PR #155: a pass can still ask something of the user.
+  it("keeps a passing check's note, such as moving to the program's city", () => {
+    const masters = fixture("fake-specialized-masters");
+    const relocating = {
+      ...personaAProfile,
+      needs: ["deep_expertise", "graduate_degree", "leadership_skills"] as const,
+      degreeRequired: "required" as const,
+      tuitionBudgetUsd: 250000,
+      maxProgramMonths: 24,
+      relocate: true,
+    } as typeof personaAProfile;
+    const { programs, result } = search(fixtureDataset(), relocating);
+    const location = result.programs
+      .find((e) => e.id === masters.id)!
+      .checks.find((c) => c.id === "location")!;
+    expect(location).toMatchObject({ status: "pass", note: "requires relocating" });
+    const entry = searchSummary(result, programs).ranked.find((r) => r.id === masters.id)!;
+    expect(entry.city).toBe(masters.city);
+    expect(entry.issues.find((i) => i.check === "location")).toMatchObject({
+      status: "pass",
+      note: "requires relocating",
+    });
   });
 
   // The history caps a tool result at 20,000 characters, so the whole result can't be stored
