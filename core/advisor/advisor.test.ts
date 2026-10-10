@@ -151,3 +151,34 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
     );
   });
 });
+
+// Run 1 of T2 re-showed the chips with no reply; run 2 replied but asked whether to bring the
+// chips back, which cost the user a turn (issue #192).
+describe("advisor.md replies to a question typed while chips are open (issue #192)", () => {
+  const line = (start: string) =>
+    section("The tools")
+      .split("\n")
+      .find((l) => l.includes(start)) ?? "";
+
+  it("keeps a typed answer apart from a typed question", () => {
+    expect(line("**An answer to the field.**")).toContain("call `ask_choice` for that field again");
+    expect(line("**A question or a side remark, not an answer.**")).not.toBe("");
+  });
+
+  it("answers or declines the question, then shows the same chips in the same turn", () => {
+    const question = line("**A question or a side remark, not an answer.**");
+    const reply = question.indexOf("Answer or decline it in a sentence or two");
+    expect(reply).toBeGreaterThanOrEqual(0);
+    expect(
+      question.indexOf("call `ask_choice` for the same field in the same turn"),
+    ).toBeGreaterThan(reply);
+    expect(question).toContain("no program facts or numbers before stage 2");
+    expect(question).toContain("admissions questions go to the school");
+  });
+
+  it("never re-shows the chips silently or asks whether to bring them back", () => {
+    expect(line("after a typed question")).toBe(
+      "  - Never call `ask_choice` with an empty message after a typed question, and never ask the user whether to bring the chips back.",
+    );
+  });
+});

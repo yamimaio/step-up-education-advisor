@@ -14,7 +14,12 @@ import { BadRequest } from "./handlers";
 import { chatLoop, MAX_SERVER_ROUNDS } from "./chatLoop";
 import type { Message } from "./history";
 import { FakeModelClient, text, toolUse, turn, type Script } from "./model/fake";
-import { PERSONA_A_DIRECTION, PERSONA_A_GOAL, personaAScript } from "./model/personaA";
+import {
+  PERSONA_A_DIRECTION,
+  PERSONA_A_GOAL,
+  personaAScript,
+  SIDE_QUESTION_REPLY,
+} from "./model/personaA";
 import { SYSTEM } from "./prompt";
 import { TOOLS } from "./tools";
 
@@ -87,6 +92,31 @@ describe("persona A on the fake model", () => {
       content: JSON.stringify({ confirmed: true, result: expected }),
     });
     expect(page.logs.every((l) => l.status !== "notice")).toBe(true);
+  });
+
+  it("replies to a question typed during the length chips and shows them again (issue #192)", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    while (page.last?.chips && page.last.chips.field !== "maxProgramMonths") {
+      await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    }
+    const asked = page.last!.chips!.toolUseId;
+
+    const typed =
+      "How much does MIT's Technology Leadership Program cost, and what's the GMAT average for Wharton's EMBA?";
+    let r = await page.post(answer(asked, { chosen: [], typed }));
+    // One turn: the reply in words and the same chips, no extra turn to bring them back.
+    expect(r.text).toBe(SIDE_QUESTION_REPLY);
+    expect(r.chips?.field).toBe("maxProgramMonths");
+    expect(r.chips?.toolUseId).not.toBe(asked);
+    expect(r.confirm).toBeNull();
+
+    // The tap that follows goes on with the interview, and the card holds the taps.
+    while (page.last?.chips) await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    r = page.last!;
+    expect(r.confirm?.direction).toEqual({ ...PERSONA_A_DIRECTION, tieBreaker: undefined });
   });
 
   it("sends the history byte for byte, and the same cached system prompt and tools", async () => {
