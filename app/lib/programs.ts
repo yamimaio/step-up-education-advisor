@@ -1,3 +1,4 @@
+import type { ChipField } from "@core/advisor/chips";
 import { loadPrograms } from "@core/data/load";
 import { CHECK_LABELS } from "@core/engine/constants";
 import type {
@@ -17,6 +18,7 @@ import {
   CATEGORY_LABELS,
   FORMAT_LABELS,
   PAYMENT_LABELS,
+  chipFor,
   chipLabel,
   fieldNames,
   usd,
@@ -290,7 +292,25 @@ function facts(p: Program, e: ProgramEvaluation, profile: Profile): Fact[] {
   return withNotes(p, out);
 }
 
-function checkLine(c: Check): CheckLine {
+// The chip set behind each limit check. An open-ended chip stores a ceiling the user never chose
+// ("Over $80k" is 250,000), so the line shows the chip they tapped, as the search card does.
+const CHECK_CHIPS: Partial<Record<Check["id"], ChipField & keyof Profile>> = {
+  tuition: "tuitionBudgetUsd",
+  travelBudget: "travelBudgetUsd",
+  onsiteDays: "maxOnsiteDays",
+  longestStretch: "maxStretchDays",
+  length: "maxProgramMonths",
+  hours: "hoursPerWeek",
+};
+
+// The user's side of a check: the chip they tapped, or the figure when no chip has it.
+function limitText(c: Check, profile: Profile, show: (v: number | string) => string): string {
+  const field = CHECK_CHIPS[c.id];
+  const chip = field ? chipFor(field, profile[field]) : null;
+  return chip !== null ? `you chose ${chip}` : `your limit ${show(c.limit!)}`;
+}
+
+function checkLine(c: Check, profile: Profile): CheckLine {
   const show = (v: number | string) =>
     c.unit === "USD" && typeof v === "number" ? usd(v) : c.unit ? `${v} ${c.unit}` : String(v);
   const parts: string[] = [];
@@ -306,7 +326,7 @@ function checkLine(c: Check): CheckLine {
       parts.push(note ?? NOT_PUBLISHED);
       note = undefined;
     }
-    if (c.limit !== null) parts.push(`your limit ${show(c.limit)}`);
+    if (c.limit !== null) parts.push(limitText(c, profile, show));
   }
   if (note) parts.push(note);
   return {
@@ -363,7 +383,7 @@ export function programView(
     why,
     draft: program.verification.status === "draft",
     facts: facts(program, evaluation, profile),
-    checks: evaluation.checks.map(checkLine),
+    checks: evaluation.checks.map((c) => checkLine(c, profile)),
     fit: fitLines(evaluation),
     confidence: {
       level: CONFIDENCE_TEXT[evaluation.confidence.level],

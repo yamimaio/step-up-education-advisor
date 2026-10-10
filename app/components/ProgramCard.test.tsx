@@ -34,7 +34,7 @@ describe("ProgramCard", () => {
     expect(card).toContain("Fake University (test fixture)");
     expect(card).toContain(WHY);
     expect(card).toContain("Tuition$30,000");
-    expect(card).toContain("FitsTuition: $30,000; your limit $80,000");
+    expect(card).toContain("FitsTuition: $30,000; you chose $40k to $80k");
     expect(card).toContain("FormatBlended");
     expect(card).toContain("Length8 months");
     expect(card).toContain("On site15 days a year");
@@ -53,7 +53,7 @@ describe("ProgramCard", () => {
   it('shows "not published" for a null tuition, and lowers confidence for it', () => {
     const card = text(renderCard(fixture("fake-executive", { tuitionUsd: null })));
     expect(card).toContain("Tuitionnot published");
-    expect(card).toContain("Near missTuition: not published; your limit $80,000");
+    expect(card).toContain("Near missTuition: not published; you chose $40k to $80k");
     expect(card).toContain("Tuition plus travelcan't be added up: a figure is not published");
     expect(card).toContain("Tuition is not published on an official page.");
   });
@@ -184,7 +184,7 @@ describe("ProgramCard", () => {
         ),
       );
       expect(card).toContain(
-        "Not fully checkedTuition: your limit $250,000; priced per course; about $97,200 at 12 courses (estimate)",
+        "Not fully checkedTuition: you chose Over $80k; priced per course; about $97,200 at 12 courses (estimate)",
       );
       expect(card).not.toContain("Near missTuition");
     });
@@ -217,5 +217,27 @@ describe("ProgramCard", () => {
       }),
     );
     expect(card).toContain("FitsLocation: Boston; requires relocating");
+  });
+
+  it("shows the chip the user tapped as their side of a check, never a stored ceiling", () => {
+    const card = text(
+      renderCard(fixture(), {
+        ...personaAProfile,
+        tuitionBudgetUsd: 250000, // "Over $80k"
+        maxProgramMonths: 3, // "About 2 months"
+        hoursPerWeek: { min: 20, max: 40 }, // "More than 20"
+        maxOnsiteDays: 365, // "More"
+      }),
+    );
+    expect(card).toContain("Tuition: $30,000; you chose Over $80k");
+    expect(card).toContain("Program length: 8 months; you chose About 2 months");
+    expect(card).toContain("Hours a week: 8-10 hours a week; you chose More than 20");
+    expect(card).toContain("On-site days a year: 15 days a year; you chose More");
+    expect(card).not.toMatch(/\$250,000|365 days|20-40/);
+  });
+
+  it("shows the figure when the user's answer matches no chip", () => {
+    const card = text(renderCard(fixture(), { ...personaAProfile, tuitionBudgetUsd: 27000 }));
+    expect(card).toContain("Tuition: $30,000; your limit $27,000");
   });
 });

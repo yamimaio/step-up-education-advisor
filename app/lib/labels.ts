@@ -43,14 +43,19 @@ export function chipLabel(
   value: unknown,
   fallback: (value: unknown) => string = String,
 ): string {
-  const chips: readonly { label: string; value: unknown }[] = CHIPS[field];
-  const chip = chips.find((c) => same(c.value, value));
-  if (chip) return chip.label;
+  const chip = chipFor(field, value);
+  if (chip !== null) return chip;
   if (field === "hoursPerWeek" && value && typeof value === "object") {
     const { min, max } = value as { min: number; max: number };
     return `${min} to ${max} hours`;
   }
   return fallback(value);
+}
+
+// The label of the chip whose value this is, or null when no chip has it.
+export function chipFor(field: ChipField, value: unknown): string | null {
+  const chips: readonly { label: string; value: unknown }[] = CHIPS[field];
+  return chips.find((c) => same(c.value, value))?.label ?? null;
 }
 
 // Stage 1 field names, for "you chose not to answer" lines.

@@ -212,7 +212,7 @@ describe("buildTranscript, stage 2", () => {
     expect(md).toContain("### Fixture fake-executive");
     expect(md).toContain("**Draft, not yet verified**");
     expect(md).toContain("Ranked first for senior peers (cohort median 15 years)");
-    expect(md).toContain("- Fits: Tuition: $30,000; your limit $80,000");
+    expect(md).toContain("- Fits: Tuition: $30,000; you chose $40k to $80k");
     expect(md).toContain("- Tuition: $30,000");
     expect(md).toContain("Confidence: Low. Draft record, not yet verified.");
     expect(md).toContain("Sources checked on 2026-10-01.");
