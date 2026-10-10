@@ -11,6 +11,8 @@ import { ProgramCard } from "./ProgramCard";
 // alternative whose programs fill "Also worth a look".
 // `programs`: the records, loadPrograms() unless a test passes fixtures.
 // `verdict`: the confirmed stage 1 result the search ran on (it says whether two types tied).
+// The frame matches the verdict's, with a paper interior so the white cards stand out (#219).
+// The heading takes focus when the cards arrive (Chat), so it has tabIndex -1.
 export function ProgramResults({
   results,
   verdict = null,
@@ -25,30 +27,36 @@ export function ProgramResults({
   return (
     <section
       aria-labelledby={headingId}
-      className="flex flex-col gap-3 rounded-lg border-2 border-teal bg-white/60 p-4 shadow-sm"
+      className="flex flex-col gap-3 rounded-xl border-2 border-teal bg-paper p-4"
     >
-      <h2 id={headingId} className="text-sm font-semibold uppercase tracking-wide text-teal">
+      <h2
+        id={headingId}
+        tabIndex={-1}
+        className="text-sm font-semibold uppercase tracking-wide text-teal outline-none"
+      >
         Programs that fit
       </h2>
-      {v.notYet && <p className="text-lg font-semibold">{v.notYet}</p>}
+      {v.notYet && <p className="font-display text-lg font-semibold">{v.notYet}</p>}
       {v.access && <p>{v.access}</p>}
       {v.ranked.length > 0 && (
         <>
           {v.category && (
-            <p className="text-sm text-ink/70">{v.category}: best fit for your needs first</p>
+            <p className="text-sm text-muted">{v.category}: best fit for your needs first</p>
           )}
           <ol className="flex flex-col gap-3">
-            {v.ranked.map((p) => (
+            {v.ranked.map((p, i) => (
               <li key={p.id}>
-                <ProgramCard program={p} />
+                <ProgramCard program={p} rank={i + 1} />
               </li>
             ))}
           </ol>
         </>
       )}
       {v.alsoWorthALook.length > 0 && (
-        <>
-          <h3 className="mt-2 font-semibold text-teal">Also worth a look</h3>
+        <div className="mt-2 flex flex-col gap-3 border-t border-line pt-3">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-teal">
+            Also worth a look
+          </h3>
           <ul className="flex flex-col gap-3">
             {v.alsoWorthALook.map((p) => (
               <li key={p.id}>
@@ -56,7 +64,7 @@ export function ProgramResults({
               </li>
             ))}
           </ul>
-        </>
+        </div>
       )}
       {v.notAnswered.length > 0 && (
         <p className="text-sm">Ranked without: {v.notAnswered.join(", ")}</p>

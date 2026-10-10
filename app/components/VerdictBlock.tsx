@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { Verdict } from "@app/lib/chatState";
 import { verdictView } from "@app/lib/verdict";
+import { Disclosure } from "./Disclosure";
 
 // The category verdict, from the engine result and the confirmed card only, never model text.
 export function VerdictBlock({ verdict }: { verdict: Verdict }) {
@@ -30,8 +31,7 @@ export function VerdictBlock({ verdict }: { verdict: Verdict }) {
         ))}
         {v.notAnswered.length > 0 && <li>Not answered: {v.notAnswered.join(", ")}</li>}
       </ul>
-      <details className="mt-3 text-sm">
-        <summary className="cursor-pointer text-teal">How each type compares</summary>
+      <Disclosure className="mt-3 text-sm" summary="How each type compares">
         <ul className="mt-2 space-y-2">
           {v.rows.map((row) => (
             <li key={row.category} className="border-t border-line pt-2">
@@ -41,7 +41,7 @@ export function VerdictBlock({ verdict }: { verdict: Verdict }) {
             </li>
           ))}
         </ul>
-      </details>
+      </Disclosure>
     </section>
   );
 }
