@@ -274,6 +274,55 @@ describe("advisor.md reads a limit missing from issues as passed (issue #200)", 
   });
 });
 
+// A real run answered "yes!" with the tuition chips and no text, then six more taps in a row, and
+// the typed home got chips only: stage 2 read like a form (issue #201).
+describe("advisor.md keeps stage 2 a conversation (issue #201)", () => {
+  const line = (start: string) =>
+    (section(STAGE_2).split("### ")[0] ?? "").split("\n").find((l) => l.includes(start)) ?? "";
+
+  it("opens the reply to yes with what's coming, before the first chips", () => {
+    const opener = line("**Say what's coming.**");
+    const coming = opener.indexOf(
+      "a few quick questions on budget, travel and format, then where they live",
+    );
+    expect(coming).toBeGreaterThanOrEqual(0);
+    expect(opener.indexOf("call `ask_choice` for the first missing field")).toBeGreaterThan(coming);
+  });
+
+  // Review round 1: a "yes" after a new verdict in stage 2 finds the stage 2 taps still in.
+  it("announces the questions only on the first yes", () => {
+    const opener = line("**Say what's coming.**");
+    expect(opener).toContain('Your reply to their first "yes"');
+    expect(opener).toContain(
+      "After a new verdict in stage 2, the stage 2 answers are already in: don't announce questions again",
+    );
+  });
+
+  it("bridges each new group to stage 1 in one line with no program facts", () => {
+    const bridge = line("**Bridge each new group.**");
+    expect(bridge).toContain("budget, travel, format, where they live, background");
+    expect(bridge).toContain("one short line tied to what they said in stage 1");
+    expect(bridge).toContain("One line, with no program facts or numbers.");
+    // Review round 1: the page drops the ask_choice question from the chat after the tap
+    // (app/lib/conversation.ts, turnText), so the bridge is the turn's text.
+    const text = bridge.indexOf("the turn opens with text");
+    expect(text).toBeGreaterThanOrEqual(0);
+    expect(bridge.indexOf("Then call `ask_choice`")).toBeGreaterThan(text);
+    expect(bridge).toContain("The bridge goes in the text, not in the `ask_choice` question");
+    const example = /for example "([^"]+)"/.exec(bridge)?.[1] ?? "";
+    expect(example).not.toBe("");
+    expect(example).not.toMatch(/\d/);
+  });
+
+  it("restates text after every typed message and acknowledges a typed answer", () => {
+    const typed = line("**Acknowledge a typed answer.**");
+    expect(typed).toContain("Every turn after a typed message has text: never return only chips.");
+    expect(typed).toContain(
+      "When they type an answer (where they live, the degree's field), acknowledge it in a short line before the next chips.",
+    );
+  });
+});
+
 // check_contradictions runs on the taps (decisions.md, "The real API refused the stage 2
 // schemas"): the prompt must not ask the model to send answers the tool no longer takes.
 describe("advisor.md calls check_contradictions with what the tool takes", () => {
