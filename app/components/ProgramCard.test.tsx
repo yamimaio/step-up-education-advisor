@@ -10,7 +10,7 @@ import type { Program } from "@core/schema/program";
 import { programView } from "@app/lib/programs";
 import { fixture } from "../../tests/fixtures/dataset";
 import { personaADirection } from "../../tests/fixtures/directions";
-import { personaAProfile } from "../../tests/fixtures/profiles";
+import { NO_HOME, NO_HOME_DECLINED, personaAProfile } from "../../tests/fixtures/profiles";
 import { ProgramCard } from "./ProgramCard";
 
 afterEach(cleanup);
@@ -169,5 +169,41 @@ describe("ProgramCard", () => {
     );
     expect(within(card).getAllByRole("link")).toHaveLength(2);
     expect(text(card)).toContain("Classmates, checked 2026-10-01");
+  });
+
+  describe("a near miss that isn't over the limit", () => {
+    it("reads Not fully checked for a per-course price with no published total", () => {
+      const card = text(
+        renderCard(
+          fixture("fake-executive", {
+            tuitionUsd: null,
+            tuitionPerCourseUsd: 8100,
+            courseCount: 12,
+          }),
+          { ...personaAProfile, tuitionBudgetUsd: 250000 },
+        ),
+      );
+      expect(card).toContain(
+        "Not fully checkedTuition: your limit $250,000; priced per course; about $97,200 at 12 courses (estimate)",
+      );
+      expect(card).not.toContain("Near missTuition");
+    });
+
+    it("reads Not fully checked for a location with no home", () => {
+      // An evening program needs the student nearby; with the home declined it can't be checked.
+      const card = text(
+        renderCard(fixture("fake-executive", { attendance: "recurring_evenings" }), {
+          ...personaAProfile,
+          ...NO_HOME,
+          declined: NO_HOME_DECLINED,
+        }),
+      );
+      expect(card).toContain("Not fully checkedLocation: Boston");
+    });
+
+    it("keeps Near miss for a published figure slightly over", () => {
+      const card = text(renderCard(fixture(), { ...personaAProfile, tuitionBudgetUsd: 27000 }));
+      expect(card).toContain("Near missTuition: $30,000; your limit $27,000");
+    });
   });
 });

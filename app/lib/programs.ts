@@ -77,6 +77,25 @@ const STATUS_TEXT: Record<CheckStatus, string> = {
   fail: "Doesn't fit",
 };
 
+// A near miss is "over" only for a published figure past the user's limit, the server template's
+// rule (isOver, server/fallback.ts, PR #155 round 2). One the engine can't compare (a per-course
+// price with no published total, a lodging-only travel total under the budget, a location with
+// no home) is not fully checked; an unpublished figure says "not published" in its detail.
+const NOT_FULLY_CHECKED = "Not fully checked";
+function isOver(c: Check): boolean {
+  if (c.unknown || c.value === null || c.id === "location") return false;
+  if (c.id === "travelBudget" && typeof c.value === "number" && typeof c.limit === "number") {
+    return c.value > c.limit;
+  }
+  return true;
+}
+
+function statusText(c: Check): string {
+  return c.status === "near_miss" && !c.unknown && !isOver(c)
+    ? NOT_FULLY_CHECKED
+    : STATUS_TEXT[c.status];
+}
+
 const CONFIDENCE_TEXT = { high: "High", medium: "Medium", low: "Low" } as const;
 
 // The payment option that serves the way the user said they'd pay. Savings, a mix or no
@@ -293,7 +312,7 @@ function checkLine(c: Check): CheckLine {
   return {
     label: capital(CHECK_LABELS[c.id]),
     status: c.status,
-    statusText: STATUS_TEXT[c.status],
+    statusText: statusText(c),
     detail: parts.join("; "),
   };
 }
