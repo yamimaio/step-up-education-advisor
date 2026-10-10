@@ -4,13 +4,14 @@ Step Up runs on Render as one Docker web service built from the repo's `Dockerfi
 
 ## What the repo provides
 
-- `render.yaml`: one `web` service named `step-up`, Docker runtime, Starter instance (`0.5c-512mb`, never sleeps), region `oregon`, one instance. It deploys `main` automatically once a commit's CI checks pass (`autoDeployTrigger: checksPass`) and health-checks `/`. It sets `PORT=3000` and `HOSTNAME=0.0.0.0` to match the image. `MODEL_API_KEY` is listed with `sync: false`, so Render asks for its value when the Blueprint is created and the repo never holds it.
-- `.github/workflows/ci.yml`: the `secrets` job runs gitleaks on every commit a PR adds and fails the PR if it finds a secret.
+- `render.yaml`: one `web` service named `step-up`, Docker runtime, Starter instance (`0.5c-512mb`, never sleeps), region `oregon`, one instance. It deploys the `production` branch, not `main`: merging to `main` changes nothing on the site until you release (see "Releasing"). A release deploys once its CI checks pass (`autoDeployTrigger: checksPass`). The service health-checks `/`. It sets `PORT=3000` and `HOSTNAME=0.0.0.0` to match the image. `MODEL_API_KEY` is listed with `sync: false`, so Render asks for its value when the Blueprint is created and the repo never holds it.
+- `.github/workflows/ci.yml`: CI runs on pushes to `main` and `production`, so every release gets its own checks. The `secrets` job runs gitleaks on every commit a PR adds and fails the PR if it finds a secret.
 
 ## Before the first public deploy
 
 - [ ] The per-IP rate limit (#122) is merged.
 - [ ] The PR with `render.yaml` and the gitleaks job is merged.
+- [ ] The `production` branch exists. After that PR merges, create it from `main` with the two commands under "Releasing". The Blueprint is read from it, so it must already hold `render.yaml`.
 - [ ] The production key exists, with a spend limit on its workspace (next section).
 
 ## 1. Create the production key (Claude Console)
@@ -26,7 +27,7 @@ If you lose the key before pasting it, delete it in the Console and create a new
 
 1. Sign in at [dashboard.render.com](https://dashboard.render.com). Check that the $50 of credits show under **Billing**.
 2. Choose **New**, then **Blueprint**. Connect GitHub if Render asks, and give the Render GitHub app access to `yamimaio/step-up-education-advisor` only.
-3. Pick the repo and the `main` branch, and give the Blueprint a name (`step-up`). Render reads `render.yaml` and lists one web service, `step-up`.
+3. Pick the repo and the `production` branch, and give the Blueprint a name (`step-up`). Render reads `render.yaml` and lists one web service, `step-up`.
 4. Render asks for `MODEL_API_KEY`. Paste the `step-up-prod` key.
 5. Choose **Deploy Blueprint**. Render builds the `Dockerfile` (a few minutes), starts the container and waits for `/` to answer before it sends traffic.
 6. The site's URL is on the service page: `https://step-up-<suffix>.onrender.com`.
@@ -39,7 +40,7 @@ If you'd rather create the service by hand (**New**, then **Web Service**), use 
 
 | Setting | Value |
 | --- | --- |
-| Repository, branch | `yamimaio/step-up-education-advisor`, `main` |
+| Repository, branch | `yamimaio/step-up-education-advisor`, `production` |
 | Language | Docker |
 | Dockerfile path, context | `./Dockerfile`, `.` |
 | Region | Oregon |
@@ -61,13 +62,32 @@ Keep one instance: the rate limit is held in memory, so a second instance would 
 
 When all four hold, tick the boxes in #123 and close it.
 
+## Releasing
+
+Work merges to `main` as usual; the site doesn't change. To put `main` live:
+
+```sh
+git fetch origin
+git push origin origin/main:production
+```
+
+Render deploys the new `production` commit once CI passes on it. A failed check means no deploy, and a deploy whose health check fails is dropped while the previous one keeps serving. To release only part of `main`, push an older commit of it instead: `git push origin <sha>:production`.
+
+`production` only ever moves forward to commits already on `main`. Never commit to it directly. A plain `git push` refuses anything that isn't a fast-forward, and that's the guard: don't add `--force` to get around it.
+
+To see what's live: `git log -1 origin/production`, or the service's **Events** page in Render.
+
+### Rolling back
+
+1. On the service's **Events** page, pick the last good deploy and choose **Rollback**. Render reuses that deploy's build, so it takes seconds. A dashboard rollback also turns auto-deploy off, so a new release can't redeploy the bad change by accident.
+2. Fix the problem on `main` (a revert is fine) through the usual PR.
+3. In the service's **Settings**, turn auto-deploy back on (**After CI checks pass**), then release as above.
+
 ## Day to day
 
-- **Deploys.** Merging to `main` deploys once CI passes on the merge commit. A failed check means no deploy. A deploy whose health check fails is dropped and the previous one keeps serving.
-- **Rollback.** On the service's **Events** page, pick an earlier deploy and choose **Rollback**.
 - **Rotate the key.** Create a new key in the Step Up workspace, replace `MODEL_API_KEY` under the service's **Environment** in Render (saving redeploys), check the site, then delete the old key in the Console.
 - **Take the site down.** **Suspend** the service in Render's settings. The URL stops answering until you resume it.
-- **Changing `render.yaml`.** Render applies changes from `main` to the service. It never asks again for a `sync: false` value: a new secret is added under **Environment** by hand.
+- **Changing `render.yaml`.** Render applies changes to the service when they reach `production`, so they go out with the next release. It never asks again for a `sync: false` value: a new secret is added under **Environment** by hand.
 
 ## Never
 
