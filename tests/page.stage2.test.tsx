@@ -12,10 +12,10 @@ import Home from "@app/page";
 import { personaADirection } from "./fixtures/directions";
 import { personaAProfile } from "./fixtures/profiles";
 
-// Stage 2 on the page, against scripted /api/chat responses in the shape #99 returns
-// (docs/chat-api.md, "Stage 2"): the verdict, a stage 2 chip set, the search card, then the
-// programs. The page doesn't wait for the server half; tests/page.fake.test.tsx drives the real
-// route for stage 1.
+// Stage 2 on the page against short scripted /api/chat responses (docs/chat-api.md, "Stage 2"):
+// the verdict, a stage 2 chip set, the search card, then the programs. It checks where each card's
+// result sits in the chat. tests/page.fake.test.tsx walks persona A through both stages on the
+// real route.
 
 const programs = loadPrograms();
 const direction = recommendCategory(toEngineDirection(personaADirection), programs);
