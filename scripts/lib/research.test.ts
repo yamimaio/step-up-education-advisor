@@ -227,6 +227,41 @@ describe("failures", () => {
     expect(recordProblems(record)).toEqual([]);
   });
 
+  it("lets the overrides set admission and class-profile facts the research left null", () => {
+    const s = sample();
+    const extra = {
+      field: "minExperienceYears",
+      url: "https://example.edu/fake-sample/apply",
+      quote: "at least eight years of work experience",
+      checkedOn: "2026-10-01",
+      kind: "official_page",
+    };
+    s.overrides = {
+      ...(s.overrides as object),
+      minExperienceYears: 8,
+      accreditation: ["AACSB"],
+      cohortSeniority: "70% director or above",
+    };
+    expect(() => convertResearch(s)).toThrow(
+      /sets minExperienceYears, accreditation, cohortSeniority without a matching extraSources entry/,
+    );
+    const base = s.overrides as { extraSources?: unknown[] };
+    s.overrides = {
+      ...base,
+      extraSources: [
+        ...(base.extraSources ?? []),
+        extra,
+        { ...extra, field: "accreditation", quote: "AACSB" },
+        { ...extra, field: "cohortSeniority", quote: "70% director or above" },
+      ],
+    };
+    const { record } = convertResearch(s);
+    expect(record.minExperienceYears).toBe(8);
+    expect(record.accreditation).toEqual(["AACSB"]);
+    expect(record.cohortSeniority).toBe("70% director or above");
+    expect(recordProblems(record)).toEqual([]);
+  });
+
   it("lets the overrides set a sourced format the research left null", () => {
     const s = sample();
     s.research = s.research.replace(/"format": "[a-z_]+"/, '"format": null');
