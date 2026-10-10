@@ -95,7 +95,7 @@ Changes from Perplexity's answer:
 - senior_network 1 → 2: the homepage's "seven years STEM experience" falls in the 5 to 9 band. Still low evidence: not labelled as a median or a part-time figure.
 - new_industry_or_city stays 3: no career facts for part-time students, so the default (3) applies.
 
-## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: pending)
+## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: Yami)
 
 Full re-review of all five needs under rate-program v3 (PR #135), from the research, the overrides and Northwestern's own pages checked on 2026-10-10: the program homepage, the curriculum, the student body profile, the flexible-format page and the MEM career development page. New in the overrides file: `format` (sourced), the part-time experience average, and `ratingNotes` sources for the capstone, class size and career services.
 
