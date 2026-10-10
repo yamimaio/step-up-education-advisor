@@ -64,7 +64,8 @@ export type ChatAction =
   | { type: "send"; message: MessageParam; correction?: string }
   | { type: "retry" }
   | { type: "response"; response: ChatResponse }
-  // The request never got a ChatResponse: a network error (retry) or a 400 (no retry helps).
+  // The request never got a ChatResponse: a network error, 5xx, 408 or 429 (retry), or a 400 or
+  // 413 (no retry helps).
   | { type: "failure"; retry: boolean; message: string };
 
 // The direction the user just confirmed: the card answered by the last message.
