@@ -19,7 +19,7 @@ Chip answers are quoted exactly as the chip label. Free text is outside the back
 | keepWorking    | `Yes, I keep working`                                                     |
 | degreeRequired | `Required`                                                                |
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 | Entry            | Answer                                                       |
 | ---------------- | ------------------------------------------------------------ |
@@ -53,7 +53,7 @@ Hand-computed on the 1 to 5 category table (`docs/need-based-ranking.md`), not a
 - Tension to raise: none.
 - Ends with "Want to see programs that fit?"
 
-### Stage 2 (not wired yet)
+### Stage 2
 
 - The record in the data is Wharton's San Francisco program, which is every-other-weekend in person rather than hybrid. Many of its figures (duration, on-site days, hours) are not published, so expect near misses and low confidence.
 - Tension to raise: none.

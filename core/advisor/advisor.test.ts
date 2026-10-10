@@ -20,7 +20,7 @@ function section(heading: string) {
   return advisor.split(/^## /m).find((s) => s.startsWith(`${heading}\n`)) ?? "";
 }
 
-const STAGE_2 = "Stage 2, not wired yet";
+const STAGE_2 = "Stage 2: show me programs";
 
 describe("advisor.md is a valid SKILL.md", () => {
   it("has frontmatter with a name and a description", () => {
@@ -41,8 +41,8 @@ describe("advisor.md names the tools that exist", () => {
     for (const name of named) expect(ADVISOR_TOOL_NAMES as readonly string[]).toContain(name);
   });
 
-  it("mentions the stage 2 tool only in the stage 2 section", () => {
-    const stage1 = advisor.replace(section(STAGE_2), "");
+  it("mentions the stage 2 tool only in the tool list and the stage 2 section", () => {
+    const stage1 = advisor.replace(section(STAGE_2), "").replace(section("The tools"), "");
     expect(stage1).not.toContain("propose_search");
   });
 });
@@ -55,7 +55,7 @@ describe("advisor.md is a frozen prompt prefix", () => {
   });
 });
 
-describe("advisor.md runs stage 1 and stops", () => {
+describe("advisor.md runs stage 1, then stage 2 on request", () => {
   it("lists every stage 1 field in the stage 1 checklist", () => {
     const checklist = section("How stage 1 runs");
     for (const entry of STAGE_1_CHECKLIST) {
@@ -79,7 +79,7 @@ describe("advisor.md runs stage 1 and stops", () => {
     expect(section("Deliver the verdict")).toContain('"Want to see programs that fit?"');
   });
 
-  it("writes the stage 2 questions as the last section, marked not wired", () => {
+  it("writes stage 2 as the last section, with every stage 2 field", () => {
     const headings = [...advisor.matchAll(/^## (.+)$/gm)].map((m) => m[1]);
     expect(headings.at(-1)).toBe(STAGE_2);
     const stage2 = section(STAGE_2);
@@ -135,11 +135,151 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
     );
   });
 
+  it("scopes a ruled-out type to the programs Step Up has verified (issue #188)", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain(
+      "say it's about the programs Step Up has so far, verified or on record as its reasons say",
+    );
+    expect(verdict).toContain("never that no program of that type exists or fits");
+  });
+
   it("takes every loss reason from the type's reasons, so no length reason is invented", () => {
     const verdict = section("Deliver the verdict");
     expect(verdict).toContain("only from that type's `reasons`");
     expect(verdict).toMatch(
       /never give a type a length, hours or work reason that its reasons don't state/,
+    );
+  });
+});
+
+// The server's checks on propose_search (docs/chat-api.md, "Stage 2"): a rule that leads the
+// model past them costs a round.
+describe("advisor.md leads stage 2 to a card the server accepts", () => {
+  const stage2 = () => section(STAGE_2);
+
+  it("starts stage 2 only after the direction is confirmed and the user opts in", () => {
+    expect(stage2()).toContain("only after the user confirms the direction card");
+    expect(section("The tools")).toContain("Stage 2 chips only after the direction is confirmed");
+  });
+
+  it("calls check_contradictions again before propose_search", () => {
+    expect(section("The tools")).toMatch(/again in stage 2, before `propose_search`/);
+    const confirm = stage2().split("### ")[1] ?? "";
+    expect(confirm.indexOf("`check_contradictions`")).toBeLessThan(
+      confirm.indexOf("`propose_search`"),
+    );
+  });
+
+  it("sends only the answers with no chips, and goes back to the direction when one changes", () => {
+    expect(stage2()).toContain("You never send a chip answer: the system reads it from the tap.");
+    expect(stage2()).toContain("so you don't send them");
+    expect(stage2()).not.toContain("Copy every stage 1 answer");
+    expect(stage2()).toMatch(/call `propose_direction` again and let them confirm the new verdict/);
+  });
+
+  it("asks for the home in words and turns it into an ISO code and coordinates", () => {
+    expect(stage2()).toContain("two-letter ISO 3166 code in capitals");
+    expect(stage2()).toContain("latitude −90 to 90, longitude −180 to 180");
+    expect(stage2()).toContain("never with chips");
+  });
+
+  it("explains the programs from the result only", () => {
+    expect(stage2()).toContain("never reorder the list");
+    expect(stage2()).toContain('If `access.status` is not "available"');
+  });
+});
+
+describe("advisor.md explains a near miss from the issue, not as an overshoot", () => {
+  it("reads the issue's note and never says a program misses a limit it's within", () => {
+    const stage2 = section("Stage 2: show me programs");
+    expect(stage2).toContain("as the issue's `note` says");
+    expect(stage2).toContain("Never say a program misses a limit its figure is within.");
+  });
+});
+
+describe("advisor.md says what a passing check asks of the user", () => {
+  it("tells the model to mention a passing issue's note, such as relocating", () => {
+    expect(section("Stage 2: show me programs")).toContain(
+      "An issue that passes but has a `note` is something the program asks of them",
+    );
+  });
+});
+
+// check_contradictions runs on the taps (decisions.md, "The real API refused the stage 2
+// schemas"): the prompt must not ask the model to send answers the tool no longer takes.
+describe("advisor.md calls check_contradictions with what the tool takes", () => {
+  it("never tells the model to send answers to check_contradictions", () => {
+    expect(advisor).not.toMatch(/check_contradictions` with the/);
+    expect(section("The tools")).toContain("You send only the tensions they resolved");
+  });
+});
+
+// Run 1 of T2 re-showed the chips with no reply; run 2 replied but asked whether to bring the
+// chips back, then took a repeated question as a decline of needs and classmates, said the chips
+// weren't working, and ended on "not yet" (issue #192).
+describe("advisor.md replies to a question typed while chips are open (issue #192)", () => {
+  const line = (start: string) =>
+    section("The tools")
+      .split("\n")
+      .find((l) => l.includes(start)) ?? "";
+  const answerLine = () => line("**An answer to the field.**");
+  const questionLine = () => line("**A question or a side remark, not an answer.**");
+
+  it("keeps a typed answer apart from a typed question", () => {
+    expect(answerLine()).toContain("call `ask_choice` for that field again");
+    expect(questionLine()).not.toBe("");
+  });
+
+  it("answers or declines the question, then shows the same chips in the same turn", () => {
+    const question = questionLine();
+    const reply = question.indexOf("Answer or decline it in a sentence or two");
+    expect(reply).toBeGreaterThanOrEqual(0);
+    expect(
+      question.indexOf("call `ask_choice` for the same field in the same turn"),
+    ).toBeGreaterThan(reply);
+    expect(question).toContain("no program facts or numbers before stage 2");
+    expect(question).toContain("admissions questions go to the school");
+  });
+
+  it("replies to a question that comes with a typed answer before asking again", () => {
+    const answer = answerLine();
+    const reply = answer.indexOf(
+      "If it also asks something, reply to that in a sentence or two first",
+    );
+    expect(reply).toBeGreaterThanOrEqual(0);
+    expect(reply).toBeLessThan(
+      answer.indexOf("If what they typed says they would rather not answer"),
+    );
+  });
+
+  it("never takes a question or a remark as a decline, however often it repeats", () => {
+    expect(questionLine()).toContain(
+      "A question or a remark is never a decline, however often it repeats: the field stays open, so never skip it, mark it declined or move on to the next field.",
+    );
+    expect(answerLine()).toContain(
+      'If what they typed says they would rather not answer, that is a decline, even when it is worded as a question ("Can we skip this one?")',
+    );
+    expect(section("How stage 1 runs")).toContain(
+      "A field is declined only when the user says they would rather not answer it; a question or a remark is never a decline.",
+    );
+  });
+
+  it("puts text in every turn after a typed message, and never blames the chips or the page", () => {
+    expect(line("Every turn after a typed message has text")).toBe(
+      "- Every turn after a typed message has text: never return only chips, and never call `ask_choice` with an empty message. Never ask the user whether to bring the chips back, and never say the chips or the page aren't working.",
+    );
+  });
+});
+
+// Review round 1 (head 1ff2ee7): with no winner the engine lists nothing.
+describe("advisor.md offers programs only for a verdict that names a type", () => {
+  it("drops the programs question with no winner and says the server refuses stage 2", () => {
+    expect(section('The "not yet" rule')).toContain("If it names none");
+    expect(section("Deliver the verdict")).toContain(
+      "When it names none, there is no list to search",
+    );
+    expect(section(STAGE_2)).toContain(
+      "The server refuses the stage 2 questions while the verdict names no type.",
     );
   });
 });

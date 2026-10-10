@@ -1,14 +1,13 @@
 import { z } from "zod";
-import { PartialProfileSchema, ProfileSchema } from "../schema/profile";
-import type { ChipField } from "./chips";
+import { ProfileSchema, type Profile } from "../schema/profile";
+import { CHIP_TARGET, type ChipField } from "./chips";
 
-// The advisor's tools for the two-stage flow (docs/ux-two-stage.md). Stage 1 is wired: the
-// server (step 6) sends only STAGE_1_TOOL_NAMES to the model and turns each input schema into a
-// strict JSON schema. propose_search is a stub until stage 2 is wired. advisor.md names exactly
-// these tools; a test keeps the two in step. Descriptions are frozen strings (cached prefix).
+// The advisor's tools for the two-stage flow (docs/ux-two-stage.md). The server (step 6) sends
+// every tool to the model, in this order, and turns each input schema into a strict JSON schema.
+// advisor.md names exactly these tools; a test keeps the two in step. Descriptions are frozen
+// strings (cached prefix).
 
 const full = ProfileSchema.shape;
-const partial = PartialProfileSchema.shape;
 
 // The chip sets stage 1 may show: the chips of the stage 1 checklist entries.
 export const STAGE_1_CHIP_FIELDS = [
@@ -19,6 +18,23 @@ export const STAGE_1_CHIP_FIELDS = [
   "hoursPerWeek",
   "keepWorking",
   "degreeRequired",
+] as const satisfies readonly ChipField[];
+
+// The chip sets of the stage 2 checklist entries. The server shows them only once a direction
+// is confirmed.
+export const STAGE_2_CHIP_FIELDS = [
+  "tuitionBudgetUsd",
+  "paymentPlan",
+  "travelBudgetUsd",
+  "travelComfort",
+  "formatPreference",
+  "maxOnsiteDays",
+  "maxStretchDays",
+  "relocate",
+  "airfareRange",
+  "locationValues",
+  "degreeLevel",
+  "currentRole",
 ] as const satisfies readonly ChipField[];
 
 // Stage 1 fields the user may decline. goalClarity is the advisor's call, never declined.
@@ -104,38 +120,192 @@ export function toEngineDirection(d: Direction) {
   };
 }
 
-// The stage 1 answers so far: every field optional, and needs may still be short.
-export const DirectionDraftSchema = z.strictObject({
-  careerGoal: partial.careerGoal,
-  goalClarity: partial.goalClarity,
-  needs: partial.needs,
-  peerPreference: partial.peerPreference,
-  maxProgramMonths: partial.maxProgramMonths,
-  hoursPerWeek: partial.hoursPerWeek,
-  keepWorking: partial.keepWorking,
-  degreeRequired: partial.degreeRequired,
-  resolvedTensions: partial.resolvedTensions,
-  declined: z.array(z.enum(DIRECTION_DECLINABLE)).optional(),
+// The stage 1 fields: the engine always takes them from the confirmed direction.
+type Stage1Field =
+  | "careerGoal"
+  | "goalClarity"
+  | "needs"
+  | "peerPreference"
+  | "maxProgramMonths"
+  | "hoursPerWeek"
+  | "keepWorking"
+  | "degreeRequired"
+  | "tieBreaker";
+export type SearchPart = Omit<Profile, Stage1Field>;
+
+// The profile stage 2 runs on (evaluatePrograms): the stage 1 answers from the confirmed
+// direction and the stage 2 answers from the search card. A declined stage 1 field gets its
+// placeholder and stays named in `declined`, so the engine ignores it. Tensions resolved on
+// either card are kept, the direction's first.
+export function toEngineProfile(direction: Direction, search: SearchPart): Profile {
+  const { declined, tieBreaker, ...stage1 } = toEngineDirection(direction);
+  const rules = new Set(direction.resolvedTensions.map((t) => t.rule));
+  // The tie-breaker belongs to stage 1: only the direction's counts, even if a whole profile
+  // is passed in.
+  const stage2: SearchPart & Pick<Partial<Profile>, "tieBreaker"> = { ...search };
+  delete stage2.tieBreaker;
+  return {
+    ...stage2,
+    ...stage1,
+    peerPreference: direction.peerPreference ?? DECLINED_PLACEHOLDERS.peerPreference,
+    resolvedTensions: [
+      ...direction.resolvedTensions,
+      ...search.resolvedTensions.filter((t) => !rules.has(t.rule)),
+    ],
+    ...(tieBreaker ? { tieBreaker } : {}),
+    declined: [...new Set([...declined, ...search.declined])],
+  };
+}
+
+// The contradiction rules' ids (core/engine/contradictions.ts).
+const RuleId = z.enum(["R1", "R2", "R3", "R4", "R5", "R6"]);
+
+// A tension the user resolved, in their words: which side they chose.
+const ResolvedTension = z.strictObject({ rule: RuleId, chosen: z.string() });
+
+// The profile fields the contradiction rules read. Every one is a chip field, so the server
+// reads them from the user's taps (server/handlers.ts); the model never sends them. A test keeps
+// this list in step with the rules.
+export const TENSION_FIELDS = [
+  "needs",
+  "hoursPerWeek",
+  "degreeRequired",
+  "tuitionBudgetUsd",
+  "travelComfort",
+  "maxOnsiteDays",
+  "maxStretchDays",
+  "relocate",
+  "locationValues",
+] as const satisfies readonly ChipField[];
+
+// The stage 2 profile fields the user may decline (the stage 2 checklist).
+export const SEARCH_DECLINABLE = [
+  "tuitionBudgetUsd",
+  "paymentPlan",
+  "travelBudgetUsd",
+  "travelComfort",
+  "formatPreference",
+  "maxOnsiteDays",
+  "maxStretchDays",
+  "homeCity",
+  "homeRegion",
+  "homeCountry",
+  "homeLat",
+  "homeLon",
+  "relocate",
+  "airfareRange",
+  "locationValues",
+  "yearsExperience",
+  "degree",
+  "currentRole",
+  "yearsLeading",
+] as const;
+
+// What a declined stage 2 chip field holds: a neutral value the engine ignores (normalize.ts).
+export const STAGE_2_PLACEHOLDERS = {
+  tuitionBudgetUsd: null,
+  paymentPlan: "no_preference",
+  travelBudgetUsd: null,
+  travelComfort: "fine",
+  formatPreference: "no_preference",
+  maxOnsiteDays: 0,
+  maxStretchDays: 0,
+  relocate: false,
+  airfareRange: "unknown",
+  locationValues: [],
+  degreeLevel: "other",
+  currentRole: "other",
+} as const satisfies Record<(typeof STAGE_2_CHIP_FIELDS)[number], unknown>;
+
+// The stage 2 answers that have no chips, which only the model can fill in: where the user
+// lives (turned into an ISO code and coordinates), years of experience and leading, and the
+// degree's field. Every chip answer comes from the user's taps instead. Every field is required
+// and few are nullable: the API compiles strict schemas into a grammar and refuses one that's
+// too large (decisions.md, "The real API refused the stage 2 schemas").
+export const SearchAnswersSchema = z.strictObject({
+  // "" when declined; ProfileSchema checks the rest once the profile is built.
+  homeCity: z.string(),
+  homeRegion: z.string().nullable(),
+  homeCountry: z.string(),
+  homeLat: z.number().nullable(),
+  homeLon: z.number().nullable(),
+  yearsExperience: z.number(),
+  yearsLeading: z.number(),
+  degreeField: z.string(),
+  resolvedTensions: z.array(ResolvedTension),
+  declined: z.array(z.enum(SEARCH_DECLINABLE)),
 });
-export type DirectionDraft = z.infer<typeof DirectionDraftSchema>;
+export type SearchAnswers = z.infer<typeof SearchAnswersSchema>;
+
+// The stage 2 profile from the search card and the user's latest taps (values by chip field):
+// a chip field the user declined gets its placeholder, even after a tap; one neither tapped
+// nor declined is listed in `missing`, and the server asks the advisor to ask for it.
+export function searchProfile(
+  direction: Direction,
+  answers: SearchAnswers,
+  taps: ReadonlyMap<string, unknown>,
+): { profile: Profile; missing: (typeof STAGE_2_CHIP_FIELDS)[number][] } {
+  const declined = new Set<string>(answers.declined);
+  const missing: (typeof STAGE_2_CHIP_FIELDS)[number][] = [];
+  const chip = <F extends (typeof STAGE_2_CHIP_FIELDS)[number]>(field: F) => {
+    if (declined.has(CHIP_TARGET[field].split(".")[0]!)) return STAGE_2_PLACEHOLDERS[field];
+    if (taps.has(field)) return taps.get(field) as never;
+    missing.push(field);
+    return STAGE_2_PLACEHOLDERS[field];
+  };
+  const search = {
+    tuitionBudgetUsd: chip("tuitionBudgetUsd"),
+    paymentPlan: chip("paymentPlan"),
+    travelBudgetUsd: chip("travelBudgetUsd"),
+    travelComfort: chip("travelComfort"),
+    formatPreference: chip("formatPreference"),
+    maxOnsiteDays: chip("maxOnsiteDays"),
+    maxStretchDays: chip("maxStretchDays"),
+    relocate: chip("relocate"),
+    airfareRange: chip("airfareRange"),
+    locationValues: [...chip("locationValues")],
+    degree: { level: chip("degreeLevel"), field: answers.degreeField },
+    currentRole: chip("currentRole"),
+    homeCity: answers.homeCity,
+    homeRegion: answers.homeRegion,
+    homeCountry: answers.homeCountry,
+    homeLat: answers.homeLat,
+    homeLon: answers.homeLon,
+    yearsExperience: answers.yearsExperience,
+    yearsLeading: answers.yearsLeading,
+    resolvedTensions: answers.resolvedTensions,
+    declined: [...answers.declined],
+  } as SearchPart;
+  return { profile: toEngineProfile(direction, search), missing };
+}
+
+export const ASK_CHOICE_FIELDS = [...STAGE_1_CHIP_FIELDS, ...STAGE_2_CHIP_FIELDS] as const;
 
 export const AskChoiceInput = z.strictObject({
-  field: z.enum(STAGE_1_CHIP_FIELDS),
+  field: z.enum(ASK_CHOICE_FIELDS),
   // The question in the advisor's words, shown above the chips.
   question: z.string().min(1),
 });
 
-export const CheckContradictionsInput = z.strictObject({ profile: DirectionDraftSchema });
+// The rules run on the user's taps; the model sends only what it learned in conversation: the
+// tensions the user resolved, and the rule fields the user declined.
+export const CheckContradictionsInput = z.strictObject({
+  resolvedTensions: z.array(ResolvedTension),
+  declined: z.array(z.enum(TENSION_FIELDS)),
+});
 
 export const ProposeDirectionInput = z.strictObject({ direction: DirectionSchema });
+
+// The stage 2 card: the answers only the model knows. The server builds the profile with
+// searchProfile and checks it before the card shows.
+export const ProposeSearchInput = z.strictObject({ search: SearchAnswersSchema });
 
 type ToolSpec = {
   stage: 1 | 2;
   // True when the server stops and waits for the user (a chip tap or the confirm card).
   pauses: boolean;
   description: string;
-  // null: not wired yet, so the tool is never sent to the model.
-  input: z.ZodType | null;
+  input: z.ZodType;
 };
 
 export const ADVISOR_TOOLS = {
@@ -150,7 +320,7 @@ export const ADVISOR_TOOLS = {
     stage: 1,
     pauses: false,
     description:
-      "Send the stage 1 answers so far. Returns the tensions that fire, each with an id, a plain sentence and whether the user already resolved it.",
+      "Run the contradiction rules on the user's chip answers, which the system reads from their taps. Send the tensions the user resolved and the rule fields they declined. Returns the tensions that fire, each with an id, a plain sentence and whether the user already resolved it.",
     input: CheckContradictionsInput,
   },
   propose_direction: {
@@ -160,22 +330,15 @@ export const ADVISOR_TOOLS = {
       "Show the stage 1 confirm card. If the user confirms, the result holds the category verdict; otherwise it holds their corrections.",
     input: ProposeDirectionInput,
   },
-  // Stage 2, not wired yet: its input (the stage 2 answers) lands with the stage 2 server work.
   propose_search: {
     stage: 2,
     pauses: true,
     description:
-      "Show the stage 2 confirm card. If the user confirms, the result holds the ranked programs.",
-    input: null,
+      "Show the stage 2 confirm card. Send the answers that have no chips (where the user lives, years of experience and leading, the degree's field), the tensions resolved and the fields declined; the chip answers come from the taps. If the user confirms, the result holds the ranked programs; otherwise it holds their corrections.",
+    input: ProposeSearchInput,
   },
 } as const satisfies Record<string, ToolSpec>;
 
 export type AdvisorToolName = keyof typeof ADVISOR_TOOLS;
+// Every tool, in a fixed order: the server sends them all on every request (cached prefix).
 export const ADVISOR_TOOL_NAMES = Object.keys(ADVISOR_TOOLS) as AdvisorToolName[];
-// The tools the server sends to the model today. Listed, not filtered, so their inputs type as
-// zod schemas (never null); a test checks the list against `stage`.
-export const STAGE_1_TOOL_NAMES = [
-  "ask_choice",
-  "check_contradictions",
-  "propose_direction",
-] as const satisfies readonly AdvisorToolName[];

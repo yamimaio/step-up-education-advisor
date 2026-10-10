@@ -20,9 +20,8 @@ describe("Category fit on the fixtures", () => {
     });
     expect(category.winner).toBe("executive");
     expect(category.runnerUp).toBe("certificate");
-    expect(category.reasons.emba.join(" ")).toContain("program length");
-    expect(category.reasons.emba.join(" ")).toMatch(
-      /no program of this type is within your limits/,
+    expect(category.reasons.emba[0]).toBe(
+      "Out: the one Executive MBA program Step Up has verified so far isn't within your limits (program length).",
     );
     expect(noProgram.triggered).toBe(false);
   });
