@@ -171,6 +171,12 @@ Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM 
 - A rating can turn on a fact that has no record field, such as career services. The skill verifies it on an official page and records it in the overrides file as an `extraSources` entry with field `ratingNotes`, holding the URL and verbatim quote. A card note may state the fact; the record carries its source. No new schema field.
 - R10: an open-enrollment program with classmates in every course but no fixed cohort is not "no cohort" for senior_network (Harvard Extension, agreed by Yami; applies to Northwestern MEM).
 
+## Tuition with school-billed housing (Kellogg EMBA Miami, issue #173, Oct 10)
+
+- Yami, Oct 10: `tuitionUsd` is the total the school itself bills for the whole program. When a school bills food and housing as a required charge (Kellogg: "Tuition and Food and Housing are both required expenses"; Wharton: "All charges are mandatory for all students, regardless of whether they choose to stay in a provided hotel space"), it is part of `tuitionUsd`, `lodgingIncluded` is true, and `tuitionIncludes` says what the total covers and splits out the published tuition line.
+- Lodging that we estimate ourselves (the GSA rate in `lodgingPerNightUsd`, or any manual calculation) never goes into `tuitionUsd`; it is a travel expense the engine adds.
+- Kellogg's total is $248,472 for 2026-2027 (tuition $205,486 plus food and housing $42,986). No page offers local students an opt-out, so the total applies to them too, as at Wharton.
+
 ## Step 5
 
 - The "17 fields" are the intake table's rows, one entry each, plus the airfare question as its own entry (`core/advisor/fields.ts`). Entries that fill two profile fields (tuition and payment, time, on-site, home) are one entry.

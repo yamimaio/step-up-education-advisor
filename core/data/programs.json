@@ -246,10 +246,10 @@
     "campusLon": -80.2588,
     "metro": null,
     "country": "US",
-    "tuitionUsd": 205486,
+    "tuitionUsd": 248472,
     "tuitionPerCourseUsd": null,
     "courseCount": null,
-    "tuitionIncludes": "Tuition only ($205,486 for 2026-2027). Food and housing ($42,986) are a separate required charge, for an estimated $248,472 in total; the total covers classes, e-books, a hotel room on the Miami campus, most meals, career services and accommodation for one global elective. Not covered: travel to and from campus and international travel for global electives.",
+    "tuitionIncludes": "Kellogg's published 2026-2027 estimated expenses for the whole two-year program: tuition $205,486 plus required food and housing $42,986. It covers classes, e-books, a hotel room at the Hyatt Regency Coral Gables, three meals a day, career services and accommodation for one global elective. Not covered: travel to and from campus and international travel for global electives.",
     "lodgingIncluded": true,
     "paymentOptions": ["installments", "employer_sponsorship"],
     "minExperienceYears": null,
@@ -280,7 +280,7 @@
       "residencyCount": "Counted from the January 2027 first-year Miami calendar: orientation, eight class weekends, the July intensive week and Global Network Week (11 trips). The second-year calendar is not published.",
       "longestStretchDays": "Orientation programming, January 12 to 17, 2027. Global Network Week's length is not published.",
       "onsiteDaysPerYear": "Not set: the January 2027 first-year calendar gives 43 known days (6 orientation, 8 weekends of 4 days, a 5-day intensive week), plus Global Network Week, whose dates and length are not published.",
-      "tuitionUsd": "2026-2027 tuition for the whole two-year program; Kellogg says tuition has historically risen 3-4% a year."
+      "tuitionUsd": "Kellogg's own estimated-expenses total for 2026-2027: tuition $205,486 plus required food and housing $42,986, billed by Kellogg in six quarters of $41,412. Food and housing is required of every student. Kellogg says tuition has historically risen 3-4% a year."
     },
     "sources": [
       {
@@ -406,6 +406,27 @@
         "field": "paymentOptions",
         "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
         "quote": "If your organization is providing financial sponsorship, please state that in the letter as well.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "2026-2027 tuition and estimated expenses for entirety of the two-year EMBA program",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "Tuition and Food and Housing are both required expenses for the Kellogg EMBA program.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+        "quote": "Individual rooms at the Omni All Suites Hotel (Chicago campus) or Hyatt Regency Coral Gables (Miami campus)",
         "checkedOn": "2026-10-10",
         "kind": "official_page"
       },
