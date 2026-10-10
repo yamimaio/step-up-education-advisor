@@ -619,6 +619,188 @@
     "locationOffers": ["industry_hub"]
   },
   {
+    "id": "stanford-lead",
+    "name": "Stanford LEAD Online Business Program",
+    "institution": "Stanford Graduate School of Business",
+    "category": "executive",
+    "credential": "Stanford GSB Professional Certificate",
+    "format": "online",
+    "durationMonths": 12,
+    "durationMaxMonths": null,
+    "credits": "24 CEUs",
+    "attendance": "none",
+    "onsiteNote": null,
+    "onsiteDaysPerYear": 0,
+    "residencyCount": 0,
+    "longestStretchDays": 0,
+    "hoursPerWeek": {
+      "min": 5,
+      "max": 10
+    },
+    "workCompatible": true,
+    "city": null,
+    "state": null,
+    "campusAddress": null,
+    "campusLat": null,
+    "campusLon": null,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 19200,
+    "tuitionPerCourseUsd": null,
+    "courseCount": null,
+    "tuitionIncludes": "Tuition, access to course platforms, and all required course materials; 8 courses, live faculty interaction, dedicated time and personalized feedback from course facilitators, and ongoing access to the community.",
+    "lodgingIncluded": null,
+    "paymentOptions": ["installments"],
+    "minExperienceYears": null,
+    "accreditation": [],
+    "cohortMedianExperienceYears": null,
+    "cohortExperienceBasis": null,
+    "cohortSeniority": null,
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "leadership_skills": 3,
+      "deep_expertise": 3,
+      "graduate_degree": 2,
+      "senior_network": 3,
+      "new_industry_or_city": 2
+    },
+    "ratingNotes": {
+      "leadership_skills": "One required leadership course plus electives spanning leadership, innovation, communication, strategy, organizational design, and decision-making.",
+      "deep_expertise": "Eight courses cover business and leadership; specialized study depth, academic credit hours, and capstone requirements are not published.",
+      "graduate_degree": "Awards a Stanford GSB Professional Certificate and 24 CEUs; graduate-degree credit applicability is not published.",
+      "senior_network": "Designed for mid- to senior-career professionals, with online peer interaction; cohort experience and title distribution are not published.",
+      "new_industry_or_city": "Offers a lifelong professional community; career services, recruiting, internships, and relocation support are not published for LEAD."
+    },
+    "ratingLowEvidence": ["deep_expertise", "senior_network", "new_industry_or_city"],
+    "figureNotes": {},
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+        "quote": "Stanford LEAD Online Business Program",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+        "quote": "Stanford Graduate School of Business",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+        "quote": "Director, Stanford LEAD Executive Education",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program/curriculum",
+        "quote": "Earn a Stanford GSB Professional Certificate upon completion",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://www.gsb.stanford.edu/exec-ed/admission/faq",
+        "quote": "This program is designed to be completed fully online",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+        "quote": "Flexible, Year-Long Online Experience",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program/curriculum",
+        "quote": "Earn 24 Continuing Education Units (CEUs)",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://www.gsb.stanford.edu/exec-ed/admission/faq",
+        "quote": "LEAD is designed to be most effective as an online business program and is only offered in this modality.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://www.gsb.stanford.edu/exec-ed/admission/faq",
+        "quote": "This program is designed to be completed fully online",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "hoursPerWeek",
+        "url": "https://www.gsb.stanford.edu/exec-ed/admission/faq",
+        "quote": "You can expect to dedicate 5-10 hours weekly to this enriching experience.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+        "quote": "while continuing to work full time",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "country",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+        "quote": "Stanford, CA 94305\nUSA",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://www.gsb.stanford.edu/exec-ed/admission/payment-cancellation",
+        "quote": "Pay the entire tuition fee of $19,200 upfront",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://www.gsb.stanford.edu/exec-ed/programs/stanford-lead-online-business-program",
+        "quote": "The program fee includes tuition, access to course platforms, and all required course materials.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://www.gsb.stanford.edu/exec-ed/admission/faq",
+        "quote": "LEAD tuition includes 8 courses, live faculty interaction, dedicated time and personalized feedback from course facilitators, as well as ongoing access to the community.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://www.gsb.stanford.edu/exec-ed/admission/payment-cancellation",
+        "quote": "pay the tuition fee in four quarterly installments of $4,800",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://www.gsb.stanford.edu/exec-ed/admission/faq",
+        "quote": "This program is designed to be completed fully online",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "draft",
+      "verifiedBy": null
+    },
+    "locationOffers": ["travel_ease", "affordability"]
+  },
+  {
     "id": "wharton-emba-sf",
     "name": "MBA Program for Executives",
     "institution": "The Wharton School, University of Pennsylvania",

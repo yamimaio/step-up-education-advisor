@@ -1,0 +1,16 @@
+{
+  "locationOffers": [
+    "travel_ease",
+    "affordability"
+  ],
+  "longestStretchDays": 0,
+  "extraSources": [
+    {
+      "field": "longestStretchDays",
+      "url": "https://www.gsb.stanford.edu/exec-ed/admission/faq",
+      "quote": "This program is designed to be completed fully online",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    }
+  ]
+}
