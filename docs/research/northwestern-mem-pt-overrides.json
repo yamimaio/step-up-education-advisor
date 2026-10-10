@@ -104,6 +104,14 @@
       "quote": "Northwestern Career Advancement offers comprehensive career services including career counseling and assessment",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
+    },
+    {
+      "field": "cohortSeniority",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/student-body-profile.html",
+      "quote": "experienced scientists, engineers, and technical professionals from diverse corporate backgrounds",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
     }
-  ]
+  ],
+  "cohortSeniority": "Experienced scientists, engineers and technical professionals from diverse corporate backgrounds; no titles are published."
 }

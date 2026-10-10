@@ -32,7 +32,8 @@
     "durationMonths": "The school's published length; the 2027-2029 San Francisco calendar runs from May 29, 2027 to May 15, 2029.",
     "onsiteDaysPerYear": "Counted from the highlighted dates of the 2027-2029 San Francisco calendar: 105 days over two program years (91 San Francisco class days on 41 weekends, 8 days in Philadelphia from May 29 to June 5, 2027, and 6 days of Global Business Week from January 10 to 15, 2028); 61 in the first year, 44 in the second.",
     "longestStretchDays": "The opening session in Philadelphia, May 29 to June 5, 2027, on the 2027-2029 San Francisco calendar.",
-    "residencyCount": "43 trips on the 2027-2029 San Francisco calendar (41 San Francisco class weekends, the Philadelphia opening session and Global Business Week; 23 in the first year, 20 in the second), so 21.5 a year, rounded up to 22."
+    "residencyCount": "43 trips on the 2027-2029 San Francisco calendar (41 San Francisco class weekends, the Philadelphia opening session and Global Business Week; 23 in the first year, 20 in the second), so 21.5 a year, rounded up to 22.",
+    "accreditation": "From AACSB's own directory of accredited schools (University of Pennsylvania, The Wharton School, accredited in Business); Wharton's EMBA pages do not name an accreditor."
   },
   "replaceSources": [
     "tuitionUsd",
@@ -241,6 +242,23 @@
       "quote": "Career Changers: Pivoting into new industries or functions",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
+    },
+    {
+      "field": "accreditation",
+      "url": "https://www.aacsb.edu/accredited/u/university-of-pennsylvania",
+      "quote": "The Wharton School 1000 Steinberg Hall-Dietrich Hall 3620 Locust Walk",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "accreditation",
+      "url": "https://www.aacsb.edu/accredited/u/university-of-pennsylvania",
+      "quote": "Accreditation Business",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
     }
+  ],
+  "accreditation": [
+    "AACSB"
   ]
 }

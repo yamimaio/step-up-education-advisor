@@ -28,7 +28,7 @@ export function DownloadTranscript({
       type="button"
       disabled={disabled}
       onClick={download}
-      className="rounded border border-teal px-3 py-1.5 text-sm text-teal disabled:opacity-50"
+      className="shrink-0 rounded-lg border border-teal bg-card px-3 py-1.5 text-sm font-medium text-teal hover:bg-teal-soft disabled:opacity-50"
     >
       Download transcript
     </button>
