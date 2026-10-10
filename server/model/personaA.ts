@@ -173,16 +173,31 @@ export const PERSONA_A_BACKGROUND_ANSWER =
 export const RESULTS_TEXT =
   "Here are the programs that fit, ranked by the three needs you named. Each card shows the program's own facts and how sure the data is.";
 
+export const SIDE_QUESTION_REPLY =
+  "Program facts like prices come from the program records once we look at programs, and admissions questions are for each school. For now, back to this one.";
+
 const askBlock = (field: Field) =>
   toolUse("ask_choice", { field, question: QUESTIONS[field] }, `toolu_a_${field}`);
 
-// The tool call the last message answers, if it answers one, whether the server refused it and
-// whether the user confirmed it.
+// What the user typed instead of tapping, from a chip answer's `typed`.
+function typedIn(content: unknown): string | undefined {
+  if (typeof content !== "string") return undefined;
+  try {
+    const typed = (JSON.parse(content) as { typed?: unknown }).typed;
+    return typeof typed === "string" ? typed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// The tool call the last message answers, if it answers one, whether the server refused it,
+// whether the user confirmed it, and what the user typed instead of tapping.
 function answered(request: ModelRequest): {
   name: string;
   input: Record<string, unknown>;
   isError: boolean;
   confirmed: boolean;
+  typed?: string;
 } | null {
   const last = request.messages.at(-1);
   if (!last || typeof last.content === "string") return null;
@@ -195,22 +210,37 @@ function answered(request: ModelRequest): {
     if (typeof m.content === "string") continue;
     for (const b of m.content) {
       if (b.type === "tool_use" && b.id === result.tool_use_id) {
-        return { name: b.name, input: b.input as Record<string, unknown>, isError, confirmed };
+        const typed = typedIn(result.content);
+        return {
+          name: b.name,
+          input: b.input as Record<string, unknown>,
+          isError,
+          confirmed,
+          typed,
+        };
       }
     }
   }
   return null;
 }
 
-// How many times the advisor has shown the chips for this field.
-const askedTimes = (request: ModelRequest, field: Field) =>
-  request.messages
-    .flatMap((m) => (typeof m.content === "string" ? [] : m.content))
-    .filter((b) => b.type === "tool_use" && (b.input as { field?: unknown }).field === field)
-    .length;
+// True when the advisor has already shown this card.
+const proposed = (request: ModelRequest, card: "propose_direction" | "propose_search") =>
+  request.messages.some(
+    (m) =>
+      typeof m.content !== "string" &&
+      m.content.some((b) => b.type === "tool_use" && b.name === card),
+  );
 
 // True when the advisor has already shown the chips for this field.
-const asked = (request: ModelRequest, field: Field) => askedTimes(request, field) > 0;
+const asked = (request: ModelRequest, field: Field) =>
+  request.messages.some(
+    (m) =>
+      typeof m.content !== "string" &&
+      m.content.some(
+        (b) => b.type === "tool_use" && (b.input as { field?: unknown }).field === field,
+      ),
+  );
 
 // True when the advisor has already said this text.
 const said = (request: ModelRequest, words: string) =>
@@ -258,14 +288,26 @@ export function personaAScript(request: ModelRequest): ModelTurn {
   }
   if (call.name === "ask_choice") {
     const field = call.input.field as Field;
+    const typed = call.typed?.trim() ?? "";
+    if (typed.endsWith("?") && !/\bskip\b|rather not/i.test(typed)) {
+      // A question typed while the chips are open: a reply in words and the same chips back, in
+      // one turn (advisor.md, issue #192). A request to skip is a decline, even with a "?".
+      return turn(
+        text(SIDE_QUESTION_REPLY),
+        toolUse(
+          "ask_choice",
+          { field, question: QUESTIONS[field] },
+          `toolu_a_${field}_${request.messages.length}`,
+        ),
+      );
+    }
     if (field === "careerGoalKind") {
       return turn(text("In your own words, what would that step up look like?"));
     }
-    // A field asked a second time is a correction from a card: go back to the card.
-    if (askedTimes(request, field) > 1) return check(request);
-    const order: readonly Field[] = (STAGE_2_ORDER as readonly Field[]).includes(field)
-      ? STAGE_2_ORDER
-      : CHIP_ORDER;
+    const stage2 = (STAGE_2_ORDER as readonly Field[]).includes(field);
+    // A field asked again after its stage's card is a correction: go back to the card.
+    if (proposed(request, stage2 ? "propose_search" : "propose_direction")) return check(request);
+    const order: readonly Field[] = stage2 ? STAGE_2_ORDER : CHIP_ORDER;
     const next = order[order.indexOf(field) + 1];
     return next ? turn(askBlock(next)) : check(request);
   }

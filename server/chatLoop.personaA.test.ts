@@ -27,6 +27,7 @@ import {
   PERSONA_A_PROGRAMS_YES,
   personaAScript,
   RESULTS_TEXT,
+  SIDE_QUESTION_REPLY,
 } from "./model/personaA";
 import { SYSTEM } from "./prompt";
 import { searchSummary } from "./stage2";
@@ -168,6 +169,72 @@ describe("persona A on the fake model", () => {
       content: JSON.stringify({ confirmed: true, result: searchSummary(expected, programs) }),
     });
     expect(page.logs.every((l) => l.status !== "notice")).toBe(true);
+  });
+
+  it("replies to a question typed during the length chips and shows them again (issue #192)", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    while (page.last?.chips && page.last.chips.field !== "maxProgramMonths") {
+      await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    }
+    const asked = page.last!.chips!.toolUseId;
+
+    const typed =
+      "How much does MIT's Technology Leadership Program cost, and what's the GMAT average for Wharton's EMBA?";
+    let r = await page.post(answer(asked, { chosen: [], typed }));
+    // One turn: the reply in words and the same chips, no extra turn to bring them back.
+    expect(r.text).toBe(SIDE_QUESTION_REPLY);
+    expect(r.chips?.field).toBe("maxProgramMonths");
+    expect(r.chips?.toolUseId).not.toBe(asked);
+    expect(r.confirm).toBeNull();
+
+    // The tap that follows goes on with the interview, and the card holds the taps.
+    while (page.last?.chips) await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    r = page.last!;
+    expect(r.confirm?.direction).toEqual({ ...PERSONA_A_DIRECTION, tieBreaker: undefined });
+  });
+
+  it("keeps the needs chips open through a question typed five times (issue #192)", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    const typed = "Is a senior network worth more than a degree?";
+    for (let i = 0; i < 5; i++) {
+      const r = await page.post(answer(page.last!.chips!.toolUseId, { chosen: [], typed }));
+      // Never a decline, never only chips: a reply and the same field again.
+      expect(r.text).not.toBe("");
+      expect(r.chips?.field).toBe("needs");
+    }
+
+    while (page.last?.chips) await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    expect(page.last?.confirm?.direction).toEqual({
+      ...PERSONA_A_DIRECTION,
+      tieBreaker: undefined,
+    });
+    const r = await page.confirm();
+    expect(r.direction?.category.winner).toBe("executive");
+  });
+
+  it("takes a request to skip worded as a question as a decline", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    while (page.last?.chips && page.last.chips.field !== "hoursPerWeek") {
+      await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    }
+    const r = await page.post(
+      answer(page.last!.chips!.toolUseId, { chosen: [], typed: "Can we skip this one?" }),
+    );
+    expect(r.chips?.field).toBe("keepWorking");
+    while (page.last?.chips) await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    expect(page.last?.confirm?.direction).toMatchObject({
+      hoursPerWeek: null,
+      declined: ["hoursPerWeek"],
+    });
   });
 
   it("sends the history byte for byte, and the same cached system prompt and tools", async () => {

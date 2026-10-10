@@ -617,5 +617,338 @@
       "verifiedBy": "Yami Maio"
     },
     "locationOffers": ["industry_hub"]
+  },
+  {
+    "id": "wharton-emba-sf",
+    "name": "MBA Program for Executives",
+    "institution": "The Wharton School, University of Pennsylvania",
+    "category": "emba",
+    "credential": "MBA",
+    "format": "in_person",
+    "durationMonths": 22,
+    "durationMaxMonths": null,
+    "credits": "19 course units",
+    "attendance": "recurring_weekends",
+    "onsiteNote": "Friday and Saturday classes every other week in San Francisco, with some three-day weekends; an eight-day opening session in Philadelphia and a six-day Global Business Week trip.",
+    "onsiteDaysPerYear": 52.5,
+    "residencyCount": 22,
+    "longestStretchDays": 8,
+    "hoursPerWeek": null,
+    "workCompatible": true,
+    "city": "San Francisco",
+    "state": "California",
+    "campusAddress": "2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105",
+    "campusLat": 37.7916,
+    "campusLon": -122.3893,
+    "metro": null,
+    "country": "US",
+    "tuitionUsd": 243000,
+    "tuitionPerCourseUsd": null,
+    "courseCount": null,
+    "tuitionIncludes": "Tuition, program fees, and housing and dining for regular class weekends and required modular courses (a hotel room on Friday nights). Not included: books and supplies, travel to and from campus (including Global Business Week airfare), personal expenses during class weekends, and hotels and dining for elective modular courses or additional class weekends.",
+    "lodgingIncluded": true,
+    "paymentOptions": ["installments", "employer_sponsorship", "loans", "scholarships"],
+    "minExperienceYears": 8,
+    "accreditation": null,
+    "cohortMedianExperienceYears": 13.5,
+    "cohortExperienceBasis": "average",
+    "cohortSeniority": null,
+    "lodgingPerNightUsd": null,
+    "ratings": {
+      "leadership_skills": 4,
+      "deep_expertise": 3,
+      "graduate_degree": 5,
+      "senior_network": 3,
+      "new_industry_or_city": 4
+    },
+    "ratingNotes": {
+      "leadership_skills": "Required Leadership Essentials core courses, such as Foundations of Teamwork and Leadership, plus co-curricular leadership sessions.",
+      "deep_expertise": "A general MBA of 19 course units; optional majors add four course units in one field.",
+      "graduate_degree": "Awards the Wharton MBA, the same degree as the full-time program.",
+      "senior_network": "Class of 2028 averages 13 to 14 years of experience; class weekends every other week.",
+      "new_industry_or_city": "Executive coaches, a job board and resume book, and dedicated support for career changers."
+    },
+    "ratingLowEvidence": [],
+    "figureNotes": {
+      "tuitionUsd": "Price for the class entering in 2026; the 2027 price is not published.",
+      "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028.",
+      "campusLat": "Derived from campusAddress (approximate, from the street address).",
+      "campusLon": "Derived from campusAddress (approximate, from the street address).",
+      "durationMonths": "The school's published length; the 2027-2029 San Francisco calendar runs from May 29, 2027 to May 15, 2029.",
+      "onsiteDaysPerYear": "Counted from the highlighted dates of the 2027-2029 San Francisco calendar: 105 days over two program years (91 San Francisco class days on 41 weekends, 8 days in Philadelphia from May 29 to June 5, 2027, and 6 days of Global Business Week from January 10 to 15, 2028); 61 in the first year, 44 in the second.",
+      "longestStretchDays": "The opening session in Philadelphia, May 29 to June 5, 2027, on the 2027-2029 San Francisco calendar.",
+      "residencyCount": "43 trips on the 2027-2029 San Francisco calendar (41 San Francisco class weekends, the Philadelphia opening session and Global Business Week; 23 in the first year, 20 in the second), so 21.5 a year, rounded up to 22."
+    },
+    "sources": [
+      {
+        "field": "name",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "MBA Program for Executives",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "institution",
+        "url": "https://executivemba.wharton.upenn.edu/global-cohort/",
+        "quote": "University of Pennsylvania’s campus in Philadelphia",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "category",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "Executive MBA Class Profile",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credential",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "There is no difference in the degree earned by executive and full-time MBA students.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "format",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "every-other-weekend residential format",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "credits",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "You must complete 19 course units at Wharton to earn your degree from our program.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "workCompatible",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "Executive MBA students are required to maintain full-time employment throughout the duration of the program.",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "city",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "Philadelphia and San Francisco cohort members",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "minExperienceYears",
+        "url": "https://executivemba.wharton.upenn.edu/emba-application-requirements/",
+        "quote": "at least eight (8)",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionUsd",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Tuition and fees for the class entering in 2026 is $243,000 or $40,500 per academic term.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Many of Wharton’s EMBA students receive some level of sponsorship from their employer. Others finance their degree through personal funds, loans and scholarships.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "paymentOptions",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Program tuition is due in six equal installments.",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "durationMonths",
+        "url": "https://executivemba.wharton.upenn.edu/mba-or-emba/",
+        "quote": "22 months, plus an Orientation Program Session in Philadelphia",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "attendance",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "every-other-weekend residential format",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "attendance",
+        "url": "https://executivemba.wharton.upenn.edu/emba-academic-calendar/",
+        "quote": "Classes on Friday and Saturday, every other week, with some three-day weekends.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteNote",
+        "url": "https://executivemba.wharton.upenn.edu/emba-academic-calendar/",
+        "quote": "All students (San Francisco, Philadelphia, and Global) start in Philadelphia with opening class sessions.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteNote",
+        "url": "https://executivemba.wharton.upenn.edu/emba-academic-calendar/",
+        "quote": "All students participate in Global Business Week, a week-long global experience in the second year.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteNote",
+        "url": "https://executivemba.wharton.upenn.edu/emba-program-details/",
+        "quote": "Students attend classes every other weekend, with several additional extended sessions through the program.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteDaysPerYear",
+        "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
+        "quote": "ATTENDANCE REQUIRED ON ALL HIGHLIGHTED DATES",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "residencyCount",
+        "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
+        "quote": "Class Sessions in San Francisco",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "longestStretchDays",
+        "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
+        "quote": "Class Sessions in Philadelphia",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "onsiteNote",
+        "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
+        "quote": "Global Business Week Trip",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Housing and dining for regular class weekends and for required modular courses",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Please note that this does not include the cost of textbooks.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Books and supplies",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Travel to and from campus",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Personal expenses during class weekends",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "Hotels and dining for elective modular courses or for additional class weekends",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "tuitionIncludes",
+        "url": "https://executivemba.wharton.upenn.edu/mba-or-emba/",
+        "quote": "Transportation, airfare for Global Business Week, and parking are not included.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "lodgingIncluded",
+        "url": "https://executivemba.wharton.upenn.edu/emba-faqs/",
+        "quote": "The program provides hotel rooms on Friday night during program weekends.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "lodgingIncluded",
+        "url": "https://executivemba.wharton.upenn.edu/emba-tuition-financial-aid/",
+        "quote": "All charges are mandatory for all students, regardless of whether they choose to stay in a provided hotel space",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "cohortMedianExperienceYears",
+        "url": "https://executivemba.wharton.upenn.edu/class-profile/",
+        "quote": "an average of 13-14 years of professional experience",
+        "checkedOn": "2026-10-08"
+      },
+      {
+        "field": "campusAddress",
+        "url": "https://sf.wharton.upenn.edu/connect/directions/",
+        "quote": "2 Harrison Street (Harrison & Spear) Sixth Floor San Francisco, CA 94105",
+        "checkedOn": "2026-10-08",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-curriculum/",
+        "quote": "Leadership Essentials ... Foundations of Teamwork and Leadership ... Management Communication ... Responsibility in Global Management",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-curriculum/",
+        "quote": "some Wharton majors can be earned by executive students as a result of pursuing four additional credit units in a focused area.",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-career-services/",
+        "quote": "Personalized 1:1 support from highly rated executive coaches",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-career-services/",
+        "quote": "CareerPath: Centralized hub with job board, resume book, board resume section, and compensation data",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      },
+      {
+        "field": "ratingNotes",
+        "url": "https://executivemba.wharton.upenn.edu/emba-career-services/",
+        "quote": "Career Changers: Pivoting into new industries or functions",
+        "checkedOn": "2026-10-10",
+        "kind": "official_page"
+      }
+    ],
+    "verification": {
+      "status": "verified",
+      "verifiedBy": "Yami Maio"
+    },
+    "locationOffers": ["network_density", "industry_hub"]
   }
 ]

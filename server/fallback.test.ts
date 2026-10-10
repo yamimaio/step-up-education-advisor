@@ -94,9 +94,19 @@ describe("the template explanation", () => {
     expect(out.length).toBeGreaterThan(0);
     const text = fallbackExplanation(result);
     expect(text).toContain(
-      "Ruled out: an executive program (you need a degree and this type does not award one).",
+      "Ruled out: an executive program. You need a degree and this type does not award one.",
     );
     expect(text).not.toMatch(/Strong for|Some help with|Little help with/);
+  });
+
+  it("says a type out on limits is about the programs Step Up has verified (issue #188)", () => {
+    const text = fallbackExplanation(
+      recommendCategory(toEngineDirection(PERSONA_A_DIRECTION as never), programs),
+    );
+    expect(text).toContain(
+      "Ruled out: an executive MBA. The one Executive MBA program Step Up has verified so far isn't within your limits (program length).",
+    );
+    expect(text).not.toMatch(/no program of this type/);
   });
 });
 

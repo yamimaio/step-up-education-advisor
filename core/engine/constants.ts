@@ -148,6 +148,19 @@ export const NEED_LABELS: Record<Need, string> = {
   new_industry_or_city: "a new industry or city",
 };
 
+// A type's programs in words, one and many, for a ruled-out type's reason (issue #188).
+export const TYPE_PROGRAM_WORDS: Record<Category, { one: string; many: string }> = {
+  mba: { one: "full-time MBA program", many: "full-time MBA programs" },
+  emba: { one: "Executive MBA program", many: "Executive MBA programs" },
+  specialized_masters: {
+    one: "specialized master's program",
+    many: "specialized master's programs",
+  },
+  executive: { one: "executive program", many: "executive programs" },
+  certificate: { one: "certificate program", many: "certificate programs" },
+  short_course: { one: "short course", many: "short courses" },
+};
+
 export const FORMAT_LABELS: Record<Format, string> = {
   online: "Online",
   hybrid: "Blended",
