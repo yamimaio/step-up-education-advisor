@@ -227,13 +227,25 @@ function sameCard(a: Direction, b: Direction, programs: Program[]): boolean {
 // new call gets this check: the re-checks of calls already in the client-held history
 // (confirmedDirection, rewriteConfirm) leave it out, so a history that holds the loop still reads.
 // It runs last: a card that misses the latest tap gets the tap problem, since the user did change
-// that answer. A card that passes holds the latest taps, so equal to the confirmed one means
-// nothing changed.
+// that answer. validateProposeDirection skips a declined field, so a field the user tapped after
+// the confirm and the card still declines is checked here (review round 3). A card that gets past
+// both holds the latest taps, so equal to the confirmed one means nothing changed.
 export function checkProposeDirection(input: unknown, history: Message[], programs: Program[]) {
   const checked = validateProposeDirection(input, history);
   if (!checked.ok) return checked;
   const confirmed = confirmedDirection(history);
-  if (confirmed && sameCard(confirmed.direction, checked.direction, programs)) {
+  if (!confirmed) return checked;
+  const tapped = stage1Changes(
+    checked.direction,
+    latestTaps(history.slice(confirmed.resultAt + 1)),
+  );
+  if (tapped.length) {
+    return {
+      ok: false as const,
+      problems: `The user tapped an answer for ${tapped.join(", ")} after confirming the direction: use the tapped value and take it out of declined.`,
+    };
+  }
+  if (sameCard(confirmed.direction, checked.direction, programs)) {
     return { ok: false as const, problems: ALREADY_CONFIRMED };
   }
   return checked;

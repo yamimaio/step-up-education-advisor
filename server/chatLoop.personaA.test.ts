@@ -644,6 +644,27 @@ describe("the server shows a confirmed card only once (issue #203)", () => {
     expect(r.confirm?.direction?.maxProgramMonths).toBe(24);
   });
 
+  it("names the tap when the card still declines a field tapped after the verdict", async () => {
+    const { page, card } = await atVerdict([turn(text(VERDICT_TEXT))], { hoursPerWeek: "skip" });
+    expect(card.declined).toEqual(["hoursPerWeek"]);
+    page.model = new FakeModelClient([
+      turn(toolUse("ask_choice", { field: "hoursPerWeek", question: "Hours?" })),
+    ]);
+    await page.type("Actually I can give it 5 to 10 hours a week.");
+    page.model = new FakeModelClient([
+      checkAll(),
+      propose(card),
+      propose({ ...card, hoursPerWeek: PERSONA_A_DIRECTION.hoursPerWeek, declined: [] }),
+    ]);
+    const r = await page.tap(...PERSONA_A_TAPS.hoursPerWeek!);
+    const errors = errorResultsIn(r.messages);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({
+      content: expect.stringContaining("The user tapped an answer for hoursPerWeek"),
+    });
+    expect(r.confirm?.direction).toMatchObject({ hoursPerWeek: { min: 5, max: 10 }, declined: [] });
+  });
+
   it("refuses the same card with a tieBreaker when the answers don't tie", async () => {
     const { page, r } = await atVerdict([turn(text(VERDICT_TEXT))]);
     expect(r.direction?.category.tie).toBeUndefined();
