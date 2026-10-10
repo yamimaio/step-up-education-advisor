@@ -10,7 +10,9 @@ A draft record built from `docs/research/northwestern-mem-pt.md` and `docs/resea
 - `cohortMedianExperienceYears 7.6` (`cohortExperienceBasis: average`) is the part-time students' average from the student body profile, dated Fall 2021 (R2; caveat in `figureNotes`). The homepage's undated "avg. seven years STEM experience" lands in the same band.
 - `durationMonths 24` and `durationMaxMonths 36` come from the quote "Part-time option: 2-3 years" (a range, not a typical value).
 - `courseCount: 12` is the published minimum, not a fixed total; `tuitionUsd` stays null, so the tuition check shows "about $97,200 at 12 courses (estimate)" only as a note, from the 2026–27 rate.
-- `attendance: recurring_evenings` is set from the schedule quote; `locationOffers` is my proposal (industry_hub).
+- `attendance: recurring_evenings` is set from the schedule quote and also covers the Saturday mornings: both mean weekly presence near campus, and `onsiteNote` keeps the full schedule. `recurring_weekends` would instead cost travel trips. `locationOffers` is my proposal (industry_hub).
+- `state: Illinois` comes from the campus address ("Evanston, IL 60208"), set in the overrides file.
+- `onsiteDaysPerYear` stays null: the school publishes no meeting count per course or quarter length, and the days depend on the student's load (one or two courses a quarter, quarters optional). The engine treats evening attendance as needing the student nearby, so commuting distance and the location check decide; only a user who caps on-site days sees it as not published.
 
 **From the research file's "uncertain or conflicting" list:**
 
@@ -53,6 +55,7 @@ Every source in the record, with the value it backs. **no quote** means the valu
 | ratingNotes | (rating evidence) | Northwestern Career Advancement offers comprehensive career services including career counseling and assessment (checked 2026-10-10) | https://www.mccormick.northwestern.edu/engineering-management/overview/career-development.html |
 | durationMaxMonths | 36 | **no quote** | |
 | onsiteNote | Classes held Monday - Thursday evenings + Saturday mornings | **no quote** | |
+| state | Illinois | **no quote** | |
 | campusLat | 42.0565 | **no quote** | |
 | campusLon | -87.6753 | **no quote** | |
 | country | US | **no quote** | |
