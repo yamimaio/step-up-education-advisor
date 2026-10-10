@@ -19,7 +19,7 @@ Choices made while building, where the approved docs were silent. Each links to 
 - B3: the research-to-record converter (`scripts/draft-records.ts`) is built in this step, as `docs/build-steps.md` says.
 - The converter sets `cohortExperienceBasis` to `unspecified` and leaves `figureNotes`, `onsiteNote`, `metro`, `durationMaxMonths`, `tuitionPerCourseUsd`, `courseCount`, `lodgingIncluded` and `attendance` (unless residencies or online) to the overrides file. It turns a lone GSA number into a range by reading the dollar amounts in the GSA quote, and refuses if the quote has none.
 - `validate-data` also fails on a `checkedOn` later than today. `fake-` ids pass only through `FixtureDatasetSchema`.
-- The overrides file may set only an allow-list of keys (never `id`, `sources`, `ratings` or `verification`), plus `extraSources` to append sources the research kept in its Part 2 tables. A lodging quote that mentions meals or totals is refused unless the overrides give `lodgingPerNightUsd`. A source with no URL converts as `school_correspondence`. Five facts (`workCompatible`, `cohortMedianExperienceYears`, `onsiteDaysPerYear`, `longestStretchDays`, `hoursPerWeek`) may also be set there when later school material (a brochure, a published schedule) settles them, and only with an `extraSources` entry for the same field; the converter refuses one without it. When newer school material supersedes the research's quote for a field, `replaceSources` in the overrides file lists that field: its research sources are dropped and only the `extraSources` entries stay (the converter refuses a listed field with no `extraSources` entry).
+- The overrides file may set only an allow-list of keys (never `id`, `sources`, `ratings` or `verification`), plus `extraSources` to append sources the research kept in its Part 2 tables. A lodging quote that mentions meals or totals is refused unless the overrides give `lodgingPerNightUsd`. A source with no URL converts as `school_correspondence`. Nine facts (`format`, `tuitionUsd`, `tuitionIncludes`, `paymentOptions`, `workCompatible`, `cohortMedianExperienceYears`, `onsiteDaysPerYear`, `longestStretchDays`, `hoursPerWeek`) may also be set there when later school material (a brochure, a published schedule) settles them, and only with an `extraSources` entry for the same field; the converter refuses one without it. When newer school material supersedes the research's quote for a field, `replaceSources` in the overrides file lists that field: its research sources are dropped and only the `extraSources` entries stay (the converter refuses a listed field with no `extraSources` entry).
 
 ## Step 3
 
@@ -37,7 +37,7 @@ Defaults chosen where `docs/step-3-engine-plan.md` and the approved docs were si
 - Declined fields (see round 1 for the rest): limits become "no limit"; `peerPreference` → `doesnt_matter`; `travelComfort` → `fine`; `airfareRange` → `unknown`; `degreeRequired` → no adjustment; `homeCity` → no name shown; `homeLat` and `homeLon` → unknown location (see "Location by distance"). `profileGaps` lists the declined fields plus `airfareRange: unknown`.
 - No-program precedence: stage 1 first (`goal_unclear`, then `no_type_fits`), then stage 2 (`nothing_passes`). An empty dataset is `nothing_passes`. Shortlists are still built. (Was `goal_unclear`, `nothing_passes`, `no_type_fits` before the engine split; see "Engine split by stage".)
 - When every type is out, `winner` and `runnerUp` are `null`. A tie exists only between the top two non-out scores (a three-way tie takes the first two in matrix order); `tieBreaker` wins only if it is one of the pair. While a tie is unresolved no program gets the +0.5 category bonus.
-- `decidingNeeds`: the two needs with the largest `weight × (winner rating − runner-up rating)`, ties by need rank.
+- `decidingNeeds`: the two needs with the largest `weight × (winner rating − runner-up rating)`, ties by need rank; a gap of 0 or less is left out (see "The verdict in words, not scores").
 - Confidence (data gaps only, your decision): four conditions (verified within 60 days, tuition from an official page, on-site time from an official page, no unknown-value check). All four → high, one missing → medium, two or more → low; a draft is capped at low. Any official source whose field is one of `onsiteDaysPerYear`, `residencyCount`, `longestStretchDays`, `onsiteNote`, `attendance` or `format` counts as on-site evidence.
 - Contradictions: `checkContradictions(partial, programs)` takes the programs for R2. R2 counts only degree-granting types with a known tuition at or under the budget; a null budget never fires. A rule with a missing field never fires. Ids are `R1` to `R6`; a rule already in `resolvedTensions` is returned with `resolved: true`.
 - Location: evening or daily attendance beyond commuting distance fails unless the user would relocate (the same exception as full-time in-person). See "Location by distance" for the distance check.
@@ -164,6 +164,13 @@ Yami reviewed the re-run ratings for MIT TLP, Wharton EMBA SF, Northwestern MEM 
 - Yami, Oct 9: no rating provenance field in the schema (no `ratingVerification`). Provenance lives only in the block heading: the skill version and the reviewer.
 
 
+## Rating skill, version 3 (issue #134, Oct 10)
+
+- `format` joins the facts the overrides file may set with an `extraSources` entry (Northwestern MEM: the research left it null, and the official page settles it). An overridden format also drives the online rules (attendance `none`, no lodging).
+- `tuitionUsd`, `tuitionIncludes` and `paymentOptions` join them too, for B1 values the research nulled because they describe another intake (Wharton's 2026 price). Before this, a converter rebuild silently dropped Wharton's hand-set price.
+- A rating can turn on a fact that has no record field, such as career services. The skill verifies it on an official page and records it in the overrides file as an `extraSources` entry with field `ratingNotes`, holding the URL and verbatim quote. A card note may state the fact; the record carries its source. No new schema field.
+- R10: an open-enrollment program with classmates in every course but no fixed cohort is not "no cohort" for senior_network (Harvard Extension, agreed by Yami; applies to Northwestern MEM).
+
 ## Step 5
 
 - The "17 fields" are the intake table's rows, one entry each, plus the airfare question as its own entry (`core/advisor/fields.ts`). Entries that fill two profile fields (tuition and payment, time, on-site, home) are one entry.
@@ -209,6 +216,16 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 
 `Dockerfile` and `Dockerfile.dev` pull `public.ecr.aws/docker/library/node:24-alpine`, Amazon ECR Public's copy of the official Docker Hub `node` image, instead of `node:24-alpine` from Docker Hub. CI pulls without logging in, and Docker Hub's anonymous limit (100 pulls per 6 hours per IP) failed the `docker` job on shared GitHub runners with `429 Too Many Requests`. ECR Public's anonymous limit is 1 pull per second, so a burst of PRs can fail at worst for seconds, not hours. Logging in to Docker Hub from CI would also work but needs a token stored as a repository secret.
 
+## Rate limit on `/api/chat` (issue #122)
+
+Build-steps risk R5: once public, the client-held history makes `/api/chat` usable as a general Claude proxy. Defaults where the docs were silent:
+
+- **Limits**: 20 requests a minute and 100 an hour per client address (`server/limits.ts`). A conversation is at most 40 turns and a fast chip run is about one request every few seconds, so a real user never meets the minute limit, and the hour allows two and a half whole conversations with retries.
+- **How it counts**: a sliding log in memory (`server/rateLimit.ts`), for the one instance on the host, with no store. A restart forgets every count. Only accepted requests are counted, so waiting `retryAfter` is always enough. It is checked before the body is read, so malformed requests count too. At most 10,000 addresses are tracked; past that the one seen longest ago is dropped.
+- **The address** is the last entry of `X-Forwarded-For`, the one the host's proxy appends for the connection it received; earlier entries come from the client and can be forged. That entry can be trusted only behind the host's proxy: Next.js fills the header with the socket address only when it is missing, so with no proxy in front (local dev) a client that sends its own header picks its own key. With no entry, one shared `unknown` bucket. There is no `X-Real-IP` fallback, since under Next.js the header is never empty (review round 1). An IPv6 address counts by its /64, since one host usually holds a whole /64, and an IPv4-mapped address counts as its IPv4 form (review round 1). This assumes one proxy in front of the app, as on Render or Vercel; behind a second proxy (a CDN in front of the host) the last entry would be that proxy's address and every user would share it. Check this on the first deploy.
+- **The answer** is `429` with `{ error: "rate_limited", retryAfter }` (whole seconds) and the same value in `Retry-After`. The page shows the wait in its notice ("Wait 12 seconds, then retry.") with the usual Retry button. The Retry button is not held back until the wait ends; a retry that comes too early gets another 429 with the new wait.
+- **Logging**: one line `{ event: "chat_rate_limited", window }`, with `window` either `minute` or `hour`. No address and no content.
+
 ## Step 7 (Stage 1 page, issue #9)
 
 - Stage 1 only: chat, chips, the "Here's what I understood" card, the verdict block and Download transcript. `ProgramCard`, the shortlists and `DataLimitsFooter` come with stage 2.
@@ -217,7 +234,7 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 - Typing while chips are pending sends a `ChipAnswer` with `typed` and no `chosen`; typing while the card is pending sends `{ confirmed: false, corrections }`.
 - A multi-select (needs, pick 3) numbers the taps in order; a second tap removes one, and a Send button is enabled once exactly `pick` are chosen.
 - The verdict block shows the winner, the runner-up (or the tie), the deciding needs, the resolved tensions or the "not yet" message, the declined fields, and every type's score or "Ruled out" with the engine's reasons. The "not yet" wording per trigger is fixed page text, not model text. Review round 1: when "not yet" fires, the block and the transcript name no winner, runner-up, tie or deciding needs, even though the engine still ranks a winner; the score table stays.
-- A request that never gets a `ChatResponse` is handled on the page: a network error or 5xx shows a Retry (same as `retryable`); a 4xx disables input (posting the same history would be refused again). Download transcript keeps working in both.
+- A request that never gets a `ChatResponse` is handled on the page: a network error, a 5xx, a 408 or a 429 shows a Retry (same as `retryable`); only a 400 or a 413 disables input (posting the same history would be refused again). Download transcript keeps working in both. Changed from "every 4xx disables input" by #102, since the rate limit (#122) and a host's proxy answer 408 and 429 to a history that a later retry accepts.
 - The page shows a fixed greeting that is not part of the history, since the history must start with the user's message.
 - Contract additions from step 6 (PR #100, `docs/chat-api.md` "Message cap"): a `limit` notice is handled like `auth_or_credit` (history kept, verdict and template text taken from the response when it carries `direction`, input off, no Retry); the wrap-up note stays in the history but `toTurns` skips it, so neither the chat nor the transcript shows it. It is matched by its whole text, `WRAP_UP_NOTE` from `core/advisor/wrapUp.ts` (changed from a prefix match in PR #100's round 1 review), so a user's own text that starts the same way still shows.
 
@@ -239,6 +256,20 @@ Stage 1 only. Yami split step 6 by stage (Oct 9, on the round 1 review of PR #10
 - **Persona A's fake** (`MODEL_FAKE=1`) builds its card from the taps in the history, so page work off persona A's exact path still reaches a verdict, and after a refused call it ends its turn instead of repeating the call.
 - **Typed answers to chip fields** (`advisor.md`): the advisor asks again with `ask_choice`, unless the typed answer declines the question. Then the field is declined as usual (`needs` keeps its one re-offer).
 - **Corrections to chip fields from the card** (round 2 review): the advisor asks again with `ask_choice` on that field before the next card, unless the correction declines the field (round 3 review). Then the field is set to `null` and named in `declined`.
+
+## Advisor markdown in the chat (issue #129)
+
+- Advisor messages render a small markdown subset (paragraphs, bullet and numbered lists, bold, italic) with `react-markdown` 10.1.0 in `app/components/Markdown.tsx`. Round 1 of the PR #136 review found the first, hand-written renderer wrong on loose and nested lists, continuation lines, nested and escaped markers, and bold across a line break. Each fix would mean rebuilding part of CommonMark, so a CommonMark parser replaces it. It runs with `skipHtml` and no `rehype-raw`, so model text never becomes HTML, and `allowedElements` (`p`, `strong`, `em`, `ul`, `ol`, `li`) with `unwrapDisallowed` shows headings, links, tables and code as their plain text. An image has no text inside it, so it is dropped. The rendered block uses `whitespace-normal`, because the newlines `react-markdown` puts between elements would show as blank lines under the bubble's `whitespace-pre-wrap`. The user's own messages and the downloaded transcript stay as typed.
+
+## The verdict in words, not scores (issue #130)
+
+- The engine still ranks types by score (decisions unchanged), but each type's `reasons` are now plain words: how strongly it serves each ranked need ("Strong for a senior network and leadership skills.", "Some help with …", "Little help with …", from the 1-5 type ratings: 4-5 strong, 3 some, 1-2 little), the degree answer ("Built around a degree you said you don't need.") and growing in the role. No reason carries a number.
+- The verdict card and the transcript drop the score column ("How each type compares"); ruled-out types are marked "(ruled out)".
+- The model still receives the scores in the `propose_direction` result, so the history format and retries don't change; `advisor.md` forbids stating them and limits loss reasons to the type's own `reasons`.
+- A ruled-out type's `Out:` reason comes first, before its need words, so "ruled out only when its reasons start with \"Out:\"" in `advisor.md` holds (round 1 review).
+- For `graduate_degree`, a type that awards no degree (`REQUIRED_RULES_OUT`: executive, certificate, short course) reads "Doesn't award a graduate degree." in place of its rating words (round 1 review).
+- `decidingNeeds` leaves out needs where the winner is no stronger than the runner-up (weighted gap 0 or less), so it can hold fewer than two needs or none. Persona A's executive program and EMBA are both 5/5/3 on its needs, so it is empty, the card and the transcript drop the "Deciding needs" line, and the template explanation drops "It fits best on". `advisor.md` step 2 then names the reason that separates the two (the EMBA's degree reason). This narrows the Step 3 `decidingNeeds` default (round 1 review).
+- "How each type compares" lists the winner, then the runner-up, then the rest by score with ruled-out types last. Without the score column the order is the only ranking shown, and a tie the user broke leaves the top two on the same score (round 1 review).
 
 ## Deploy to Render (issue #123)
 

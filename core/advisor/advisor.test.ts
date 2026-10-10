@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import advisor from "./advisor.md?raw";
+import { CHIP_FIELDS } from "./chips";
 import { STAGE_1_CHECKLIST, STAGE_2_CHECKLIST } from "./fields";
 import { ADVISOR_TOOL_NAMES } from "./tools";
 
@@ -86,5 +87,59 @@ describe("advisor.md runs stage 1 and stops", () => {
       for (const field of entry.fields) expect(stage2, field).toContain(`\`${field}\``);
     }
     expect(stage2).toContain("`formatPreference`");
+  });
+});
+
+// The server refuses these with is_error (docs/chat-api.md), so a rule that leads the model to
+// them costs a round (issues #76 and #80).
+describe("advisor.md only asks for tool calls the server accepts", () => {
+  it("requires ask_choice only for fields with a chip set; goalClarity has none", () => {
+    const tools = section("The tools");
+    expect(tools).toContain("**Every** field with a chip set");
+    expect(tools).not.toMatch(/fixed-choice field/);
+    expect(CHIP_FIELDS as readonly string[]).not.toContain("goalClarity");
+    expect(section("How stage 1 runs")).toContain("`goalClarity` is yours to set");
+  });
+
+  it("calls check_contradictions before propose_direction, even after a wrap-up note", () => {
+    const wrapUp = section("Confirm before the verdict")
+      .split("\n")
+      .find((line) => line.includes("wrap up"));
+    expect(wrapUp).toBeDefined();
+    const check = wrapUp!.indexOf("`check_contradictions`");
+    expect(check).toBeGreaterThanOrEqual(0);
+    expect(check).toBeLessThan(wrapUp!.indexOf("`propose_direction`"));
+    expect(section("The tools")).toMatch(/\*\*always\*\* before `propose_direction`/);
+  });
+});
+
+describe("advisor.md explains the verdict in words, from the engine's reasons (issue #130)", () => {
+  it("forbids scores in the advisor's words", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toMatch(/Never state a score, subtotal, point, adjustment or rank number/);
+    expect(section("Facts come from tool results only")).toContain(
+      "Scores never appear in what you write.",
+    );
+  });
+
+  it("names what separates the winner from the runner-up when the needs don't", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain(
+      "When the needs don't separate the winner from the runner-up (`decidingNeeds` is empty), name the reason that does",
+    );
+  });
+
+  it('matches the engine: a ruled-out type\'s reasons start with "Out:"', () => {
+    expect(section("Deliver the verdict")).toContain(
+      'A type is ruled out only when its reasons start with "Out:"',
+    );
+  });
+
+  it("takes every loss reason from the type's reasons, so no length reason is invented", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain("only from that type's `reasons`");
+    expect(verdict).toMatch(
+      /never give a type a length, hours or work reason that its reasons don't state/,
+    );
   });
 });

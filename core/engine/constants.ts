@@ -71,6 +71,30 @@ export const DEGREE_ADJUSTED_TYPES: readonly Category[] = ["mba", "emba", "speci
 export const REQUIRED_RULES_OUT: readonly Category[] = ["executive", "certificate", "short_course"];
 
 export const GROW_IN_ROLE_BONUS = 4;
+
+// The words a type's reasons use (issue #130): the user reads why a type fits, never its score.
+export const NEED_WORDS: Record<Need, string> = {
+  leadership_skills: "leadership skills",
+  deep_expertise: "deep expertise in a field",
+  graduate_degree: "a graduate degree",
+  senior_network: "a senior network",
+  new_industry_or_city: "access to a new industry or city",
+};
+export const RATING_WORDS: Record<Rating, string> = {
+  5: "Strong for",
+  4: "Strong for",
+  3: "Some help with",
+  2: "Little help with",
+  1: "Little help with",
+};
+// For graduate_degree on a type in REQUIRED_RULES_OUT, in place of its rating words.
+export const NO_DEGREE_WORDS = "Doesn't award a graduate degree.";
+export const DEGREE_WORDS = {
+  no: "Built around a degree you said you don't need.",
+  unsure: "Built around a degree you're not sure you need.",
+  preferred: "Built around a degree the role you want prefers but doesn't require.",
+} as const;
+export const GROW_IN_ROLE_WORDS = "Made for growing in the role you have.";
 export const GROW_IN_ROLE_TYPES: readonly Category[] = ["executive", "certificate", "short_course"];
 
 export const NO_PROGRAM_THRESHOLD = 14;

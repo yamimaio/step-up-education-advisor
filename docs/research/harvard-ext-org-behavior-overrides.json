@@ -1,0 +1,30 @@
+{
+  "locationOffers": [
+    "travel_ease",
+    "affordability"
+  ],
+  "tuitionPerCourseUsd": 3580,
+  "courseCount": 4,
+  "cohortMedianExperienceYears": 11,
+  "cohortExperienceBasis": "median",
+  "figureNotes": {
+    "cohortMedianExperienceYears": "Median from Harvard's 2024 fast facts for students pursuing this certificate (years of employment by band); the middle student falls in the 11-20 band, stored at its lower edge."
+  },
+  "extraSources": [
+    {
+      "field": "cohortMedianExperienceYears",
+      "url": "https://extension.harvard.edu/wp-content/uploads/sites/8/2024/05/HES-Fast-Facts-Certificates-Organizational-Behavior.pdf",
+      "quote": "Years of employment 0–4 years 14% 5–10 years 30% 11–20 years 34% 21+ years 22% ... Data pertains to academic year 2024.",
+      "checkedOn": "2026-10-09",
+      "kind": "official_page"
+    },
+    {
+      "field": "durationMaxMonths",
+      "url": "https://extension.harvard.edu/academics/programs/organizational-behavior-certificate/",
+      "quote": "If you prefer a more flexible pace, you have up to three years to finish.",
+      "checkedOn": "2026-10-08",
+      "kind": "official_page"
+    }
+  ],
+  "durationMaxMonths": 36
+}

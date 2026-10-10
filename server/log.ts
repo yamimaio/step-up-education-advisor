@@ -28,3 +28,8 @@ export function logRequest(entry: RequestLog): void {
   };
   console.info(JSON.stringify({ event: "chat_request", ...line }));
 }
+
+// A request refused by the rate limit: which window refused it, never the address.
+export function logRateLimited(window: "minute" | "hour"): void {
+  console.info(JSON.stringify({ event: "chat_rate_limited", window }));
+}

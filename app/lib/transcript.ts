@@ -61,9 +61,10 @@ export function buildTranscript({ history, verdict, fallbackText, date }: Transc
     if (v.decidingNeeds.length) out.push(`- Deciding needs: ${v.decidingNeeds.join(", ")}`);
     for (const t of v.tensions) out.push(`- You decided: ${t}`);
     if (v.notAnswered.length) out.push(`- Not answered: ${v.notAnswered.join(", ")}`);
-    out.push("", "| Type | Score | Why |", "| --- | --- | --- |");
+    out.push("", "| Type | Why |", "| --- | --- |");
     for (const row of v.rows) {
-      out.push(`| ${row.name} | ${row.score} | ${row.reasons.join(" ").replaceAll("|", "\\|")} |`);
+      const name = row.out ? `${row.name} (ruled out)` : row.name;
+      out.push(`| ${name} | ${row.reasons.join(" ").replaceAll("|", "\\|")} |`);
     }
     out.push("");
   }
