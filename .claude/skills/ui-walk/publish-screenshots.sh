@@ -29,9 +29,18 @@ GIT_DIR="$(git rev-parse --absolute-git-dir)"
 export GIT_INDEX_FILE="$GIT_DIR/ui-walk-screenshots.index"
 trap 'rm -f "$GIT_INDEX_FILE"' EXIT
 
-# Start from the branch's last commit, local or on origin, so earlier screenshots stay.
+# Start from the branch's newest commit, local or on origin, so earlier screenshots stay and the
+# push fast-forwards. Stop, before moving any ref, if the two have diverged.
 git fetch --quiet origin "refs/heads/$BRANCH:refs/remotes/origin/$BRANCH" 2>/dev/null || true
-PARENT="$(git rev-parse --verify --quiet "refs/heads/$BRANCH" || git rev-parse --verify --quiet "refs/remotes/origin/$BRANCH" || true)"
+LOCAL="$(git rev-parse --verify --quiet "refs/heads/$BRANCH" || true)"
+REMOTE="$(git rev-parse --verify --quiet "refs/remotes/origin/$BRANCH" || true)"
+if [ -z "$LOCAL" ] || { [ -n "$REMOTE" ] && git merge-base --is-ancestor "$LOCAL" "$REMOTE"; }; then
+  PARENT="$REMOTE"
+elif [ -z "$REMOTE" ] || git merge-base --is-ancestor "$REMOTE" "$LOCAL"; then
+  PARENT="$LOCAL"
+else
+  die "local $BRANCH and origin/$BRANCH have diverged; reconcile them first"
+fi
 if [ -n "$PARENT" ]; then git read-tree "$PARENT"; else git read-tree --empty; fi
 
 for f in "$@"; do

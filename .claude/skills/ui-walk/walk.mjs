@@ -105,6 +105,36 @@ function pageHelpers() {
         ])
       : null;
 
+  // Any CSS color (rgb, hex, oklch…) as [r, g, b, alpha 0-1], through a 1×1 canvas.
+  const pixel = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+  const rgba = (color) => {
+    pixel.clearRect(0, 0, 1, 1);
+    pixel.fillStyle = "rgba(0, 0, 0, 0)";
+    pixel.fillStyle = color;
+    pixel.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = pixel.getImageData(0, 0, 1, 1).data;
+    return [r, g, b, a / 255];
+  };
+  // The opaque color behind an element: its and its ancestors' backgrounds over white.
+  const backdrop = (from) => {
+    const layers = [];
+    for (let e = from; e; e = e.parentElement)
+      layers.unshift(rgba(getComputedStyle(e).backgroundColor));
+    return layers.reduce(
+      (under, [r, g, b, a]) => [r, g, b].map((c, i) => a * c + (1 - a) * under[i]),
+      [255, 255, 255],
+    );
+  };
+  const luminance = (rgb) =>
+    rgb
+      .map((c) => c / 255)
+      .map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+      .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i], 0);
+  const ratio = (x, y) => {
+    const [hi, lo] = [luminance(x), luminance(y)].sort((p, q) => q - p);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
   window.__uiwalk = {
     describe,
     text,
@@ -175,12 +205,31 @@ function pageHelpers() {
       window.__uiwalkNext ??= 0;
       if (!window.__uiwalkIds.has(el)) window.__uiwalkIds.set(el, ++window.__uiwalkNext);
       const s = getComputedStyle(el);
-      const outlined = s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0;
+      // An outline counts only when it can be seen: "auto" (the browser's own two-tone ring), or
+      // a drawn one at 3:1 or more against what is behind it (WCAG 1.4.11). Behind is the
+      // element's ancestors for an outline outside it, the element itself for one inside.
+      let contrast = null;
+      let outlined = s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0;
+      if (outlined && s.outlineStyle !== "auto") {
+        const behind = backdrop(parseFloat(s.outlineOffset) >= 0 ? el.parentElement : el);
+        const [r, g, b, a] = rgba(s.outlineColor);
+        const ring = [r, g, b].map((c, i) => a * c + (1 - a) * behind[i]);
+        contrast = ratio(ring, behind);
+        outlined = contrast >= 3;
+      }
+      // A box-shadow counts only when focus adds it.
+      let shadowed = false;
+      if (!outlined && s.boxShadow !== "none" && s.boxShadow !== "") {
+        const focused = s.boxShadow;
+        el.blur();
+        shadowed = getComputedStyle(el).boxShadow !== focused;
+        el.focus({ preventScroll: true });
+      }
       return {
         key: window.__uiwalkIds.get(el),
         el: describe(el),
-        outline: `${s.outlineStyle} ${s.outlineWidth}`,
-        ring: outlined || (s.boxShadow !== "none" && s.boxShadow !== ""),
+        outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}${contrast === null ? "" : `, ${contrast.toFixed(2)}:1`}`,
+        ring: outlined || shadowed,
         focusVisible: el.matches(":focus-visible"),
         covered: covered(el),
       };
@@ -336,6 +385,13 @@ async function act(page, label, action, opts = {}) {
   return step;
 }
 
+// Horizontal scroll after something opens without a reply (a disclosure).
+async function measure(page, label) {
+  await page.waitForTimeout(200);
+  const s = await snap(page);
+  result.steps.push({ label, overflow: s.overflow, wide: s.wide, focus: null, progress: null });
+}
+
 async function axe(page, label) {
   if (!(await page.evaluate(() => !!window.axe))) await page.addScriptTag({ content: axeSource });
   const violations = await page.evaluate(async (tags) => {
@@ -486,6 +542,7 @@ async function walk() {
   });
   await shot(page, "verdict");
   await page.locator("summary", { hasText: "How each type compares" }).click();
+  await measure(page, "verdict: How each type compares open");
   await axe(page, "verdict (How each type compares open)");
 
   // Stage 2: the yes fails once (network error), then Retry.
@@ -532,7 +589,10 @@ async function walk() {
   });
   await shot(page, "programs");
   const sources = page.locator("summary", { hasText: /^\s*Sources \(\d+\)/ }).first();
-  if (await sources.count()) await sources.click();
+  if (await sources.count()) {
+    await sources.click();
+    await measure(page, "program cards: first Sources open");
+  }
   await axe(page, "program cards (first Sources open)");
   await tabPass(page, "program cards");
   await shot(page, "full", { fullPage: true });
