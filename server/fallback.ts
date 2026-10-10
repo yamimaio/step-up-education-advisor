@@ -63,11 +63,13 @@ export function fallbackExplanation(result: DirectionResult): string {
     (c) => category.scores[c] === "out",
   );
   for (const c of out) {
-    // Only the reason that rules it out, not how it fits the needs: "(you need a degree and …)".
+    // Only the reason that rules it out, not how it fits the needs, as its own sentence so the
+    // type isn't named twice in one: "Ruled out: an executive MBA. The one Executive MBA …".
     const reasons = category.reasons[c]
       .filter((r) => r.startsWith("Out: "))
-      .map((r) => r.slice("Out: ".length).replace(/\.$/, ""));
-    lines.push(`Ruled out: ${CATEGORY[c]}${reasons.length ? ` (${reasons.join("; ")})` : ""}.`);
+      .map((r) => r.slice("Out: ".length))
+      .map((r) => r.charAt(0).toUpperCase() + r.slice(1));
+    lines.push([`Ruled out: ${CATEGORY[c]}.`, ...reasons].join(" "));
   }
   if (profileGaps.length) {
     lines.push(
