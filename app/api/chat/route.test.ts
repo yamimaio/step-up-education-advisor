@@ -140,6 +140,19 @@ describe("the per-IP rate limit", () => {
     const forged = { "x-forwarded-for": "6.6.6.6, 203.0.113.7" };
     expect((await post(hi, forged)).status).toBe(429);
   });
+
+  it("keys on CF-Connecting-IP when present, so X-Forwarded-For can't pick the bucket (#186)", async () => {
+    // Behind Cloudflare: a forged first entry and a proxy last entry that changes every request.
+    const viaCloudflare = (i: number) => ({
+      "cf-connecting-ip": "203.0.113.7",
+      "x-forwarded-for": `6.6.6.${i}, 10.0.0.${i}`,
+    });
+    for (let i = 0; i < RATE_LIMIT_PER_MINUTE; i++) {
+      expect((await post(hi, viaCloudflare(i))).status).toBe(200);
+    }
+    expect((await post(hi, viaCloudflare(99))).status).toBe(429);
+    expect((await post(hi, { "cf-connecting-ip": "198.51.100.2" })).status).toBe(200);
+  });
 });
 
 describe("other methods", () => {

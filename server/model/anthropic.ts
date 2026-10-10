@@ -66,6 +66,46 @@ export function buildParams(request: ModelRequest): Anthropic.MessageCreateParam
   };
 }
 
+export type ProbeResult =
+  | { ok: true; requestId: string | null; inputTokens: number; outputTokens: number }
+  | { ok: false; status: number | null; message: string; requestId: string | null };
+
+// One real request with the server's own parameters, for scripts/probe-tools.ts and
+// scripts/real-run.ts only (never from tests: CLAUDE.md rule 2). The API compiles strict tool
+// schemas on every request and refuses a grammar that's too large, a limit no test can check.
+// `maxTokens` keeps a probe cheap; a refused request uses no tokens.
+export async function probeRequest(request: ModelRequest, maxTokens: number): Promise<ProbeResult> {
+  const apiKey = process.env.MODEL_API_KEY;
+  if (!apiKey)
+    return { ok: false, status: null, message: "MODEL_API_KEY is not set", requestId: null };
+  const client = new Anthropic({ apiKey, maxRetries: 0, timeout: TIMEOUT_MS });
+  try {
+    const message = await client.messages.create({
+      ...buildParams(request),
+      max_tokens: maxTokens,
+    });
+    return {
+      ok: true,
+      requestId: message._request_id ?? null,
+      inputTokens:
+        message.usage.input_tokens +
+        (message.usage.cache_read_input_tokens ?? 0) +
+        (message.usage.cache_creation_input_tokens ?? 0),
+      outputTokens: message.usage.output_tokens,
+    };
+  } catch (error) {
+    if (error instanceof Anthropic.APIError) {
+      return {
+        ok: false,
+        status: error.status ?? null,
+        message: error.message,
+        requestId: error.requestID ?? null,
+      };
+    }
+    return { ok: false, status: null, message: String(error), requestId: null };
+  }
+}
+
 // By the API's error type, never the message text (shared/error-codes in the claude-api skill).
 export function errorKind(error: unknown): ModelErrorKind {
   if (error instanceof Anthropic.APIConnectionError) return "retryable";
