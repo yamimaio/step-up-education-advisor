@@ -4,17 +4,24 @@
   ],
   "attendance": "recurring_evenings",
   "onsiteNote": "Classes held Monday - Thursday evenings + Saturday mornings",
+  "format": "in_person",
   "durationMonths": 24,
   "durationMaxMonths": 36,
   "credits": "A minimum number of 12 courses is required",
   "tuitionPerCourseUsd": 8100,
   "courseCount": 12,
+  "cohortMedianExperienceYears": 7.6,
+  "cohortExperienceBasis": "average",
+  "campusAddress": "2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208",
+  "campusLat": 42.0565,
+  "campusLon": -87.6753,
   "figureNotes": {
     "tuitionPerCourseUsd": "2026-27 rate; the Fall 2027 rate is not published.",
     "courseCount": "A minimum; the school publishes no fixed total.",
     "durationMonths": "The school publishes a 2-3 year range for the part-time option.",
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
-    "campusLon": "Derived from campusAddress (approximate, from the street address)."
+    "campusLon": "Derived from campusAddress (approximate, from the street address).",
+    "cohortMedianExperienceYears": "Average for part-time students in Fall 2021, the latest student body profile the school publishes."
   },
   "extraSources": [
     {
@@ -47,9 +54,55 @@
       "quote": "Northwestern University 2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208",
       "checkedOn": "2026-10-08",
       "kind": "official_page"
+    },
+    {
+      "field": "format",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/flexible-format.html",
+      "quote": "All courses are offered on the Evanston campus.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "cohortMedianExperienceYears",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/student-body-profile.html",
+      "quote": "Note: Data below is from Fall 2021 ... Average Work Experience ... Part-Time Students: 7.6 years",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/curriculum/",
+      "quote": "Choose one (1) of the following Capstone courses: ... MEM 436: Technology Strategy for Products ... MEM 437: Strategic Management for Engineers",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+      "quote": "20-30 students in each academic course",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/",
+      "quote": "Program is not a cohort format to allow additional flexibility",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/career-development.html",
+      "quote": "The Engineering Career Development Office helps provide career advice to engineering students",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.mccormick.northwestern.edu/engineering-management/overview/career-development.html",
+      "quote": "Northwestern Career Advancement offers comprehensive career services including career counseling and assessment",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
     }
-  ],
-  "campusAddress": "2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208",
-  "campusLat": 42.0565,
-  "campusLon": -87.6753
+  ]
 }

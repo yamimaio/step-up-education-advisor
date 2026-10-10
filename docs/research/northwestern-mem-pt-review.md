@@ -1,15 +1,16 @@
 # Review checklist: Master of Engineering Management
 
-A draft record built from `docs/research/northwestern-mem-pt.md`. The first section lists what is uncertain, conflicting, assumed or set by hand; the second lists every set field with the school's verbatim quote and URL. **no quote** means the value was derived or proposed.
+A draft record built from `docs/research/northwestern-mem-pt.md` and `docs/research/northwestern-mem-pt-overrides.json`. The first section lists what is uncertain, conflicting, assumed or set by hand; the second lists every set field with the school's verbatim quote and URL. **no quote** means the value was derived or proposed.
 
 ## Uncertain, conflicting or set by hand
 
 **Mine (derived, assumed or set by hand):**
 
-- **`format: in_person` is my assumption.** The research leaves format null (schema requires a value). The only evidence is the on-campus Monday–Thursday evening and Saturday schedule. Please confirm; hybrid or online would change the location checks.
+- `format: in_person` is now sourced: "All courses are offered on the Evanston campus." (flexible-format page, checked 2026-10-10), set in the overrides file (rate-program v3, PR #135). It replaces the earlier hand-set assumption.
+- `cohortMedianExperienceYears 7.6` (`cohortExperienceBasis: average`) is the part-time students' average from the student body profile, dated Fall 2021 (R2; caveat in `figureNotes`). The homepage's undated "avg. seven years STEM experience" lands in the same band.
 - `durationMonths 24` and `durationMaxMonths 36` come from the quote "Part-time option: 2-3 years" (a range, not a typical value).
 - `courseCount: 12` is the published minimum, not a fixed total; `tuitionUsd` stays null, so the tuition check shows "about $97,200 at 12 courses (estimate)" only as a note, from the 2026–27 rate.
-- `attendance: recurring_evenings` is set by hand from the schedule quote; `locationOffers` is my proposal (industry_hub).
+- `attendance: recurring_evenings` is set from the schedule quote; `locationOffers` is my proposal (industry_hub).
 
 **From the research file's "uncertain or conflicting" list:**
 
@@ -22,9 +23,11 @@ A draft record built from `docs/research/northwestern-mem-pt.md`. The first sect
 - **Attendance and workload:** Evening/Saturday scheduling does not establish annual on-site days, separate trips, online percentage, or weekly study hours.
 - **Unresolved evidence:** Full-time experience profile, cohort size, alumni access, seniority distribution, accreditation, tuition inclusions, exact start date, and Evanston’s FY2027 GSA lodging rate remain unverified.
 
-**Ratings marked low evidence:** network, costValue.
+**Ratings marked low evidence:** new_industry_or_city (career offices are listed, but access for part-time students is not stated). All five needs were re-reviewed under rate-program v3 on Oct 10 with Northwestern's pages; no rating changed, and senior_network now rests on the part-time average. Close calls: new_industry_or_city 3 or 2 (see the last block of `northwestern-mem-pt-rating.md`).
 
 ## Fields, quotes and URLs
+
+Every source in the record, with the value it backs. **no quote** means the value was derived or proposed. Sources with field `ratingNotes` back facts stated in the rating notes.
 
 | Field | Value | Verbatim quote | URL |
 | --- | --- | --- | --- |
@@ -32,27 +35,38 @@ A draft record built from `docs/research/northwestern-mem-pt.md`. The first sect
 | institution | Northwestern University | Northwestern University’s Evanston campus (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/ |
 | category | specialized_masters | Master of Engineering Management degree (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/curriculum/ |
 | credential | Master of Engineering Management | Master of Engineering Management degree (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/curriculum/ |
-| format | in_person | **no quote** | |
-| durationMonths | 24 | Part-time option: 2-3 years (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/ |
-| durationMaxMonths | 36 | **no quote** | |
-| credits | A minimum number of 12 courses is required | A minimum number of 12 courses is required (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/curriculum/ |
-| attendance | recurring_evenings | Classes held Monday - Thursday evenings + Saturday mornings (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/ |
-| onsiteNote | Classes held Monday - Thursday evenings + Saturday mornings | **no quote** | |
 | workCompatible | true | Choose the part-time option to accommodate work or personal needs (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/ |
 | city | Evanston | Northwestern University’s Evanston campus (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/ |
-| country | US | **no quote** | |
+| paymentOptions | ["scholarships", "loans"] | The Albert H. Rubenstein Memorial Scholarship is based on merit and is awarded during the application process. (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/financial-aid.html |
+| paymentOptions | ["scholarships", "loans"] | master’s students are provided with a variety of federal and private loan options (checked 2026-10-08) | https://www.mccormick.northwestern.edu/academics/graduate/prospective-student-resources/financial-aid.html |
+| durationMonths | 24 | Part-time option: 2-3 years (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/ |
+| attendance | recurring_evenings | Classes held Monday - Thursday evenings + Saturday mornings (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/ |
+| credits | A minimum number of 12 courses is required | A minimum number of 12 courses is required (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/curriculum/ |
 | tuitionPerCourseUsd | 8100 | $8,100 per course for part-time students (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/ |
+| campusAddress | 2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208 | Northwestern University 2311 N. Campus Drive, Office Suite 1400 (first floor), Evanston, IL 60208 (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/ |
+| format | in_person | All courses are offered on the Evanston campus. (checked 2026-10-10) | https://www.mccormick.northwestern.edu/engineering-management/overview/flexible-format.html |
+| cohortMedianExperienceYears | 7.6 | Note: Data below is from Fall 2021 ... Average Work Experience ... Part-Time Students: 7.6 years (checked 2026-10-10) | https://www.mccormick.northwestern.edu/engineering-management/overview/student-body-profile.html |
+| ratingNotes | (rating evidence) | Choose one (1) of the following Capstone courses: ... MEM 436: Technology Strategy for Products ... MEM 437: Strategic Management for Engineers (checked 2026-10-10) | https://www.mccormick.northwestern.edu/engineering-management/curriculum/ |
+| ratingNotes | (rating evidence) | 20-30 students in each academic course (checked 2026-10-10) | https://www.mccormick.northwestern.edu/engineering-management/ |
+| ratingNotes | (rating evidence) | Program is not a cohort format to allow additional flexibility (checked 2026-10-10) | https://www.mccormick.northwestern.edu/engineering-management/ |
+| ratingNotes | (rating evidence) | The Engineering Career Development Office helps provide career advice to engineering students (checked 2026-10-10) | https://www.mccormick.northwestern.edu/engineering-management/overview/career-development.html |
+| ratingNotes | (rating evidence) | Northwestern Career Advancement offers comprehensive career services including career counseling and assessment (checked 2026-10-10) | https://www.mccormick.northwestern.edu/engineering-management/overview/career-development.html |
+| durationMaxMonths | 36 | **no quote** | |
+| onsiteNote | Classes held Monday - Thursday evenings + Saturday mornings | **no quote** | |
+| campusLat | 42.0565 | **no quote** | |
+| campusLon | -87.6753 | **no quote** | |
+| country | US | **no quote** | |
 | courseCount | 12 | **no quote** | |
-| paymentOptions | ["scholarships","loans"] | The Albert H. Rubenstein Memorial Scholarship is based on merit and is awarded during the application process. (checked 2026-10-08) | https://www.mccormick.northwestern.edu/engineering-management/overview/tuition/financial-aid.html |
-| paymentOptions | ["scholarships","loans"] | master’s students are provided with a variety of federal and private loan options (checked 2026-10-08) | https://www.mccormick.northwestern.edu/academics/graduate/prospective-student-resources/financial-aid.html |
-| figureNotes | {"tuitionPerCourseUsd":"2026-27 rate; the Fall 2027 rate is not published.","courseCount":"A minimum; the school publishes no fixed total.","durationMonths":"The school publishes a 2-3 year range for the part-time option."} | **no quote** | |
+| cohortExperienceBasis | average | **no quote** | |
 | locationOffers | ["industry_hub"] | **no quote** | |
+| figureNotes | {"tuitionPerCourseUsd": "2026-27 rate; the Fall 2027 rate is not published.", "courseCount": "A minimum; the school publishes no fixed total.", "durationMonths": "The school publishes a 2-3 year range for the part-time option.", "campusLat": "Derived from campusAddress (approximate, from the street address).", "campusLon": "Derived from campusAddress (approximate, from the street address).", "cohortMedianExperienceYears": "Average for part-time students in Fall 2021, the latest student body profile the school publishes."} | **no quote** | |
 
-**Ratings** (from `northwestern-mem-pt-rating.md`):
+**Ratings** (from the last block of `northwestern-mem-pt-rating.md`):
 
-| Rating | Score | Note |
+| Need | Score | Note |
 | --- | --- | --- |
-| network (low evidence) | 3 | Low evidence: scheduled evening/Saturday classes and an experienced-STEM target audience support a provisional 3; cohort interaction, actual in-person time, seniority and alumni access are not established. |
-| depth | 4 | Master’s degree requiring at least 12 courses, including 7 core courses and at least 2 advanced-engineering courses, supports 4; research/thesis requirements and faculty involvement are not established for 5. |
-| practicality | 4 | The work-accommodating part-time option offers evening/Saturday classes, entry in any quarter, a capstone choice and applied leadership simulations; projects in participants’ own organizations are not established for 5. |
-| costValue (low evidence) | 3 | Low evidence: $8,100 per course is published for 2026–2027 for a master’s typically lasting 2–3 years, but total tuition, Fall 2027 pricing and comparable-program costs are missing; 3 is provisional, not a verified market-value assessment. |
+| leadership_skills | 4 | Required Leadership and Organizational Behavior course and rotating leadership roles in a simulation. |
+| deep_expertise | 5 | Twelve-course master's in engineering management with a required strategy capstone course. |
+| graduate_degree | 5 | Awards the Master of Engineering Management. |
+| senior_network | 2 | Part-time students averaged 7.6 years of experience (Fall 2021); 20 to 30 students per course. |
+| new_industry_or_city (low evidence) | 3 | Engineering career office and Northwestern Career Advancement offer advising; access for part-time students is not stated. |

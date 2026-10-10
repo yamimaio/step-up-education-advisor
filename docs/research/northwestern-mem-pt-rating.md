@@ -94,3 +94,47 @@ Changes from Perplexity's answer:
 - leadership_skills 5 → 4: one required leadership course plus a simulation is a major strand with required courses, not a curriculum built for experienced leaders (new rubric level 4).
 - senior_network 1 → 2: the homepage's "seven years STEM experience" falls in the 5 to 9 band. Still low evidence: not labelled as a median or a part-time figure.
 - new_industry_or_city stays 3: no career facts for part-time students, so the default (3) applies.
+
+## Reviewed ratings (rate-program v3, 2026-10-10; reviewed by: pending)
+
+Full re-review of all five needs under rate-program v3 (PR #135), from the research, the overrides and Northwestern's own pages checked on 2026-10-10: the program homepage, the curriculum, the student body profile, the flexible-format page and the MEM career development page. New in the overrides file: `format` (sourced), the part-time experience average, and `ratingNotes` sources for the capstone, class size and career services.
+
+```json
+{
+  "ratings": {
+    "leadership_skills": 4,
+    "deep_expertise": 5,
+    "graduate_degree": 5,
+    "senior_network": 2,
+    "new_industry_or_city": 3
+  },
+  "ratingNotes": {
+    "leadership_skills": "Required Leadership and Organizational Behavior course and rotating leadership roles in a simulation.",
+    "deep_expertise": "Twelve-course master's in engineering management with a required strategy capstone course.",
+    "graduate_degree": "Awards the Master of Engineering Management.",
+    "senior_network": "Part-time students averaged 7.6 years of experience (Fall 2021); 20 to 30 students per course.",
+    "new_industry_or_city": "Engineering career office and Northwestern Career Advancement offer advising; access for part-time students is not stated."
+  },
+  "reasoning": {
+    "leadership_skills": "default 3 → 4 per R3: required core course 'MEM 424: Leadership and Organizational Behavior' and, in MEM 402, 'Students take turns performing in leadership roles in a competitive scenario.' The program is about engineering management, not built for experienced leaders, so not 5. Re-checked on the curriculum page on 2026-10-10.",
+    "deep_expertise": "Category default 5 stands: at least 12 courses in engineering management ('A minimum number of 12 courses is required') with a required capstone: 'Choose one (1) of the following Capstone courses:' MEM 436 Technology Strategy for Products or MEM 437 Strategic Management for Engineers. Sustained, credit-bearing depth in one field with a capstone is level 5. The research called these a capstone choice; the curriculum page now confirms the label.",
+    "graduate_degree": "Factual 5: awards the 'Master of Engineering Management degree'.",
+    "senior_network": "default 1 → 2 per R2 and R10: the student body profile ('Note: Data below is from Fall 2021') gives 'Part-Time Students: 7.6 years' of average work experience, band 5 to 9. It is the latest published profile and the figure for this part-time option; the homepage's 'Students possess an avg. seven years STEM experience' (R4) lands in the same band. Per R10, 'Program is not a cohort format' does not make it 'no cohort': there are '20-30 students in each academic course'. The engine derives the same 2 from the record's 7.6.",
+    "new_industry_or_city": "default 3 stands, on thin evidence: the MEM career development page lists 'The Engineering Career Development Office helps provide career advice to engineering students' and 'Northwestern Career Advancement offers comprehensive career services including career counseling and assessment', and an annual MEM Industry Night. None of these says it is open to part-time students, and the page describes part-time graduates as those 'who maintain their current employment'. The optional summer internship is described for the full-time course of study. Not 4: no recruiting channel or career-switcher support quoted."
+  },
+  "lowEvidence": [
+    "new_industry_or_city"
+  ]
+}
+```
+
+Changes from the reviewed block above (Yami, Oct 9):
+
+- No rating changes.
+- senior_network leaves lowEvidence: the 7.6-year average is labelled and specific to part-time students, from the latest published profile (Fall 2021). The record now stores it, so the engine derives the 2 instead of reading the rating.
+- Notes for senior_network and new_industry_or_city restate the new facts.
+
+Close calls:
+
+- new_industry_or_city 3 or 2: if the career offices turn out not to serve part-time students, only the network is left and R5 gives 2.
+- senior_network: the profile is from Fall 2021, five years old; the homepage's current but unlabelled "avg. seven years" agrees.
