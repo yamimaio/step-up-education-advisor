@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { CHIPS } from "../core/advisor/chips";
 import { fixtureDataset } from "../tests/fixtures/dataset";
 import { Page, PERSONA_A_OPENING, PERSONA_A_TAPS, walkToLastTap } from "../tests/fixtures/chat";
-import { logClientHeaders, logRequest } from "./log";
+import { logRequest } from "./log";
 import { FakeModelClient } from "./model/fake";
 import { PERSONA_A_GOAL, personaAScript, VERDICT_TEXT } from "./model/personaA";
 
@@ -61,23 +61,5 @@ describe("logging during persona A's run", () => {
     });
     expect(lines).toHaveLength(1);
     expect(lines[0]).not.toContain(PERSONA_A_GOAL);
-  });
-
-  it("logClientHeaders logs counts and booleans only, never an address", () => {
-    const lines: string[] = [];
-    vi.spyOn(console, "info").mockImplementation((line: string) => void lines.push(line));
-    logClientHeaders({
-      forwardedFor: 2,
-      cfConnectingIp: true,
-      trueClientIp: false,
-      ...({ address: "198.51.100.9" } as object),
-    });
-    expect(lines).toHaveLength(1);
-    expect(JSON.parse(lines[0]!)).toEqual({
-      event: "chat_client_headers",
-      forwardedFor: 2,
-      cfConnectingIp: true,
-      trueClientIp: false,
-    });
   });
 });

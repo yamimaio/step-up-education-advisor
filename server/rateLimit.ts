@@ -74,32 +74,15 @@ export class RateLimiter {
 // proxy in front a client that sends its own header (or its own CF-Connecting-IP) chooses its
 // key. No address means one shared bucket. Never logged.
 export function clientAddress(headers: Headers): string {
-  const address = headers.get("cf-connecting-ip")?.trim() || forwardedFor(headers).at(-1);
+  const address =
+    headers.get("cf-connecting-ip")?.trim() ||
+    (headers.get("x-forwarded-for") ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .at(-1);
   // An address is at most 45 characters (IPv6 with an IPv4 tail); anything longer isn't one.
   return address && address.length <= 45 ? clientKey(address) : "unknown";
-}
-
-// Which client-address headers a request carries, as counts and booleans only, for the temporary
-// diagnostic log of issue #186 (removed by #190). No address leaves this function.
-export function clientHeaderShape(headers: Headers): ClientHeaderShape {
-  return {
-    forwardedFor: forwardedFor(headers).length,
-    cfConnectingIp: headers.has("cf-connecting-ip"),
-    trueClientIp: headers.has("true-client-ip"),
-  };
-}
-
-export type ClientHeaderShape = {
-  forwardedFor: number;
-  cfConnectingIp: boolean;
-  trueClientIp: boolean;
-};
-
-function forwardedFor(headers: Headers): string[] {
-  return (headers.get("x-forwarded-for") ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
 }
 
 // An IPv6 address counts by its /64, since one host usually holds a whole /64 and could send each

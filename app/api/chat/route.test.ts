@@ -128,16 +128,8 @@ describe("the per-IP rate limit", () => {
     expect(body).toEqual({ error: "rate_limited", retryAfter: expect.any(Number) });
     expect(body.retryAfter).toBeGreaterThan(0);
     expect(refused.headers.get("Retry-After")).toBe(String(body.retryAfter));
-    // The log lines hold counts, booleans and the window, never the address.
-    expect(lines).toEqual([
-      JSON.stringify({
-        event: "chat_client_headers",
-        forwardedFor: 2,
-        cfConnectingIp: false,
-        trueClientIp: false,
-      }),
-      JSON.stringify({ event: "chat_rate_limited", window: "minute" }),
-    ]);
+    // The log line names the window, never the address.
+    expect(lines).toEqual([JSON.stringify({ event: "chat_rate_limited", window: "minute" })]);
   });
 
   it("counts each address apart, by the proxy's entry", async () => {

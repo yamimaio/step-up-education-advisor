@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RATE_LIMIT_PER_HOUR, RATE_LIMIT_PER_MINUTE } from "./limits";
-import { clientAddress, clientHeaderShape, clientKey, RateLimiter } from "./rateLimit";
+import { clientAddress, clientKey, RateLimiter } from "./rateLimit";
 
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -150,23 +150,6 @@ describe("clientAddress", () => {
     expect(rl.take(from(1)).ok).toBe(true);
     expect(rl.take(from(2)).ok).toBe(true);
     expect(rl.take(from(3)).ok).toBe(false);
-  });
-});
-
-describe("clientHeaderShape", () => {
-  it("reports counts and booleans, never an address", () => {
-    const shape = clientHeaderShape(
-      new Headers({
-        "x-forwarded-for": "198.51.100.9, , 10.0.0.4",
-        "cf-connecting-ip": "198.51.100.9",
-      }),
-    );
-    expect(shape).toEqual({ forwardedFor: 2, cfConnectingIp: true, trueClientIp: false });
-    expect(clientHeaderShape(new Headers({ "true-client-ip": "198.51.100.9" }))).toEqual({
-      forwardedFor: 0,
-      cfConnectingIp: false,
-      trueClientIp: true,
-    });
   });
 });
 

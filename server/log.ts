@@ -1,7 +1,5 @@
-import type { ClientHeaderShape } from "./rateLimit";
-
-// The server's only logger (CLAUDE.md rule 4). It takes numbers, booleans and fixed enums only, so
-// message content can't be logged by type: no strings from the request or the model ever reach it.
+// The server's only logger (CLAUDE.md rule 4). It takes numbers and fixed enums only, so message
+// content can't be logged by type: no strings from the request or the model ever reach it.
 
 export type RequestStatus =
   "ok" | "paused_chips" | "paused_confirm" | "notice" | "empty_input" | "limit" | "bad_request";
@@ -34,16 +32,4 @@ export function logRequest(entry: RequestLog): void {
 // A request refused by the rate limit: which window refused it, never the address.
 export function logRateLimited(window: "minute" | "hour"): void {
   console.info(JSON.stringify({ event: "chat_rate_limited", window }));
-}
-
-// Temporary (issue #186): which client-address headers reach the app on the host, to confirm the
-// rate limit's key. Counts and booleans only, never an address. Removed by #190 once confirmed.
-export function logClientHeaders(shape: ClientHeaderShape): void {
-  // Rebuilt field by field, like logRequest.
-  const line: ClientHeaderShape = {
-    forwardedFor: shape.forwardedFor,
-    cfConnectingIp: shape.cfConnectingIp,
-    trueClientIp: shape.trueClientIp,
-  };
-  console.info(JSON.stringify({ event: "chat_client_headers", ...line }));
 }
