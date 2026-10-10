@@ -232,6 +232,48 @@ describe("advisor.md says what a passing check asks of the user", () => {
   });
 });
 
+// The summary sends only the checks that don't pass, can't be checked or carry a note
+// (server/stage2.ts). A real run read a missing trip-length check as "the result doesn't give the
+// trip lengths" and told the user to confirm it with the school, while the card said it fit
+// (issue #200).
+describe("advisor.md reads a limit missing from issues as passed (issue #200)", () => {
+  const explain = () => section(STAGE_2).split("### Explain the programs")[1] ?? "";
+
+  it("says every limit not in a program's issues passed", () => {
+    expect(explain()).toContain(
+      "Every limit the user set that the engine checks and that is not in a program's `issues` passed: the program is within it.",
+    );
+    expect(explain()).toContain("a closer look at one included");
+  });
+
+  it("never says the result lacks a passed limit or sends it to the school", () => {
+    expect(explain()).toContain(
+      'Never say the result lacks a limit that passed ("the result doesn\'t give the trip lengths"), and never tell the user to confirm it with the school.',
+    );
+  });
+
+  it("takes questions for the school only from issues, uncovered needs and unchecked answers", () => {
+    expect(explain()).toContain(
+      "Questions for the school come only from `issues` (a near miss, a figure that is `unknown`, or an estimate the issue's `note` names), from needs the result doesn't cover, and from answers the engine doesn't check.",
+    );
+  });
+
+  // Review round 2: how they'd pay isn't an engine check, so it's never in issues, but the card
+  // shows a payment option the record doesn't publish (app/lib/programs.ts, "How you'd pay").
+  it("leaves how they'd pay to the card and the school, never to the passed-limit rule", () => {
+    expect(explain()).toContain(
+      "How they'd pay is one: the result holds no payment options, so never say whether a program offers their way of paying; point to the program card, which shows it, and suggest asking the school when the card says it isn't published.",
+    );
+  });
+
+  // Review round 1: the figure of a passed check never reaches the model (server/stage2.ts).
+  it("answers a question about a passed figure from the limit and the card, not memory", () => {
+    expect(explain()).toContain(
+      "If they ask for the figure of a limit that passed, say it is within the limit they set (name it) and that the program card shows the figure; never state one from memory.",
+    );
+  });
+});
+
 // check_contradictions runs on the taps (decisions.md, "The real API refused the stage 2
 // schemas"): the prompt must not ask the model to send answers the tool no longer takes.
 describe("advisor.md calls check_contradictions with what the tool takes", () => {
