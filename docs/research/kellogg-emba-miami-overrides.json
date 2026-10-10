@@ -1,0 +1,153 @@
+{
+  "locationOffers": [
+    "network_density",
+    "travel_ease"
+  ],
+  "attendance": "recurring_weekends",
+  "onsiteNote": "Thursday afternoon to midday Sunday once a month in Coral Gables (Miami), plus four intensive weeks a program, including orientation and Global Network Week in Evanston.",
+  "state": "Florida",
+  "campusAddress": "95 Merrick Way # 100, Coral Gables, FL 33134",
+  "campusLat": 25.7497,
+  "campusLon": -80.2588,
+  "workCompatible": true,
+  "residencyCount": 11,
+  "longestStretchDays": 6,
+  "lodgingIncluded": true,
+  "paymentOptions": [
+    "installments",
+    "employer_sponsorship"
+  ],
+  "tuitionIncludes": "Tuition only ($205,486 for 2026-2027). Food and housing ($42,986) are a separate required charge, for an estimated $248,472 in total; the total covers classes, e-books, a hotel room on the Miami campus, most meals, career services and accommodation for one global elective. Not covered: travel to and from campus and international travel for global electives.",
+  "cohortMedianExperienceYears": 15,
+  "cohortExperienceBasis": "average",
+  "figureNotes": {
+    "campusLat": "Derived from campusAddress (approximate, from the street address).",
+    "campusLon": "Derived from campusAddress (approximate, from the street address).",
+    "cohortMedianExperienceYears": "Average published on the admissions page; no median or breakdown is published.",
+    "residencyCount": "Counted from the January 2027 first-year Miami calendar: orientation, eight class weekends, the July intensive week and Global Network Week (11 trips). The second-year calendar is not published.",
+    "longestStretchDays": "Orientation programming, January 12 to 17, 2027. Global Network Week's length is not published.",
+    "onsiteDaysPerYear": "Not set: the January 2027 first-year calendar gives 43 known days (6 orientation, 8 weekends of 4 days, a 5-day intensive week), plus Global Network Week, whose dates and length are not published.",
+    "tuitionUsd": "2026-2027 tuition for the whole two-year program; Kellogg says tuition has historically risen 3-4% a year."
+  },
+  "extraSources": [
+    {
+      "field": "workCompatible",
+      "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
+      "quote": "The Executive MBA Program is designed for fully-employed professionals with at least eight years of work experience.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "campusAddress",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/",
+      "quote": "95 Merrick Way # 100, Coral Gables, FL 33134",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "attendance",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/",
+      "quote": "Take classes once a month, beginning Thursday afternoon and ending midday Sunday.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "residencyCount",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/",
+      "quote": "February 4 - 7, 2027 March 4 - 7, 2027 April 1 - 4, 2027 May 20 - May 23, 2027 June 24 - 27, 2027 July 13 - 17, 2027 (Intensive week) August 2027 (Global network week) September 9 - 12, 2027 October 7 - 10, 2027 November 4 - 7, 2027",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "longestStretchDays",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/locations-and-schedule/miami-monthly/",
+      "quote": "Programming: January 12 - 17, 2027",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "paymentOptions",
+      "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+      "quote": "Tuition is billed by academic quarter.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "paymentOptions",
+      "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
+      "quote": "If your organization is providing financial sponsorship, please state that in the letter as well.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "tuitionIncludes",
+      "url": "https://www.kellogg.northwestern.edu/admissions/financial-aid/emba-fin-aid/",
+      "quote": "designed to be comprehensive and all-inclusive",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "cohortMedianExperienceYears",
+      "url": "https://www.kellogg.northwestern.edu/admissions/emba-admissions/emba-how-to-apply/",
+      "quote": "Students in our program have an average of 15 years of work experience, including military service,",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/emba-experience/class-profile/",
+      "quote": "Hold senior positions (Director + VP + C-Suite)",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/core-courses/",
+      "quote": "You are required to take all core courses, which you take at the same time as other students in your cohort.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/leadership-development.aspx",
+      "quote": "The series consists of five workshops",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/core-courses/",
+      "quote": "Executive Perspectives on Leadership",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/leadership-development.aspx",
+      "quote": "receive individual coaching sessions with a Kellogg executive leadership coach",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/curriculum-and-faculty/specializations",
+      "quote": "These specializations are not recorded on the transcript or diploma.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/",
+      "quote": "Shift to a new function or industry with tools from the CMC that help you:",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "ratingNotes",
+      "url": "https://www.kellogg.northwestern.edu/programs/executive-mba/career-services/",
+      "quote": "CMC coaching sessions are tailored to experienced professionals making high-impact decisions.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    }
+  ]
+}
