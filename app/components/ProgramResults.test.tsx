@@ -62,6 +62,13 @@ describe("ProgramResults", () => {
     expect(region.textContent).not.toContain("Fixture fake-mba");
   });
 
+  it("numbers the ranked cards and leaves Also worth a look unnumbered", () => {
+    const region = renderResults(withPassingCertificate);
+    const [ranked, also] = within(region).getAllByRole("article");
+    expect(within(ranked!).getByText("1").getAttribute("aria-hidden")).toBe("true");
+    expect(within(also!).queryByText(/^\d+$/)).toBeNull();
+  });
+
   it("says when the confirmed category has nothing within the limits, and shows the alternative", () => {
     const region = renderResults(withPassingCertificate, {
       ...personaAProfile,

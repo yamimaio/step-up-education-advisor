@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CHIPS } from "@core/advisor/chips";
@@ -133,7 +133,17 @@ async function walkToPrograms(user: ReturnType<typeof userEvent.setup>) {
 const follows = (a: Node, b: Node) =>
   Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
+// jsdom has no scrollIntoView: record each call, with the element it was called on.
+let scrolled: { el: Element; options: unknown }[] = [];
+beforeEach(() => {
+  scrolled = [];
+  Element.prototype.scrollIntoView = function (this: Element, options?: unknown) {
+    scrolled.push({ el: this, options });
+  };
+});
+
 afterEach(() => {
+  delete (Element.prototype as Partial<Element>).scrollIntoView;
   cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -205,6 +215,39 @@ describe("the page, stage 2", () => {
     // The log is live by its role; the line sits in it, outside the silenced cards.
     expect(log.contains(line)).toBe(true);
     expect(line.closest('[aria-live="off"]')).toBeNull();
+  });
+
+  it("starts the view at Programs that fit and puts focus on its heading when the cards arrive", async () => {
+    const results = await walkToPrograms(userEvent.setup());
+    const heading = within(results).getByRole("heading", { level: 2, name: "Programs that fit" });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    // The last scroll is to the heading's top, after the usual scroll to the end of the chat.
+    expect(scrolled.at(-1)).toEqual({ el: heading, options: { block: "start" } });
+    expect(scrolled.some((s) => s.el !== heading)).toBe(true);
+
+    // A later turn scrolls to the end as usual and leaves the heading alone.
+    queue.push({
+      ...ok,
+      messages: [assistant({ type: "text", text: "Anything else?" })],
+      text: "Anything else?",
+    });
+    await userEvent.setup().type(screen.getByLabelText("Your message"), "Thanks{Enter}");
+    await screen.findByText("Anything else?");
+    expect(scrolled.at(-1)!.el).not.toBe(heading);
+  });
+
+  it("keeps focus on Retry when the cards arrive with a failed reply", async () => {
+    queue[queue.length - 1] = {
+      ...ok,
+      programs: search,
+      text: "Here is what fits.",
+      notice: { kind: "retryable", message: "Try again" },
+    };
+    const results = await walkToPrograms(userEvent.setup());
+    const heading = within(results).getByRole("heading", { level: 2, name: "Programs that fit" });
+    const retry = await screen.findByRole("button", { name: "Retry" });
+    await waitFor(() => expect(document.activeElement).toBe(retry));
+    expect(scrolled.at(-1)).toEqual({ el: heading, options: { block: "start" } });
   });
 
   it("keeps the programs under their own card's answer when a later search confirm fails", async () => {

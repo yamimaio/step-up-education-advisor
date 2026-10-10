@@ -19,10 +19,16 @@ const today = new Date("2026-10-10");
 const WHY = "Ranked first for senior peers (cohort median 15 years) and leadership skills.";
 
 // The card for one program, with the engine's evaluation of it for persona A.
-function renderCard(program: Program = fixture(), profile: Profile = personaAProfile) {
+function renderCard(
+  program: Program = fixture(),
+  profile: Profile = personaAProfile,
+  rank?: number,
+) {
   const category = recommendCategory(toEngineDirection(personaADirection), [program]).category;
   const result = evaluatePrograms(profile, category, [program], today);
-  render(<ProgramCard program={programView(program, result.programs[0]!, profile, WHY)} />);
+  render(
+    <ProgramCard program={programView(program, result.programs[0]!, profile, WHY)} rank={rank} />,
+  );
   return screen.getByRole("article", { name: program.name });
 }
 
@@ -48,6 +54,19 @@ describe("ProgramCard", () => {
     expect(card).toContain("Blended, as you prefer.");
     expect(card).toContain("Confidence: High.");
     expect(card).not.toContain("Draft, not yet verified");
+  });
+
+  it("numbers a ranked card before its name, hidden from screen readers", () => {
+    const card = renderCard(fixture(), personaAProfile, 2);
+    const marker = within(card).getByText("2");
+    expect(marker.getAttribute("aria-hidden")).toBe("true");
+    // The heading, and so the card's name, is the program name alone.
+    expect(within(card).getByRole("heading", { level: 3 }).textContent).toBe(fixture().name);
+  });
+
+  it("has no number without a rank", () => {
+    const card = renderCard();
+    expect(within(card).queryByText(/^\d+$/)).toBeNull();
   });
 
   it('shows "not published" for a null tuition, and lowers confidence for it', () => {
