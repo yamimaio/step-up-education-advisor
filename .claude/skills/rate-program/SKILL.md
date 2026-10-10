@@ -5,7 +5,7 @@ description: Rate a Step Up program on the five needs (1 to 5) from its saved re
 
 # Rate a program
 
-**Version 3 (Oct 10, 2026).** Bump the version whenever `rating-prompt.md` or `rulings.md` changes, and add a line to the changelog at the end.
+**Version 4 (Oct 10, 2026).** Bump the version whenever `rating-prompt.md` or `rulings.md` changes, and add a line to the changelog at the end.
 
 Files in this skill:
 
@@ -17,6 +17,7 @@ Files in this skill:
 - Start from the facts in `docs/research/<id>.md` and `docs/research/<id>-overrides.json`. When a rating turns on a fact the research lacks or got wrong, verify it on the school's own pages or documents (a web search is fine for finding them) and add it to the overrides file: the value, plus an `extraSources` entry with the URL, the verbatim quote and `checkedOn`. `docs/decisions.md` lists the facts the overrides file may set. Never use what you know about the program without such a source. Yami's first-hand knowledge enters only through a ruling.
 - When the fact has no record field (career services, curriculum structure, majors), verify it the same way and add an `extraSources` entry with field `ratingNotes`: the URL, the verbatim quote and `checkedOn`. A card note may then state it.
 - Every card note (`ratingNotes`) states facts from the research or from an `extraSources` entry in the overrides file. Judgments go in `reasoning` (R8).
+- Tuition: `tuitionUsd` is the total the school itself bills for the whole program. When the school bills food and housing as a required charge (Kellogg, Wharton), it is part of `tuitionUsd`, `lodgingIncluded` is true, and `tuitionIncludes` says what the total covers and gives the published tuition line. Lodging we estimate ourselves (the GSA rate in `lodgingPerNightUsd`, or any manual calculation) never goes into `tuitionUsd`: it is a travel expense the engine adds. If the research stores tuition alone, set the total in the overrides file with its source (`docs/decisions.md`, tuition with school-billed housing).
 - Never change the research file or edit `core/data/programs.json` by hand. The overrides file changes only to add a verified fact as above. The converter (`draft-records --force docs/research/<id>`) reads the ratings from the rating file and the facts from the overrides.
 
 ## Steps
@@ -69,3 +70,4 @@ Prompt and skill changes go in their own issue and PR, separate from the step 4 
 - v1 (Oct 9, 2026): first version. The rating prompt moved here from `docs/perplexity-program-prompts.md`, with the rules from issue #87. Rulings R1 to R8 come from Yami's review of MIT TLP, Wharton EMBA SF, Northwestern MEM and Harvard Extension.
 - v2 (Oct 9, 2026): R9 and the senior_network rubric line: a published experience breakdown gives the median, which beats a stated average (Yami, MIT TLP review). Facts the research lacks may now be verified on official pages and added to the overrides file with a source (Yami: re-rate every program ourselves, verifying where needed).
 - v3 (Oct 10, 2026): a fact with no record field that a rating or card note rests on is recorded as an `extraSources` entry with field `ratingNotes`; `format` can be set with a source in the overrides file; R10 (open enrollment with classmates per course is not "no cohort"). From the Wharton EMBA SF and Northwestern MEM re-ratings.
+- v4 (Oct 10, 2026): tuition rule. `tuitionUsd` is the school's billed total, including required school-billed food and housing; our own lodging estimates never go into it (Yami, Kellogg EMBA Miami review).
