@@ -34,25 +34,16 @@ export function VerdictBlock({ verdict }: { verdict: Verdict }) {
         {v.notAnswered.length > 0 && <li>Not answered: {v.notAnswered.join(", ")}</li>}
       </ul>
       <details className="mt-3 text-sm">
-        <summary className="cursor-pointer text-teal">How each type scored</summary>
-        <table className="mt-2 w-full text-left">
-          <thead>
-            <tr className="text-ink/70">
-              <th className="py-1 pr-3 font-medium">Type</th>
-              <th className="py-1 pr-3 font-medium">Score</th>
-              <th className="py-1 font-medium">Why</th>
-            </tr>
-          </thead>
-          <tbody>
-            {v.rows.map((row) => (
-              <tr key={row.category} className="border-t border-ink/10 align-top">
-                <td className="py-1 pr-3">{row.name}</td>
-                <td className="py-1 pr-3">{row.score}</td>
-                <td className="py-1">{row.reasons.join(" ")}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <summary className="cursor-pointer text-teal">How each type compares</summary>
+        <ul className="mt-2 space-y-2">
+          {v.rows.map((row) => (
+            <li key={row.category} className="border-t border-ink/10 pt-2">
+              <span className="font-medium">{row.name}</span>
+              {row.out && <span className="ml-2 text-ink/70">(ruled out)</span>}
+              <span className="block text-ink/80">{row.reasons.join(" ")}</span>
+            </li>
+          ))}
+        </ul>
       </details>
     </section>
   );
