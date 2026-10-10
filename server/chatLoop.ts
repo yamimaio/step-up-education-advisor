@@ -14,12 +14,12 @@ import {
 import {
   BadRequest,
   checkAskChoice,
+  checkProposeDirection,
   EmptyInput,
   rewriteChipAnswer,
   rewriteConfirm,
   rewriteSearchConfirm,
   runCheckContradictions,
-  validateProposeDirection,
   validateProposeSearch,
 } from "./handlers";
 import {
@@ -284,7 +284,11 @@ export async function chatLoop(posted: Message[], deps: ChatDeps): Promise<ChatR
         }
         results = [errorResult(use.id, ask.problems)];
       } else if (use.name === "propose_direction") {
-        const checked = validateProposeDirection(use.input, [...history, ...added.slice(0, -1)]);
+        const checked = checkProposeDirection(
+          use.input,
+          [...history, ...added.slice(0, -1)],
+          deps.programs,
+        );
         if (checked.ok) {
           confirm = { toolUseId: use.id, direction: checked.direction };
           shown.push(said);

@@ -172,9 +172,6 @@ function valueAt(answers: Direction | Profile, path: string): unknown {
     );
 }
 
-const ALREADY_CONFIRMED =
-  "The user already confirmed these answers and saw the verdict. Don't show the card again: explain the verdict in words. Call propose_direction again only after the user changes a stage 1 answer (through ask_choice for a chip field), or with tieBreaker set when the result is a tie.";
-
 // The checks before the confirm card shows (docs/chat-api.md, "Validation the server does on
 // propose_direction"). `history` is everything before the call. Problems go back to the model as
 // an is_error result, so it asks again.
@@ -185,12 +182,6 @@ export function validateProposeDirection(
   const parsed = ProposeDirectionInput.safeParse(input);
   if (!parsed.success) return { ok: false, problems: problemsOf(parsed.error) };
   const { direction } = parsed.data;
-  // The same card again after its verdict only loops the user through "Looks right" (issue
-  // #203). A changed answer or a tieBreaker makes it a new direction, which passes.
-  const confirmed = confirmedDirection(history);
-  if (confirmed && same(confirmed.direction, direction)) {
-    return { ok: false, problems: ALREADY_CONFIRMED };
-  }
   const problems: string[] = [];
   if (!calledBefore(history, "check_contradictions")) {
     problems.push("Call check_contradictions with the stage 1 answers before propose_direction.");
@@ -211,6 +202,41 @@ export function validateProposeDirection(
     }
   }
   return problems.length ? { ok: false, problems: problems.join("\n") } : { ok: true, direction };
+}
+
+const ALREADY_CONFIRMED =
+  "The user already confirmed these answers and saw the verdict. Don't show the card again: explain the verdict in words. Call propose_direction again only after the user changes a stage 1 answer (through ask_choice for a chip field, in words for the goal), or with tieBreaker set when the result is a tie.";
+
+// Two cards the engine reads the same: declined and resolvedTensions in any order, and the
+// tieBreaker only when the answers tie without it, since the engine ignores it otherwise.
+function sameCard(a: Direction, b: Direction, programs: Program[]): boolean {
+  const untied = recommendCategory(toEngineDirection({ ...a, tieBreaker: undefined }), programs);
+  const key = (d: Direction) => ({
+    ...d,
+    declined: [...d.declined].sort(),
+    resolvedTensions: [...d.resolvedTensions].sort(
+      (x, y) => x.rule.localeCompare(y.rule) || x.chosen.localeCompare(y.chosen),
+    ),
+    tieBreaker: untied.category.tie ? d.tieBreaker : undefined,
+  });
+  return same(key(a), key(b));
+}
+
+// The model's propose_direction call: the checks above, and not the card the user already
+// confirmed, since showing it again only loops them through "Looks right" (issue #203). Only a
+// new call gets this check: the re-checks of calls already in the client-held history
+// (confirmedDirection, rewriteConfirm) leave it out, so a history that holds the loop still reads.
+export function checkProposeDirection(input: unknown, history: Message[], programs: Program[]) {
+  const parsed = ProposeDirectionInput.safeParse(input);
+  const confirmed = parsed.success ? confirmedDirection(history) : null;
+  if (
+    parsed.success &&
+    confirmed &&
+    sameCard(confirmed.direction, parsed.data.direction, programs)
+  ) {
+    return { ok: false as const, problems: ALREADY_CONFIRMED };
+  }
+  return validateProposeDirection(input, history);
 }
 
 const ChipAnswer = z.strictObject({ chosen: z.array(z.string()), typed: z.string().optional() });

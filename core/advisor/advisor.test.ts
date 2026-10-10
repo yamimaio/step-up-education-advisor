@@ -275,7 +275,7 @@ describe("advisor.md shows the direction card once per set of answers (issue #20
   it("never calls propose_direction after a confirmed result unless an answer changed or it ties", () => {
     const verdict = section("Deliver the verdict");
     expect(verdict).toContain(
-      "The verdict turn always has text. After a confirmed result, never call `propose_direction` again unless the user changed a stage 1 answer through `ask_choice` or the result is a tie.",
+      "The verdict turn always has text. After a confirmed result, never call `propose_direction` again unless the user changed a stage 1 answer (through `ask_choice` for a chip field, in words for the goal) or the result is a tie.",
     );
     expect(verdict).toContain(
       "If the user agrees with the verdict or asks about it, answer in words; the server refuses the same card twice.",

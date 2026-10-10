@@ -15,7 +15,7 @@ import {
   walkToSearchCard,
 } from "../tests/fixtures/chat";
 import { ModelError } from "./model/adapter";
-import { BadRequest } from "./handlers";
+import { BadRequest, confirmedDirection } from "./handlers";
 import { chatLoop, MAX_SERVER_ROUNDS } from "./chatLoop";
 import type { Message } from "./history";
 import { FakeModelClient, text, toolUse, turn, type Script } from "./model/fake";
@@ -550,13 +550,25 @@ describe("the posted message must answer what is pending", () => {
 // showed the same card and verdict again.
 describe("the server shows a confirmed card only once (issue #203)", () => {
   // Persona A to the direction card, then a scripted model for the turn after "Looks right".
-  async function atVerdict(script: Script) {
+  // `answers` replaces persona A's tap for a field, or skips it ("skip": a typed decline).
+  async function atVerdict(script: Script, answers: Record<string, string[] | "skip"> = {}) {
     const page = new Page(new FakeModelClient(personaAScript), programs);
-    await walkToLastTap(page);
-    await page.tap(...PERSONA_A_TAPS.degreeRequired!);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    while (page.last?.chips) {
+      const { field, toolUseId } = page.last.chips;
+      const own = answers[field];
+      if (own === "skip") {
+        await page.post(answer(toolUseId, { chosen: [], typed: "Can we skip this one?" }));
+      } else {
+        await page.tap(...(own ?? PERSONA_A_TAPS[field]!));
+      }
+    }
+    const card = page.last!.confirm!.direction!;
     page.model = new FakeModelClient(script);
     const r = await page.confirm();
-    return { page, r };
+    return { page, r, card };
   }
   const propose = (direction: object) => turn(toolUse("propose_direction", { direction }));
 
@@ -609,15 +621,79 @@ describe("the server shows a confirmed card only once (issue #203)", () => {
     expect(r.direction).not.toBeNull();
   });
 
-  it("shows the card again with a tieBreaker", async () => {
-    const { page } = await atVerdict([turn(text(VERDICT_TEXT))]);
+  it("refuses the same card with a tieBreaker when the answers don't tie", async () => {
+    const { page, r } = await atVerdict([turn(text(VERDICT_TEXT))]);
+    expect(r.direction?.category.tie).toBeUndefined();
     page.model = new FakeModelClient([
       checkAll(),
       propose({ ...PERSONA_A_DIRECTION, tieBreaker: "executive" }),
+      turn(text("It's still the executive program.")),
     ]);
-    const r = await page.type("The executive program, if I had to pick.");
-    expect(errorResultsIn(r.messages)).toHaveLength(0);
-    expect(r.confirm?.direction?.tieBreaker).toBe("executive");
+    const again = await page.type("The executive program, if I had to pick.");
+    expect(again.confirm).toBeNull();
+    expect(errorResultsIn(again.messages)).toHaveLength(1);
+  });
+
+  it("shows the card again with a tieBreaker when the answers tie", async () => {
+    // These answers tie a certificate with a short course on the fixture programs.
+    const tied = {
+      needs: ["Leadership skills", "Deep expertise in a field", "A graduate degree"],
+      hoursPerWeek: ["Under 5"],
+    };
+    const { page, r, card } = await atVerdict(
+      [turn(text("A certificate and a short course tie."))],
+      tied,
+    );
+    expect(r.direction?.category.tie).toEqual(["certificate", "short_course"]);
+    page.model = new FakeModelClient([checkAll(), propose({ ...card, tieBreaker: "certificate" })]);
+    const broken = await page.type("The certificate, if I had to pick.");
+    expect(errorResultsIn(broken.messages)).toHaveLength(0);
+    expect(broken.confirm?.direction?.tieBreaker).toBe("certificate");
+    const verdict = await page.confirm();
+    expect(verdict.direction?.category.winner).toBe("certificate");
+  });
+
+  it("refuses the same card with its declines in another order", async () => {
+    const { page, card } = await atVerdict([turn(text(VERDICT_TEXT))], {
+      hoursPerWeek: "skip",
+      keepWorking: "skip",
+    });
+    expect(card.declined).toEqual(["hoursPerWeek", "keepWorking"]);
+    page.model = new FakeModelClient([
+      checkAll(["hoursPerWeek"]),
+      propose({ ...card, declined: ["keepWorking", "hoursPerWeek"] }),
+      turn(text("Glad it fits.")),
+    ]);
+    const r = await page.type("Yes, that verdict is right.");
+    expect(r.confirm).toBeNull();
+    expect(errorResultsIn(r.messages)).toHaveLength(1);
+  });
+
+  // A tab open across the deploy can already hold the loop: two confirms of the same card.
+  it("still reads a history that already holds the same card confirmed twice", async () => {
+    const { page } = await atVerdict([turn(text(VERDICT_TEXT))]);
+    page.history.push({
+      role: "assistant",
+      content: [toolUse("propose_direction", { direction: PERSONA_A_DIRECTION }, "toolu_dup")],
+    });
+    page.model = new FakeModelClient([turn(text(VERDICT_TEXT))]);
+    const r = await page.post(answer("toolu_dup", { confirmed: true }));
+    expect(r.direction?.category.winner).toBe("executive");
+    expect(confirmedDirection(page.history)?.direction).toMatchObject(PERSONA_A_DIRECTION);
+
+    // Stage 2 stays open, and the card still doesn't come back.
+    page.model = new FakeModelClient([
+      checkAll(),
+      propose(PERSONA_A_DIRECTION),
+      turn(
+        text("Let's look at programs."),
+        toolUse("ask_choice", { field: "currentRole", question: "Role?" }),
+      ),
+    ]);
+    const next = await page.type(PERSONA_A_PROGRAMS_YES);
+    expect(next.confirm).toBeNull();
+    expect(errorResultsIn(next.messages)).toHaveLength(1);
+    expect(next.chips?.field).toBe("currentRole");
   });
 });
 
