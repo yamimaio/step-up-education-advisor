@@ -150,6 +150,19 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
       /never give a type a length, hours or work reason that its reasons don't state/,
     );
   });
+
+  // T2 run 1 called the certificate "a lighter and cheaper option"; its reasons said neither (issue #193).
+  it("reads cost as what the type asks against the user's needs and limits, never price", () => {
+    const verdict = section("Deliver the verdict");
+    expect(verdict).toContain(
+      '"What it costs them" means what the type asks of this person against their needs and limits, exactly as its `reasons` state',
+    );
+    expect(verdict).toContain(
+      'never a price or tuition, and never "cheaper", "more expensive" or "lighter" unless its reasons say so',
+    );
+    expect(verdict).toContain("Stage 1 never compares types by price");
+    expect(verdict).toContain("what it would cost them in their needs and limits");
+  });
 });
 
 // Run 1 of T2 re-showed the chips with no reply; run 2 replied but asked whether to bring the
