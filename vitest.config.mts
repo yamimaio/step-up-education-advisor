@@ -9,6 +9,8 @@ export default defineConfig({
       "@core": dir("./core"),
       "@server": dir("./server"),
       "@app": dir("./app"),
+      // The real package throws on import outside Next's react-server condition.
+      "server-only": dir("./tests/stubs/server-only.ts"),
     },
   },
   test: {

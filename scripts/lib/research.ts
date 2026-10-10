@@ -140,6 +140,16 @@ const SOURCE_FIELD_MAP: Record<string, string> = {
 const normalizeSourceField = (field: string) =>
   SOURCE_FIELD_MAP[field] ?? (field.startsWith("paymentOptions.") ? "paymentOptions" : field);
 
+// Facts the research got wrong or left out that later school material settles (a brochure, the
+// published schedule). Each one needs its own entry in extraSources.
+const SOURCED_OVERRIDE_KEYS = [
+  "workCompatible",
+  "cohortMedianExperienceYears",
+  "onsiteDaysPerYear",
+  "longestStretchDays",
+  "hoursPerWeek",
+] as const;
+
 // The only keys an overrides file may set: facts the research JSON doesn't produce, plus hand
 // fixes for ones it gets wrong. Never id, sources, ratings or verification.
 const OVERRIDE_KEYS = [
@@ -160,16 +170,20 @@ const OVERRIDE_KEYS = [
   "lodgingIncluded",
   "lodgingPerNightUsd",
   "cohortExperienceBasis",
+  ...SOURCED_OVERRIDE_KEYS,
   "figureNotes",
   "extraSources",
+  "replaceSources",
 ] as const;
 
 export type Overrides = Partial<
-  Pick<ProgramInput, Exclude<(typeof OVERRIDE_KEYS)[number], "extraSources">>
+  Pick<ProgramInput, Exclude<(typeof OVERRIDE_KEYS)[number], "extraSources" | "replaceSources">>
 > & {
   locationOffers: ProgramInput["locationOffers"];
   /** Sources to append, for example quotes the research kept in its Part 2 tables. */
   extraSources?: ProgramInput["sources"];
+  /** Fields whose research sources are dropped, because newer extraSources replace them. */
+  replaceSources?: string[];
 };
 
 export type Converted = {
@@ -267,7 +281,21 @@ export function convertResearch(input: {
       `The overrides file for ${id} sets ${unknownKeys.join(", ")}, which it may not. Allowed: ${OVERRIDE_KEYS.join(", ")}.`,
     );
   }
-  const { extraSources = [], ...overrides } = input.overrides as Overrides;
+  const { extraSources = [], replaceSources = [], ...overrides } = input.overrides as Overrides;
+  const unreplaced = replaceSources.filter((f) => !extraSources.some((s) => s.field === f));
+  if (unreplaced.length > 0) {
+    throw new Error(
+      `The overrides file for ${id} replaces the sources of ${unreplaced.join(", ")} without a matching extraSources entry.`,
+    );
+  }
+  const unsourced = SOURCED_OVERRIDE_KEYS.filter(
+    (k) => k in overrides && !extraSources.some((s) => s.field === k),
+  );
+  if (unsourced.length > 0) {
+    throw new Error(
+      `The overrides file for ${id} sets ${unsourced.join(", ")} without a matching extraSources entry.`,
+    );
+  }
 
   for (const key of Object.keys(raw)) {
     if (!PROGRAM_KEYS_FROM_RESEARCH.has(key))
@@ -315,6 +343,7 @@ export function convertResearch(input: {
     const quote = typeof s.quote === "string" ? s.quote.trim() : "";
     if (!quote || /^not published\.?$/i.test(quote)) continue; // placeholder for a null fact
     if (field === "nextStartDate") continue;
+    if (replaceSources.includes(field)) continue;
     if (field === "lodgingPerNightUsd" && lodging === null) continue;
     if (field === "mastersStackability" || field === "admissionRequirements") {
       notes.push(`Source for "${field}" dropped: the schema has no such field.`);

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import advisor from "./advisor.md?raw";
+import { CHIP_FIELDS } from "./chips";
 import { STAGE_1_CHECKLIST, STAGE_2_CHECKLIST } from "./fields";
 import { ADVISOR_TOOL_NAMES } from "./tools";
 
@@ -86,5 +87,28 @@ describe("advisor.md runs stage 1 and stops", () => {
       for (const field of entry.fields) expect(stage2, field).toContain(`\`${field}\``);
     }
     expect(stage2).toContain("`formatPreference`");
+  });
+});
+
+// The server refuses these with is_error (docs/chat-api.md), so a rule that leads the model to
+// them costs a round (issues #76 and #80).
+describe("advisor.md only asks for tool calls the server accepts", () => {
+  it("requires ask_choice only for fields with a chip set; goalClarity has none", () => {
+    const tools = section("The tools");
+    expect(tools).toContain("**Every** field with a chip set");
+    expect(tools).not.toMatch(/fixed-choice field/);
+    expect(CHIP_FIELDS as readonly string[]).not.toContain("goalClarity");
+    expect(section("How stage 1 runs")).toContain("`goalClarity` is yours to set");
+  });
+
+  it("calls check_contradictions before propose_direction, even after a wrap-up note", () => {
+    const wrapUp = section("Confirm before the verdict")
+      .split("\n")
+      .find((line) => line.includes("wrap up"));
+    expect(wrapUp).toBeDefined();
+    const check = wrapUp!.indexOf("`check_contradictions`");
+    expect(check).toBeGreaterThanOrEqual(0);
+    expect(check).toBeLessThan(wrapUp!.indexOf("`propose_direction`"));
+    expect(section("The tools")).toMatch(/\*\*always\*\* before `propose_direction`/);
   });
 });
