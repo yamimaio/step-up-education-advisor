@@ -5,7 +5,8 @@ import { CATEGORY_LABELS, DIRECTION_FIELD_LABELS, chipLabel } from "./labels";
 // The verdict in display form, from the engine's DirectionResult and the confirmed card only.
 // Shared by the verdict block and the transcript.
 
-export type VerdictRow = { category: Category; name: string; score: string; reasons: string[] };
+// No scores: they rank the types, but the user decides on the reasons (issue #130).
+export type VerdictRow = { category: Category; name: string; out: boolean; reasons: string[] };
 
 export type VerdictView = {
   // "not yet": the engine's stage 1 trigger, explained in plain words.
@@ -16,7 +17,8 @@ export type VerdictView = {
   tie: [string, string] | null;
   decidingNeeds: string[];
   tensions: string[];
-  // Every type, best score first and ruled-out types last, with the engine's reasons.
+  // Every type, with the engine's reasons in words: the winner, the runner-up, then the rest best
+  // fit first, ruled-out types last. With no scores shown, this order is the ranking the user sees.
   rows: VerdictRow[];
   notAnswered: string[];
 };
@@ -34,17 +36,19 @@ const rank = (s: number | "out") => (s === "out" ? Number.MIN_SAFE_INTEGER : s);
 
 export function verdictView({ direction, result }: Verdict): VerdictView {
   const { category, noProgram, profileGaps } = result;
+  // A tie the user broke leaves the winner and runner-up on the same score, so name them first.
+  const lead = (c: Category) => (c === category.winner ? 0 : c === category.runnerUp ? 1 : 2);
   const rows = (Object.keys(category.scores) as Category[])
     .map((c) => ({ c, s: category.scores[c] }))
-    .sort((a, b) => rank(b.s) - rank(a.s))
+    .sort((a, b) => lead(a.c) - lead(b.c) || rank(b.s) - rank(a.s))
     .map(({ c, s }) => ({
       category: c,
       name: CATEGORY_LABELS[c],
-      score: s === "out" ? "Ruled out" : String(s),
+      out: s === "out",
       reasons: category.reasons[c] ?? [],
     }));
   const name = (c: Category | null) => (c ? CATEGORY_LABELS[c] : null);
-  // "Not yet" replaces the pick: the engine still ranks the types (the score table shows them),
+  // "Not yet" replaces the pick: the engine still ranks the types (the comparison shows them),
   // but the verdict names no winner, runner-up, tie or deciding needs.
   const notYet = noProgram.triggered;
   return {
