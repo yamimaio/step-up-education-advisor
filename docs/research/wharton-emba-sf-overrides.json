@@ -4,8 +4,10 @@
     "industry_hub"
   ],
   "attendance": "recurring_weekends",
-  "onsiteNote": "Friday and Saturday classes every other week, with some three-day weekends and several extended sessions; opening class sessions in Philadelphia and a one-week Global Business Week in the second year.",
+  "onsiteNote": "Friday and Saturday classes every other week in San Francisco, with some three-day weekends; an eight-day opening session in Philadelphia and a six-day Global Business Week trip.",
   "durationMonths": 22,
+  "onsiteDaysPerYear": 52.5,
+  "longestStretchDays": 8,
   "lodgingIncluded": true,
   "tuitionUsd": 243000,
   "tuitionIncludes": "Tuition, program fees, and housing and dining for regular class weekends and required modular courses (a hotel room on Friday nights). Not included: books and supplies, travel to and from campus (including Global Business Week airfare), personal expenses during class weekends, and hotels and dining for elective modular courses or additional class weekends.",
@@ -26,12 +28,15 @@
     "cohortMedianExperienceYears": "Midpoint of the published 13-14 years average for the Class of 2028.",
     "campusLat": "Derived from campusAddress (approximate, from the street address).",
     "campusLon": "Derived from campusAddress (approximate, from the street address).",
-    "durationMonths": "The school's published length; the 2027-2029 San Francisco calendar runs from May 29, 2027 to May 15, 2029."
+    "durationMonths": "The school's published length; the 2027-2029 San Francisco calendar runs from May 29, 2027 to May 15, 2029.",
+    "onsiteDaysPerYear": "Counted from the highlighted dates of the 2027-2029 San Francisco calendar: 105 days over two program years (91 San Francisco class days on 41 weekends, 8 days in Philadelphia from May 29 to June 5, 2027, and 6 days of Global Business Week from January 10 to 15, 2028); 61 in the first year, 44 in the second.",
+    "longestStretchDays": "The opening session in Philadelphia, May 29 to June 5, 2027, on the 2027-2029 San Francisco calendar."
   },
   "replaceSources": [
     "tuitionUsd",
     "cohortMedianExperienceYears",
-    "tuitionIncludes"
+    "tuitionIncludes",
+    "onsiteDaysPerYear"
   ],
   "extraSources": [
     {
@@ -93,6 +98,27 @@
       "field": "onsiteNote",
       "url": "https://executivemba.wharton.upenn.edu/emba-program-details/",
       "quote": "Students attend classes every other weekend, with several additional extended sessions through the program.",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteDaysPerYear",
+      "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
+      "quote": "ATTENDANCE REQUIRED ON ALL HIGHLIGHTED DATES",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "longestStretchDays",
+      "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
+      "quote": "Class Sessions in Philadelphia",
+      "checkedOn": "2026-10-10",
+      "kind": "official_page"
+    },
+    {
+      "field": "onsiteNote",
+      "url": "https://executivemba.wharton.upenn.edu/wp-content/uploads/2026/09/cal_53_SF_TY_V1_09122026.pdf",
+      "quote": "Global Business Week Trip",
       "checkedOn": "2026-10-10",
       "kind": "official_page"
     },
