@@ -141,6 +141,25 @@ describe("persona A on the fake model", () => {
     expect(r.direction?.category.winner).toBe("executive");
   });
 
+  it("takes a request to skip worded as a question as a decline", async () => {
+    const page = new Page(new FakeModelClient(personaAScript), programs);
+    await page.type(PERSONA_A_OPENING);
+    await page.tap(...PERSONA_A_TAPS.careerGoalKind!);
+    await page.type(PERSONA_A_GOAL);
+    while (page.last?.chips && page.last.chips.field !== "hoursPerWeek") {
+      await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    }
+    const r = await page.post(
+      answer(page.last!.chips!.toolUseId, { chosen: [], typed: "Can we skip this one?" }),
+    );
+    expect(r.chips?.field).toBe("keepWorking");
+    while (page.last?.chips) await page.tap(...PERSONA_A_TAPS[page.last.chips.field]!);
+    expect(page.last?.confirm?.direction).toMatchObject({
+      hoursPerWeek: null,
+      declined: ["hoursPerWeek"],
+    });
+  });
+
   it("sends the history byte for byte, and the same cached system prompt and tools", async () => {
     const model = new FakeModelClient(personaAScript);
     const page = new Page(model, programs);

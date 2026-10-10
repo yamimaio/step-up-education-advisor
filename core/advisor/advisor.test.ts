@@ -179,12 +179,23 @@ describe("advisor.md replies to a question typed while chips are open (issue #19
     expect(question).toContain("admissions questions go to the school");
   });
 
+  it("replies to a question that comes with a typed answer before asking again", () => {
+    const answer = answerLine();
+    const reply = answer.indexOf(
+      "If it also asks something, reply to that in a sentence or two first",
+    );
+    expect(reply).toBeGreaterThanOrEqual(0);
+    expect(reply).toBeLessThan(
+      answer.indexOf("If what they typed says they would rather not answer"),
+    );
+  });
+
   it("never takes a question or a remark as a decline, however often it repeats", () => {
     expect(questionLine()).toContain(
       "A question or a remark is never a decline, however often it repeats: the field stays open, so never skip it, mark it declined or move on to the next field.",
     );
     expect(answerLine()).toContain(
-      "If what they typed says they would rather not answer, that is a decline",
+      'If what they typed says they would rather not answer, that is a decline, even when it is worded as a question ("Can we skip this one?")',
     );
     expect(section("How stage 1 runs")).toContain(
       "A field is declined only when the user says they would rather not answer it; a question or a remark is never a decline.",

@@ -186,9 +186,10 @@ export function personaAScript(request: ModelRequest): ModelTurn {
   }
   if (call.name === "ask_choice") {
     const field = call.input.field as Field;
-    if (call.typed?.trim().endsWith("?")) {
+    const typed = call.typed?.trim() ?? "";
+    if (typed.endsWith("?") && !/\bskip\b|rather not/i.test(typed)) {
       // A question typed while the chips are open: a reply in words and the same chips back, in
-      // one turn (advisor.md, issue #192).
+      // one turn (advisor.md, issue #192). A request to skip is a decline, even with a "?".
       return turn(
         text(SIDE_QUESTION_REPLY),
         toolUse(
