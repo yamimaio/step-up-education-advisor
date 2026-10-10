@@ -163,6 +163,12 @@ describe("advisor.md explains the verdict in words, from the engine's reasons (i
     expect(verdict).toContain("Stage 1 never compares types by price");
     expect(verdict).toContain("what it would cost them in their needs and limits");
   });
+
+  it("reads cost the same way when it names a tension (PR #205 review)", () => {
+    expect(section("Name the tension")).toContain(
+      "what each would cost them in their needs and limits, never a price or tuition: stage 1 never compares types by price",
+    );
+  });
 });
 
 // Run 1 of T2 re-showed the chips with no reply; run 2 replied but asked whether to bring the
