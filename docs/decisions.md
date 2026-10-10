@@ -260,6 +260,7 @@ The page half of Stage 2, built on the server half (#99, PR #155) against `docs/
 - **"Ranked without"** lists `profileGaps` by name. It includes an airfare range of "I don't know", which the engine also counts as a gap.
 - **The data-limits note** sits under the programs and in the transcript. It is built from the records only: the count, the countries, the verification window (oldest to newest `verifiedOn`), the number of drafts, and "not a complete list".
 - **Records on the client**: `programRecords()` parses `loadPrograms()` once per page load (DQ13). A ranked id with no record is left out rather than shown without facts.
+- **#155's stopgap is replaced.** #155 merges first, with a one-line note in `Chat.tsx` in place of the search card, its own `PendingConfirm` union in `app/lib/chatTypes.ts`, and a page test for that note. This PR draws the card instead, keeps its own `chatTypes.ts` (the same union, told apart with `"profile" in confirm`, plus `programs`), and drops that test: the two-stage persona A walk covers the same path through to the program cards.
 - **The transcript** adds "What you confirmed for the search", "Programs" (each listed program with the same lines as its card, and sources as links) and "About this data". Stage 2 chip taps were already in "Chips tapped".
 
 ## Step 6, Stage 1 (issue #8)
