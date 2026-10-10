@@ -3,12 +3,12 @@ import { loadPrograms } from "@core/index";
 import { chatLoop } from "@server/chatLoop";
 import { BadRequest } from "@server/handlers";
 import { MAX_BODY_BYTES } from "@server/limits";
-import { logRateLimited } from "@server/log";
+import { logClientHeaders, logRateLimited } from "@server/log";
 import type { ModelClient } from "@server/model/adapter";
 import { createAnthropicClient } from "@server/model/anthropic";
 import { FakeModelClient } from "@server/model/fake";
 import { personaAScript } from "@server/model/personaA";
-import { chatRateLimiter, clientAddress } from "@server/rateLimit";
+import { chatRateLimiter, clientAddress, clientHeaderShape } from "@server/rateLimit";
 import { parseChatRequest } from "@server/requestSchema";
 
 // POST /api/chat (docs/chat-api.md). Errors never echo the request: the body is the user's words.
@@ -52,6 +52,8 @@ async function readBody(request: Request): Promise<unknown> {
 }
 
 export async function POST(request: Request) {
+  // Temporary (#186): which address headers arrive on the host. Counts and booleans only.
+  logClientHeaders(clientHeaderShape(request.headers));
   // Before the body is read, so a refused request costs nothing.
   const rate = chatRateLimiter.take(clientAddress(request.headers));
   if (!rate.ok) {

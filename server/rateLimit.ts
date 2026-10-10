@@ -64,19 +64,42 @@ export class RateLimiter {
   }
 }
 
-// The client's key: the last entry of X-Forwarded-For, the one the host's proxy appended for the
-// connection it received (earlier entries come from the client and can be forged). That entry is
-// trustworthy only behind the host's proxy. Next.js fills the header with the socket address only
-// when it is missing, so with no proxy in front (local dev) a client that sends its own header
-// chooses its key. No entry means one shared bucket. Never logged.
+// The client's key. On Render, Cloudflare sits in front and sets CF-Connecting-IP to the address
+// it received the connection from, overwriting any value the client sent, so that header wins
+// (issue #186). Render's X-Forwarded-For can't be used there: its last entry is a proxy address that
+// changes between requests, and the earlier ones come from the client.
+// Without CF-Connecting-IP (local Docker), the last entry of X-Forwarded-For, the one the host's
+// proxy appended for the connection it received. That entry is trustworthy only behind such a proxy.
+// Next.js fills the header with the socket address only when it is missing, so with no proxy in
+// front a client that sends its own header (or its own CF-Connecting-IP) chooses its key. No
+// address means one shared bucket. Never logged.
 export function clientAddress(headers: Headers): string {
-  const address = (headers.get("x-forwarded-for") ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .at(-1);
+  const address = headers.get("cf-connecting-ip")?.trim() || forwardedFor(headers).at(-1);
   // An address is at most 45 characters (IPv6 with an IPv4 tail); anything longer isn't one.
   return address && address.length <= 45 ? clientKey(address) : "unknown";
+}
+
+// Which client-address headers a request carries, as counts and booleans only, for the temporary
+// diagnostic log of issue #186. No address leaves this function.
+export function clientHeaderShape(headers: Headers): ClientHeaderShape {
+  return {
+    forwardedFor: forwardedFor(headers).length,
+    cfConnectingIp: headers.has("cf-connecting-ip"),
+    trueClientIp: headers.has("true-client-ip"),
+  };
+}
+
+export type ClientHeaderShape = {
+  forwardedFor: number;
+  cfConnectingIp: boolean;
+  trueClientIp: boolean;
+};
+
+function forwardedFor(headers: Headers): string[] {
+  return (headers.get("x-forwarded-for") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 // An IPv6 address counts by its /64, since one host usually holds a whole /64 and could send each
