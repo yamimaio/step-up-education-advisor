@@ -1,8 +1,8 @@
 import type { Direction } from "@core/advisor/tools";
-import type { DirectionResult } from "@core/engine/types";
+import type { DirectionResult, SearchResult } from "@core/engine/types";
 import type { Profile } from "@core/schema/profile";
 
-// The /api/chat contract, Stage 1 (docs/chat-api.md). The page can't import the Anthropic SDK
+// The /api/chat contract, Stages 1 and 2 (docs/chat-api.md). The page can't import the Anthropic SDK
 // or server/, so messages are typed loosely here: the page passes every block back unchanged
 // (thinking blocks included) and only reads the text, tool_use and tool_result blocks.
 
@@ -28,11 +28,10 @@ export type PendingChips = {
   pick: number;
 };
 
-// The stage 1 card holds `direction`; the stage 2 card holds `profile` (docs/chat-api.md,
-// "Stage 2"). The page renders only the stage 1 card until #147.
+// The stage 1 card (propose_direction) or the stage 2 card (propose_search), told apart by key.
+// The search card carries the whole profile the engine will run on (stage 1 values included).
 export type PendingConfirm =
-  | { toolUseId: string; direction: Direction; profile?: never }
-  | { toolUseId: string; profile: Profile; direction?: never };
+  { toolUseId: string; direction: Direction } | { toolUseId: string; profile: Profile };
 
 export type NoticeKind =
   | "retryable"
@@ -52,6 +51,9 @@ export type ChatResponse = {
   chips: PendingChips | null;
   confirm: PendingConfirm | null;
   direction: DirectionResult | null;
+  // Set only on the turn right after the user confirms the search card: the engine's stage 2
+  // result. The program cards render from it and from loadPrograms(), never from model text.
+  programs: SearchResult | null;
   counter: { remaining: number } | null;
   notice: Notice | null;
 };
