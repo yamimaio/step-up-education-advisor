@@ -245,7 +245,7 @@ Stage 1 only. Yami split step 6 by stage (Oct 9, on the round 1 review of PR #10
 The docs set the host (Render, from the `Dockerfile`), the health check on `/`, auto-deploy from `main` and the key in Render's environment only. Defaults picked where they're silent; setup steps are in `docs/deploy.md`.
 
 - **Blueprint, not dashboard-only settings.** `render.yaml` keeps the service's settings in review. `MODEL_API_KEY` is `sync: false`, so Render asks for it once at creation and the file holds only its name.
-- **Deploy after CI passes** (`autoDeployTrigger: checksPass`), not on every commit: a release whose CI fails never reaches the public site.
+- **Deploy after CI passes** (`autoDeployTrigger: checksPass`), not on every commit: a release whose CI fails never reaches the public site. **Blueprint Auto Sync is off** (a dashboard setting, step 2.7 of `docs/deploy.md`), because a sync deploys on the push that changes `render.yaml` and Render doesn't document it waiting for checks. A `render.yaml` change is applied with **Manual Sync** once CI is green on `production`.
 - **Starter instance** (`0.5c-512mb`), which never sleeps (the free plan spins down after idle time, so a first visitor would wait), paid from Yami's Render credits. **One instance**, because the per-IP rate limit (#122) is held in memory.
 - **Region `oregon`**, Render's default. Nothing in the docs places the users; it can only be changed before the service is created.
 - **`PORT=3000` and `HOSTNAME=0.0.0.0` set in `render.yaml`**, matching the `Dockerfile`, so the server listens where the image says whatever Render injects (its default `PORT` is 10000).

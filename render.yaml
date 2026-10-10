@@ -14,6 +14,7 @@ services:
     # Releases only: `git push origin origin/main:refs/heads/production` (docs/deploy.md, "Releasing").
     branch: production
     # Deploys each commit pushed to production once its CI checks pass.
+    # Blueprint Auto Sync is off (dashboard; docs/deploy.md step 2.7): it wouldn't wait for checks.
     autoDeployTrigger: checksPass
     healthCheckPath: /
     envVars:

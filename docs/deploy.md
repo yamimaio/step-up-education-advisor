@@ -31,6 +31,7 @@ If you lose the key before pasting it, delete it in the Console and create a new
 4. Render asks for `MODEL_API_KEY`. Paste the `step-up-prod` key.
 5. Choose **Deploy Blueprint**. Render builds the `Dockerfile` (a few minutes), starts the container and waits for `/` to answer before it sends traffic.
 6. The site's URL is on the service page: `https://step-up-<suffix>.onrender.com`.
+7. Open the Blueprint's **Settings** page and set **Auto Sync** to **No**. With Auto Sync on, every push to `production` that changes `render.yaml` deploys straight away, and Render doesn't say it waits for CI checks. With it off, `render.yaml` changes wait for a **Manual Sync** (see "Changing `render.yaml`" below).
 
 The region (`oregon`) can't be changed once the service exists. To use another one (`ohio`, `virginia`, `frankfurt` or `singapore`), change `region` in `render.yaml` before step 2.
 
@@ -78,7 +79,7 @@ git fetch origin
 git push origin origin/main:refs/heads/production
 ```
 
-Render deploys the new `production` commit once CI passes on it. A failed check means no deploy, and a deploy whose health check fails is dropped while the previous one keeps serving. To release only part of `main`, push an older commit of it instead: `git push origin <sha>:refs/heads/production`. The full `refs/heads/` name is needed: without it, git can't create `production` on the first release.
+Render deploys the new `production` commit once CI passes on it. A failed check means no deploy (as long as Auto Sync is off, step 2.7), and a deploy whose health check fails is dropped while the previous one keeps serving. To release only part of `main`, push an older commit of it instead: `git push origin <sha>:refs/heads/production`. The full `refs/heads/` name is needed: without it, git can't create `production` on the first release.
 
 `production` only ever moves forward to commits already on `main`. Never commit to it directly. A plain `git push` refuses anything that isn't a fast-forward, and that's the guard: don't add `--force` to get around it.
 
@@ -94,7 +95,7 @@ To see what's live: `git log -1 origin/production`, or the service's **Events** 
 
 - **Rotate the key.** Create a new key in the Step Up workspace, replace `MODEL_API_KEY` under the service's **Environment** in Render (saving redeploys), check the site, then delete the old key in the Console.
 - **Take the site down.** **Suspend** the service in Render's settings. The URL stops answering until you resume it.
-- **Changing `render.yaml`.** Render applies changes to the service when they reach `production`, so they go out with the next release. It never asks again for a `sync: false` value: a new secret is added under **Environment** by hand.
+- **Changing `render.yaml`.** A release that changes `render.yaml` deploys its code once CI passes, still with the service's old settings. When CI is green on `production`, click **Manual Sync** on the Blueprint's page to apply the new settings; Render redeploys the service with them. Render never asks again for a `sync: false` value: a new secret is added under **Environment** by hand. If you created the service by hand instead, `render.yaml` isn't read at all: change the setting in the dashboard.
 
 ## Never
 
