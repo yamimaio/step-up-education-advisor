@@ -1,6 +1,7 @@
 import type { ChipField } from "@core/advisor/chips";
 import { loadPrograms } from "@core/data/load";
 import { CHECK_LABELS } from "@core/engine/constants";
+import { isOver } from "@core/engine/constraints";
 import type {
   Check,
   CheckStatus,
@@ -81,18 +82,12 @@ const STATUS_TEXT: Record<CheckStatus, string> = {
   fail: "Doesn't fit",
 };
 
-// A near miss is "over" only for a published figure past the user's limit, the server template's
-// rule (isOver, server/fallback.ts, PR #155 round 2). One the engine can't compare (a per-course
-// price with no published total, a lodging-only travel total under the budget, a location with
-// no home) is not fully checked; an unpublished figure says "not published" in its detail.
+// A near miss is "over" only for a published figure past the user's limit (isOver, shared with
+// the server template and the ranking, PR #155 round 2, #247). One the engine can't compare (a
+// per-course price with no published total, a lodging-only travel total under the budget, a
+// location with no home) is not fully checked; an unpublished figure says "not published" in its
+// detail.
 const NOT_FULLY_CHECKED = "Not fully checked";
-function isOver(c: Check): boolean {
-  if (c.unknown || c.value === null || c.id === "location") return false;
-  if (c.id === "travelBudget" && typeof c.value === "number" && typeof c.limit === "number") {
-    return c.value > c.limit;
-  }
-  return true;
-}
 
 function statusText(c: Check): string {
   return c.status === "near_miss" && !c.unknown && !isOver(c)

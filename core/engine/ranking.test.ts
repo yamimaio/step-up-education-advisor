@@ -10,7 +10,8 @@ import {
   totalCost,
   travelFit,
 } from "./ranking";
-import type { ProgramEvaluation } from "./types";
+import type { Check, ProgramEvaluation } from "./types";
+import { loadPrograms } from "../data/load";
 import { fixture, fixtureDataset } from "../../tests/fixtures/dataset";
 import { BOSTON, makeProfile, personaAProfile } from "../../tests/fixtures/profiles";
 
@@ -292,6 +293,23 @@ const scores = {
 } as const;
 const confirmed = { winner: "executive", runnerUp: "certificate", scores } as const;
 const ids = (list: { id: string }[]) => list.map((r) => r.id);
+// A near miss over a published limit, and one only on a value the school doesn't publish.
+const tuitionOver = {
+  id: "tuition",
+  status: "near_miss",
+  value: 90000,
+  limit: 80000,
+  unknown: false,
+} as Check;
+const hoursUnpublished = {
+  id: "hours",
+  status: "near_miss",
+  value: null,
+  limit: "5 to 10",
+  unknown: true,
+} as Check;
+const overLimit = { status: "near_miss" as const, checks: [tuitionOver] };
+const unpublished = { status: "near_miss" as const, checks: [hoursUnpublished] };
 // The access card names no alternative unless a test says so.
 const rank = (
   evaluations: ProgramEvaluation[],
@@ -300,11 +318,11 @@ const rank = (
 ) => rankPrograms(evaluations, category, { alternative });
 
 describe("Order", () => {
-  it("puts passing programs before near misses, then by score", () => {
+  it("puts passing programs before near misses over a published limit, then by score", () => {
     const r = rank(
       [
         ev("fake-a", { total: 25 }),
-        ev("fake-near", { total: 45, status: "near_miss" }),
+        ev("fake-near", { total: 45, ...overLimit }),
         ev("fake-b", { total: 35 }),
       ],
       confirmed,
@@ -314,6 +332,49 @@ describe("Order", () => {
       "Ranked first.",
       "Ranked second.",
       "Ranked third.",
+    ]);
+  });
+
+  it("ranks a near miss only on unpublished values with the passes, by score (#247)", () => {
+    const r = rank(
+      [
+        ev("fake-a", { total: 25 }),
+        ev("fake-unpublished", { total: 45, ...unpublished }),
+        ev("fake-b", { total: 35 }),
+        // Unpublished hours too, but also over a published limit: still after the passes.
+        ev("fake-over", {
+          total: 50,
+          status: "near_miss",
+          checks: [hoursUnpublished, tuitionOver],
+        }),
+      ],
+      confirmed,
+    );
+    expect(ids(r.ranked)).toEqual(["fake-unpublished", "fake-b", "fake-a", "fake-over"]);
+  });
+
+  it("ranks a near miss on a figure it can't compare with the passes, as the card does (#247 review)", () => {
+    // Not over anything: a per-course price with no published total, and a lodging-only travel
+    // total under the budget (the user's airfare is unknown). A lodging-only total already past
+    // the budget is over.
+    const perCourse = { ...tuitionOver, value: null };
+    const lodgingUnder = { id: "travelBudget", status: "near_miss", value: 5475, limit: 10000 };
+    const lodgingOver = { ...lodgingUnder, value: 10500 };
+    const near = (c: object) => ({ status: "near_miss" as const, checks: [c as Check] });
+    const r = rank(
+      [
+        ev("fake-pass", { total: 30 }),
+        ev("fake-per-course", { total: 40, ...near(perCourse) }),
+        ev("fake-lodging-under", { total: 35, ...near({ ...lodgingUnder, unknown: false }) }),
+        ev("fake-lodging-over", { total: 45, ...near({ ...lodgingOver, unknown: false }) }),
+      ],
+      confirmed,
+    );
+    expect(ids(r.ranked)).toEqual([
+      "fake-per-course",
+      "fake-lodging-under",
+      "fake-pass",
+      "fake-lodging-over",
     ]);
   });
 
@@ -419,6 +480,34 @@ describe("Order", () => {
   });
 });
 
+// Only what #247 is about, so a data-only change (a re-rating, a new record) doesn't fail it.
+describe("Persona A on the real records (#247)", () => {
+  const ranked = (profile: typeof personaAProfile) => {
+    const result = evaluate(profile, loadPrograms(), today);
+    const order = ids(result.ranking.ranked);
+    return { result, order, mit: result.programs.find((p) => p.id === "mit-tlp") };
+  };
+
+  it("ranks MIT TLP above Stanford LEAD: a near miss only because its weekly hours aren't published", () => {
+    const { result, order, mit } = ranked(personaAProfile);
+    expect(mit?.status).toBe("near_miss");
+    expect(mit?.checks.filter((c) => c.status !== "pass")).toMatchObject([
+      { id: "hours", status: "near_miss", unknown: true },
+    ]);
+    expect(order.indexOf("mit-tlp")).toBeLessThan(order.indexOf("stanford-lead"));
+    expect(result.ranking.ranked[order.indexOf("mit-tlp")]?.why).toMatch(/^Ranked first\b/);
+  });
+
+  it("still does with the airfare unknown, when its travel estimate covers lodging only (#247 review)", () => {
+    const { order, mit } = ranked({ ...personaAProfile, airfareRange: "unknown" });
+    expect(mit?.checks.filter((c) => c.status !== "pass").map((c) => c.id)).toEqual([
+      "travelBudget",
+      "hours",
+    ]);
+    expect(order.indexOf("mit-tlp")).toBeLessThan(order.indexOf("stanford-lead"));
+  });
+});
+
 describe("Also worth a look", () => {
   it("holds up to 2 passing programs of the runner-up, best first, never a near miss", () => {
     const cert = (id: string, total: number, status: "pass" | "near_miss" = "pass") =>
@@ -438,20 +527,66 @@ describe("Also worth a look", () => {
   });
 
   it("holds the access card's alternative when the confirmed category has nothing to rank", () => {
-    // A third category, not the runner-up, near misses after passes.
+    // A third category, not the runner-up, near misses over a published limit after passes; a
+    // near miss only on an unpublished value ranks with the passes (#247).
     const withShort = { ...confirmed, scores: { ...scores, short_course: 10 } };
     const r = rank(
       [
         ev("fake-exec", { status: "fail" }),
         ev("fake-cert", { category: "certificate", status: "fail" }),
-        ev("fake-s1", { category: "short_course", status: "near_miss", total: 45 }),
+        ev("fake-s1", { category: "short_course", total: 45, ...overLimit }),
         ev("fake-s2", { category: "short_course", total: 20 }),
+        ev("fake-s3", { category: "short_course", total: 30, ...unpublished }),
       ],
       withShort,
       "short_course",
     );
     expect(r.ranked).toEqual([]);
-    expect(ids(r.alsoWorthALook)).toEqual(["fake-s2", "fake-s1"]);
+    expect(ids(r.alsoWorthALook)).toEqual(["fake-s3", "fake-s2"]);
+  });
+
+  it("keeps the alternative's best pass, which the access card points to (#247 review round 2)", () => {
+    // Two near misses over nothing outscore the only pass; the card says the type has a program
+    // "within your limits", so the pass keeps the last slot.
+    const withShort = { ...confirmed, scores: { ...scores, short_course: 10 } };
+    const r = rank(
+      [
+        ev("fake-exec", { status: "fail" }),
+        ev("fake-s1", { category: "short_course", total: 45, ...unpublished }),
+        ev("fake-s2", { category: "short_course", total: 40, ...unpublished }),
+        ev("fake-s3", { category: "short_course", total: 35, ...unpublished }),
+        ev("fake-pass", { category: "short_course", total: 20 }),
+      ],
+      withShort,
+      "short_course",
+    );
+    expect(ids(r.alsoWorthALook)).toEqual(["fake-s1", "fake-pass"]);
+  });
+
+  it("leaves the alternative list by score when its pass already has a slot, or it has none", () => {
+    const withShort = { ...confirmed, scores: { ...scores, short_course: 10 } };
+    const short = (id: string, total: number, over = {}) =>
+      ev(id, { category: "short_course", total, ...over });
+    const passListed = rank(
+      [
+        short("fake-s1", 45, unpublished),
+        short("fake-pass", 40),
+        short("fake-s2", 35, unpublished),
+      ],
+      withShort,
+      "short_course",
+    );
+    expect(ids(passListed.alsoWorthALook)).toEqual(["fake-s1", "fake-pass"]);
+    const noPass = rank(
+      [
+        short("fake-s1", 45, unpublished),
+        short("fake-s2", 40, overLimit),
+        short("fake-s3", 35, unpublished),
+      ],
+      withShort,
+      "short_course",
+    );
+    expect(ids(noPass.alsoWorthALook)).toEqual(["fake-s1", "fake-s3"]);
   });
 
   it("lists the runner-up's near miss when it is the only program within reach (review #86)", () => {
