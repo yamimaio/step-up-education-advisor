@@ -2,3 +2,5 @@ docs
 .next
 coverage
 package-lock.json
+# Test-run transcripts are verbatim downloads from the app; keep them as saved.
+examples/test-runs
