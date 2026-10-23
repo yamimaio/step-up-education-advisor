@@ -456,3 +456,13 @@ This refines the approved order in `docs/need-based-ranking.md` (section 3, "Ord
 - **Which list changes.** The confirmed category's list, and "Also worth a look" when it holds the access card's alternative (near misses included). "Also worth a look" for the runner-up holds passing programs only, so neither who is listed there nor their order changes.
 - **The alternative's best pass keeps a slot (review round 2).** The access card says the alternative has a program "within your limits" whenever one of its programs passes (`accessText`, `app/lib/programs.ts`). Near misses over nothing that outscore that pass could otherwise fill both `RUNNER_UP_LIMIT` slots and leave the card pointing at a list with no pass in it. So when the alternative has a pass and none made the top 2, its best pass takes the last slot. It still sorts last there, since everything above it outscores it. The card is unchanged.
 - **What doesn't change.** Scores, statuses, checks, confidence, the card and the server. MIT is still a near miss and its card still says "Near miss: not published".
+
+## Versions and release notes (issue #274)
+
+Defaults picked where the approved docs are silent. The steps are in `docs/deploy.md` ("Release notes").
+
+- **Version of record.** The `vX.Y.Z` git tags and `CHANGELOG.md` ([Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)) say what each release holds. A tag goes on the `production` commit that went live, after Render shows the deploy live, and its GitHub Release carries that version's `CHANGELOG.md` section.
+- **`package.json` `version`** matches the latest release. It is already `0.1.0`; each release PR bumps it, with the root entries in `package-lock.json`.
+- **Which number moves.** A patch for fixes and security updates, a minor for new features. Every PR adds its line under `[Unreleased]`, and the release PR turns that into the new version's section.
+- **0.x until the catalog is verified.** Versions stay below 1.0.0 until the full program catalog (#153) is verified; that release is 1.0.0. Until then Step Up is a prototype with 7 programs.
+- **Backfill.** The first public release, production `c15c109` (Oct 11, 2026), is `v0.1.0`, tagged and released after the fact.

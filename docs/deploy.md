@@ -85,6 +85,32 @@ Render deploys the new `production` commit once CI passes on it. A failed check 
 
 To see what's live: `git log -1 origin/production`, or the service's **Events** page in Render.
 
+### Release notes
+
+Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production` commit that went live, and a GitHub Release with the same notes. Every PR adds its line under `## [Unreleased]` in `CHANGELOG.md`. The version rules are in `docs/decisions.md` ("Versions and release notes"): a patch for fixes and security, a minor for features.
+
+1. **Before releasing**, open a release PR to `main` that:
+   - renames `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` (the release date), and adds a new, empty `## [Unreleased]` above it;
+   - updates the links at the bottom of `CHANGELOG.md`: `[unreleased]` compares `vX.Y.Z...HEAD`, and a new `[X.Y.Z]` line compares the previous tag with it (`compare/vW.W.W...vX.Y.Z`);
+   - sets `version` in `package.json` and `package-lock.json` to `X.Y.Z`: `./run npm version X.Y.Z --no-git-tag-version`.
+
+   Merge it, then release `main` as above.
+
+2. **After Render shows the deploy live** (the service's **Events** page), tag the commit that went live and create the GitHub Release from its `CHANGELOG.md` section. Run this in the repo; `awk` runs in the dev container, since only `git`, `gh` and `docker` run on the host:
+
+   ```sh
+   git fetch origin
+   git tag -a vX.Y.Z origin/production -m "vX.Y.Z"
+   git push origin vX.Y.Z
+   git show origin/production:CHANGELOG.md \
+     | docker compose run --rm -T dev awk '/^## \[|^\[[^]]+\]: / { p = 0 } /^## \[X\.Y\.Z\]/ { p = 1; next } p' \
+     | gh release create vX.Y.Z --verify-tag --title "vX.Y.Z" --notes-file -
+   ```
+
+   Replace every `X.Y.Z`, including the one in the `awk` pattern, where the dots stay escaped (`0\.1\.1`). To read the notes first, run the first two lines of the pipeline on their own. If a published release has a mistake, fix `CHANGELOG.md` in a PR and run the same pipeline with `gh release edit vX.Y.Z --notes-file -` as its last command.
+
+   If the deploy failed or was rolled back, don't tag it: fix it on `main` and release again.
+
 ### Rolling back
 
 1. On the service's **Events** page, pick the last good deploy and choose **Rollback**. Render reuses that deploy's build, so it takes seconds. A dashboard rollback also turns auto-deploy off, so a new release can't redeploy the bad change by accident.
