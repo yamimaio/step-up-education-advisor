@@ -463,6 +463,6 @@ Defaults picked where the approved docs are silent. The steps are in `docs/deplo
 
 - **Version of record.** The `vX.Y.Z` git tags and `CHANGELOG.md` ([Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/)) say what each release holds. A tag goes on the `production` commit that went live, after Render shows the deploy live, and its GitHub Release carries that version's `CHANGELOG.md` section.
 - **`package.json` `version`** matches the latest release. It is already `0.1.0`; each release PR bumps it, with the root entries in `package-lock.json`.
-- **Which number moves.** A patch for fixes and security updates, a minor for new features. Every PR adds its line under `[Unreleased]`, and the release PR turns that into the new version's section.
+- **Which number moves.** A patch for fixes and security updates, a minor for new features. Every PR adds its line under `[Unreleased]` (changes that only touch docs, tests or tooling may be grouped), and the release PR turns that into the new version's section.
 - **0.x until the catalog is verified.** Versions stay below 1.0.0 until the full program catalog (#153) is verified; that release is 1.0.0. Until then Step Up is a prototype with 7 programs.
 - **Backfill.** The first public release, production `c15c109` (Oct 11, 2026), is `v0.1.0`, tagged and released after the fact.
