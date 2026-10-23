@@ -90,28 +90,49 @@ To see what's live: `git log -1 origin/production`, the latest tag (`git describ
 Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production` commit that went live, and a GitHub Release with the same notes. Every PR adds its line under `## [Unreleased]` in `CHANGELOG.md`; changes that only touch docs, tests or tooling may be grouped. The version rules are in `docs/decisions.md` ("Versions and release notes"): a patch for fixes and security, a minor for features.
 
 1. **Before releasing**, make these changes in a release PR to `main` (or in the last PR going out):
-   - rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` (the release date), and add a new, empty `## [Unreleased]` above it;
+   - rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`, and add a new, empty `## [Unreleased]` above it. The date is the day the release goes live, so merge and release on the same day;
    - update the links at the bottom of `CHANGELOG.md`: `[unreleased]` compares `vX.Y.Z...HEAD`, and a new `[X.Y.Z]` line compares the previous tag with it (`compare/vW.W.W...vX.Y.Z`);
    - set `version` in `package.json` and `package-lock.json` to `X.Y.Z`: `./run npm version X.Y.Z --no-git-tag-version`.
 
-   Merge it, then release `main` as above.
-
-2. **After Render shows the deploy live** (the service's **Events** page), tag the commit that went live and create the GitHub Release from its `CHANGELOG.md` section. Run this in the repo; `awk` runs in the dev container, since only `git`, `gh` and `docker` run on the host:
+   Merge it, then release **that PR's merge commit**, not the tip of `main`. A PR merged after it isn't in the version's notes, so it waits for the next release:
 
    ```sh
    git fetch origin
-   git tag -a vX.Y.Z origin/production -m "vX.Y.Z"
-   git push origin vX.Y.Z
-   git show origin/production:CHANGELOG.md \
-     | docker compose run --rm -T dev awk '/^## \[|^\[[^]]+\]: / { p = 0 } /^## \[X\.Y\.Z\]/ { p = 1; next } p' \
-     | gh release create vX.Y.Z --verify-tag --title "vX.Y.Z" --notes-file -
+   sha=$(gh pr view <release PR number> --json mergeCommit --jq .mergeCommit.oid)
+   git push origin "$sha:refs/heads/production"
    ```
 
-   Replace every `X.Y.Z`, including the one in the `awk` pattern, where the dots stay escaped (`0\.1\.1`). To read the notes first, run the first two lines of the pipeline on their own. If a published release has a mistake, fix `CHANGELOG.md` in a PR and run the same pipeline with `gh release edit vX.Y.Z --notes-file -` as its last command.
+2. **After Render shows the deploy live**, check that the service's **Events** page names the commit `$sha`. Then tag it and create the GitHub Release from its `CHANGELOG.md` section. Run this in the repo, in the same shell (in a new one, set `sha` again as in step 1). `awk` runs in the dev container, since only `git`, `gh` and `docker` run on the host:
 
-   If the deploy failed or was rolled back, don't tag it: fix it on `main` and release again.
+   ```sh
+   v=X.Y.Z      # the version, e.g. 0.1.1
+   src=$sha     # the commit whose CHANGELOG.md holds the notes
+   notes=$(git show "$src:CHANGELOG.md" | docker compose run --rm -T dev awk -v v="$v" '
+       index($0, "## [" v "]") == 1 { p = 1; next }
+       /^## \[|^\[[^]]+\]: / { p = 0 }
+       p && NF { n++ }
+       p { print }
+       END { if (!n) { print "No notes for [" v "] in CHANGELOG.md" > "/dev/stderr"; exit 1 } }') \
+     && git tag -a "v$v" "$sha" -m "v$v" \
+     && git push origin "v$v" \
+     && printf '%s\n' "$notes" | gh release create "v$v" --verify-tag --title "v$v" --notes-file -
+   ```
 
-A rollback after tagging doesn't move or delete the tag: the fix goes out as the next version.
+   If `CHANGELOG.md` at `$src` has no `[X.Y.Z]` section with text under it (a typo in `v`, or a release PR that missed it), the command prints "No notes for …" and stops before tagging, so nothing is published. To read the notes first, run `printf '%s\n' "$notes"` after the `notes=…` part. If a published release has a mistake, fix `CHANGELOG.md` in a PR, then set `src=origin/main`, rerun the `notes=…` part, and run `printf '%s\n' "$notes" | gh release edit "v$v" --notes-file -`.
+
+3. **If the deploy failed or was rolled back before it was tagged**, the version keeps its number, since no tag points at it. The fix PR adds its line under `## [X.Y.Z]`, not Unreleased, and sets that section's date to the new release day. Any PR merged since the release PR moves its line there too, because releasing the fix PR's merge commit ships it. Then release and tag the fix PR's merge commit as in steps 1 and 2.
+
+   A rollback after tagging doesn't move or delete the tag: the fix goes out as the next version.
+
+#### The v0.1.0 backfill (once)
+
+`c15c109`, the first public release, went live before `CHANGELOG.md` existed. So its notes come from `main`. Once this changelog is on `main`, run `git fetch origin`, set these three, then run step 2's command without its `v=` and `src=` lines:
+
+```sh
+sha=c15c1097bd3d0dda8c48931ffdaf4a19a7d57f4f
+v=0.1.0
+src=origin/main
+```
 
 ### Rolling back
 
