@@ -104,19 +104,27 @@ Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production
    ```sh
    v=X.Y.Z      # the version, e.g. 0.1.1
    src=$sha     # the commit whose CHANGELOG.md holds the notes
-   [ -n "$sha" ] || echo "sha is empty: set it as in step 1"
-   [ -n "$sha" ] && notes=$(git show "${src}:CHANGELOG.md" | docker compose --progress quiet run --rm -T dev awk -v v="$v" '
+   notes=$(git show "${src}:CHANGELOG.md" | docker compose --progress quiet run --rm -T dev awk -v v="$v" '
        index($0, "## [" v "]") == 1 { p = 1; next }
        /^## \[|^\[[^]]+\]: / { p = 0 }
        p && NF { n++ }
        p { print }
-       END { if (!n) { print "No notes for [" v "] in CHANGELOG.md" > "/dev/stderr"; exit 1 } }') \
+       END { if (!n) { print "No notes for [" v "] in CHANGELOG.md" > "/dev/stderr"; exit 1 } }')
+   [ -n "$sha" ] || echo "sha is empty: set it as in step 1"
+   [ -n "$sha" ] && [ -n "$notes" ] \
      && git tag -a "v$v" "$sha" -m "v$v" \
      && git push origin "v$v" \
      && printf '%s\n' "$notes" | gh release create "v$v" --verify-tag --title "v$v" --notes-file -
    ```
 
-   If `CHANGELOG.md` at `$src` has no `[X.Y.Z]` section with text under it (a typo in `v`, or a release PR that missed it), the command prints "No notes for …" and stops before tagging, so nothing is published. To read the notes first, run `printf '%s\n' "$notes"` after the `notes=…` part. If a published release has a mistake, fix `CHANGELOG.md` in a PR and merge it. Then run `git fetch origin` (otherwise `origin/main` still holds the old notes), set `src=origin/main`, rerun the `notes=…` part, and run `printf '%s\n' "$notes" | gh release edit "v$v" --notes-file -`.
+   The `notes=…` command always sets `notes`: to the section, or to nothing when `CHANGELOG.md` at `$src` has no `[X.Y.Z]` section with text under it (a typo in `v`, or a release PR that missed it), and then it prints "No notes for …". Every command that publishes checks the value it uses (`[ -n "$notes" ]`), so an empty one stops before tagging and nothing is published. To read the notes first, run `printf '%s\n' "$notes"` after the `notes=…` command.
+
+   If a published release has a mistake, fix `CHANGELOG.md` in a PR and merge it. Then, in the repo, in any shell:
+
+   - run `git fetch origin` (otherwise `origin/main` still holds the old notes);
+   - set `v` to the release's version and `src=origin/main`;
+   - run the `notes=…` command above;
+   - run `[ -n "$notes" ] && printf '%s\n' "$notes" | gh release edit "v$v" --notes-file -`.
 
 3. **If the deploy failed or was rolled back before it was tagged**, the version keeps its number, since no tag points at it. The fix PR adds its line under `## [X.Y.Z]`, not Unreleased, and sets that section's date to the new release day. Any PR merged since the release PR moves its line there too, because releasing the fix PR's merge commit ships it. Then release and tag the fix PR's merge commit as in steps 1 and 2.
 
