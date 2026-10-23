@@ -72,9 +72,9 @@ When all five hold, tick the boxes in #123 and close it.
 
 ## Releasing
 
-Work merges to `main` as usual; the site doesn't change. A release puts one commit of `main` live: the merge commit of its release PR, pushed to `production`. The steps, the push included, are under "Release notes" below.
+Work merges to `main` as usual; the site doesn't change. A release puts one commit of `main` live: the merge commit of its release PR, pushed to `production`. `scripts/release.sh` does the push and the tagging; the steps are under "Release notes" below.
 
-Render deploys the new `production` commit once CI passes on it. A failed check means no deploy (as long as Auto Sync is off, step 2.7), and a deploy whose health check fails is dropped while the previous one keeps serving. The push names the full `refs/heads/production`, and it checks that `sha` isn't empty first: an empty source in a refspec (`:refs/heads/production`) deletes the branch.
+Render deploys the new `production` commit once CI passes on it. A failed check means no deploy (as long as Auto Sync is off, step 2.7), and a deploy whose health check fails is dropped while the previous one keeps serving. The script pushes only a merged PR's merge commit, to the full `refs/heads/production`: an empty source in a refspec (`:refs/heads/production`) would delete the branch.
 
 `production` only ever moves forward to commits already on `main`. Never commit to it directly. A plain `git push` refuses anything that isn't a fast-forward, and that's the guard: don't add `--force` to get around it.
 
@@ -89,62 +89,28 @@ Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production
    - update the links at the bottom of `CHANGELOG.md`: `[unreleased]` compares `vX.Y.Z...HEAD`, and a new `[X.Y.Z]` line compares the previous tag with it (`compare/vW.W.W...vX.Y.Z`);
    - set `version` in `package.json` and `package-lock.json` to `X.Y.Z`: `./run npm version X.Y.Z --no-git-tag-version`.
 
-   Merge it, then release **that PR's merge commit**, not the tip of `main`. A PR merged after it isn't in the version's notes, so it waits for the next release:
+   Merge it.
 
-   ```sh
-   git fetch origin
-   sha=$(gh pr view <release PR number> --json mergeCommit --jq .mergeCommit.oid)
-   if [ -n "$sha" ]; then git push origin "${sha}:refs/heads/production"; else echo "No merge commit (is the PR merged?): nothing pushed"; fi
-   ```
+2. **Put it live** with `scripts/release.sh push <release PR> X.Y.Z`. It pushes **that PR's merge commit** to `production`, not the tip of `main`: a PR merged after it isn't in the version's notes, so it waits for the next release. The script stops, before pushing, when the PR isn't merged, when its merge commit isn't on `main`, or when that commit's `CHANGELOG.md` has no notes for `X.Y.Z`.
 
-   `gh` prints an empty line, with no error, for a PR that isn't merged yet, so the push only runs on a non-empty `sha`. Keep the braces in `${sha}:…`: in zsh, `$sha:r…` would read `:r` as a modifier and push to the wrong name.
+3. **After Render shows the deploy live** (the service's **Events** page names the commit that `push` printed), run `scripts/release.sh publish <release PR> X.Y.Z`. It tags the merge commit `vX.Y.Z`, pushes the tag, and creates the GitHub Release from that commit's `X.Y.Z` section. It stops, before tagging, when `production` isn't at that commit, when the section has no text besides its subheadings, when the tag already exists on another commit, or when the release is already published. If it stops after pushing the tag (a `gh` error), run it again: it reuses a tag that's already on the commit.
 
-2. **After Render shows the deploy live**, check that the service's **Events** page names the commit `$sha`. Then tag it and create the GitHub Release from its `CHANGELOG.md` section. Run this in the repo, in the same shell (in a new one, set `sha` again as in step 1). `awk` runs in the dev container, since only `git`, `gh` and `docker` run on the host. `--progress quiet` keeps Compose's build log out of the notes when the dev image has to be built first (a fresh clone or worktree):
+The script runs only `git`, `gh` and `docker` on the host. The section is cut out by `scripts/release-notes.awk` in the dev container. `tests/release.test.ts` covers each check. Two more commands:
 
-   ```sh
-   v=X.Y.Z      # the version, e.g. 0.1.1
-   src=$sha     # the commit whose CHANGELOG.md holds the notes
-   notes=$(git show "${src}:CHANGELOG.md" | docker compose --progress quiet run --rm -T dev awk -v v="$v" '
-       index($0, "## [" v "]") == 1 { p = 1; next }
-       /^## \[|^\[[^]]+\]: / { p = 0 }
-       p && NF { n++ }
-       p { print }
-       END { if (!n) { print "No notes for [" v "] in CHANGELOG.md" > "/dev/stderr"; exit 1 } }')
-   [ -n "$sha" ] || echo "sha is empty: set it as in step 1"
-   [ -n "$sha" ] && [ -n "$notes" ] \
-     && git tag -a "v$v" "$sha" -m "v$v" \
-     && git push origin "v$v" \
-     && printf '%s\n' "$notes" | gh release create "v$v" --verify-tag --title "v$v" --notes-file -
-   ```
+- `scripts/release.sh notes X.Y.Z [<ref>]` prints the notes (from `origin/main` by default), to read them before a release.
+- If a published release has a mistake, fix `CHANGELOG.md` in a PR and merge it, then run `scripts/release.sh edit X.Y.Z`. It fetches and republishes the notes from `origin/main`, and stops when they're empty.
 
-   The `notes=…` command always sets `notes`: to the section, or to nothing when `CHANGELOG.md` at `$src` has no `[X.Y.Z]` section with text under it (a typo in `v`, or a release PR that missed it), and then it prints "No notes for …". Every command that publishes checks the value it uses (`[ -n "$notes" ]`), so an empty one stops before tagging and nothing is published. To read the notes first, run `printf '%s\n' "$notes"` after the `notes=…` command.
-
-   If a published release has a mistake, fix `CHANGELOG.md` in a PR and merge it. Then, in the repo, in any shell:
-
-   - run `git fetch origin` (otherwise `origin/main` still holds the old notes);
-   - set `v` to the release's version and `src=origin/main`;
-   - run the `notes=…` command above;
-   - run `[ -n "$notes" ] && printf '%s\n' "$notes" | gh release edit "v$v" --notes-file -`.
-
-3. **If the deploy failed or was rolled back before it was tagged**, the version keeps its number, since no tag points at it. The fix PR adds its line under `## [X.Y.Z]`, not Unreleased, and sets that section's date to the new release day. Any PR merged since the release PR moves its line there too, because releasing the fix PR's merge commit ships it. Then release and tag the fix PR's merge commit as in steps 1 and 2.
-
-   A rollback after tagging doesn't move or delete the tag: the fix goes out as the next version.
+**If the deploy failed or was rolled back before it was tagged**, the version keeps its number, since no tag points at it. The fix PR adds its line under `## [X.Y.Z]`, not Unreleased, and sets that section's date to the new release day. Any PR merged since the release PR moves its line there too, because releasing the fix PR's merge commit ships it. Then run `push` and `publish` with the fix PR. A rollback after tagging doesn't move or delete the tag: the fix goes out as the next version.
 
 #### The v0.1.0 backfill (once)
 
-`c15c109`, the first public release, went live before `CHANGELOG.md` existed. So its notes come from `main`. Once this changelog is on `main`, run `git fetch origin`, set these three, then run step 2's command without its `v=` and `src=` lines:
-
-```sh
-sha=c15c1097bd3d0dda8c48931ffdaf4a19a7d57f4f
-v=0.1.0
-src=origin/main
-```
+`c15c109`, the first public release, went live before `CHANGELOG.md` existed, so its notes come from `main`. Once this changelog is on `main`, run `scripts/release.sh backfill`. It tags `c15c109` as `v0.1.0` and creates its GitHub Release from `origin/main`'s `[0.1.0]` section.
 
 ### Rolling back
 
 1. On the service's **Events** page, pick the last good deploy and choose **Rollback**. Render reuses that deploy's build, so it takes seconds. A dashboard rollback also turns auto-deploy off, so a new release can't redeploy the bad change by accident.
 2. Fix the problem on `main` (a revert is fine) through the usual PR.
-3. In the service's **Settings**, turn auto-deploy back on (**After CI checks pass**), then release the fix as in "Release notes", step 3: its PR's merge commit, under the same version if the bad one was never tagged.
+3. In the service's **Settings**, turn auto-deploy back on (**After CI checks pass**), then release the fix with `scripts/release.sh push` and `publish` ("Release notes"), under the same version if the bad one was never tagged.
 
 ## Day to day
 
