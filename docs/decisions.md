@@ -4,7 +4,7 @@ Choices made while building, where the approved docs were silent. Each links to 
 
 ## Step 1
 
-- Runtime is Node 24 in Docker only; CI reads `.nvmrc`. TypeScript is pinned to 6.0.3 and ESLint to 9.39.5, because typescript-eslint 8.71 and the Next ESLint plugins don't support TypeScript 7 or ESLint 10 yet.
+- Runtime is Node 24 in Docker only; CI reads `.nvmrc`. Since #273 every pin names an exact patch (see "Node pinned to an exact patch" below). TypeScript is pinned to 6.0.3 and ESLint to 9.39.5, because typescript-eslint 8.71 and the Next ESLint plugins don't support TypeScript 7 or ESLint 10 yet.
 - DQ16: Prettier runs in CI; `docs/` (including `docs/research/`) is ignored.
 - DQ21: CI runs natively on GitHub's runner; a separate job builds the production Docker image.
 - DQ22: `git` and `gh` run on the host; everything else goes through `./run`.
@@ -224,7 +224,7 @@ Defaults taken where `docs/need-based-ranking.md` is silent:
 
 ## Node base image from the ECR Public mirror (issue #107)
 
-`Dockerfile` and `Dockerfile.dev` pull `public.ecr.aws/docker/library/node:24-alpine`, Amazon ECR Public's copy of the official Docker Hub `node` image, instead of `node:24-alpine` from Docker Hub. CI pulls without logging in, and Docker Hub's anonymous limit (100 pulls per 6 hours per IP) failed the `docker` job on shared GitHub runners with `429 Too Many Requests`. ECR Public's anonymous limit is 1 pull per second, so a burst of PRs can fail at worst for seconds, not hours. Logging in to Docker Hub from CI would also work but needs a token stored as a repository secret.
+`Dockerfile` and `Dockerfile.dev` pull `public.ecr.aws/docker/library/node:24.22.1-alpine` (a floating `24-alpine` until #273), Amazon ECR Public's copy of the official Docker Hub `node` image, instead of `node:24-alpine` from Docker Hub. CI pulls without logging in, and Docker Hub's anonymous limit (100 pulls per 6 hours per IP) failed the `docker` job on shared GitHub runners with `429 Too Many Requests`. ECR Public's anonymous limit is 1 pull per second, so a burst of PRs can fail at worst for seconds, not hours. Logging in to Docker Hub from CI would also work but needs a token stored as a repository secret.
 
 ## Rate limit on `/api/chat` (issue #122)
 
@@ -456,3 +456,10 @@ This refines the approved order in `docs/need-based-ranking.md` (section 3, "Ord
 - **Which list changes.** The confirmed category's list, and "Also worth a look" when it holds the access card's alternative (near misses included). "Also worth a look" for the runner-up holds passing programs only, so neither who is listed there nor their order changes.
 - **The alternative's best pass keeps a slot (review round 2).** The access card says the alternative has a program "within your limits" whenever one of its programs passes (`accessText`, `app/lib/programs.ts`). Near misses over nothing that outscore that pass could otherwise fill both `RUNNER_UP_LIMIT` slots and leave the card pointing at a list with no pass in it. So when the alternative has a pass and none made the top 2, its best pass takes the last slot. It still sorts last there, since everything above it outscores it. The card is unchanged.
 - **What doesn't change.** Scores, statuses, checks, confidence, the card and the server. MIT is still a near miss and its card still says "Near miss: not published".
+
+## Node pinned to an exact patch (issue #273)
+
+- **Why.** The Oct 21, 2026 Node security release fixed TLS hostname-check bypasses and a Brotli decompression flaw, and distrusted the compromised eMudhra intermediate certificates. The floating `24-alpine` tag gave no guarantee, and no proof, that a build picked up the fix, and `.nvmrc` = `24` and `engines` `>=24 <25` allowed an unpatched 24.x.
+- **Rule.** `Dockerfile` (all three stages), `Dockerfile.dev` and `.nvmrc` name the same exact patch, now `24.22.1`, and `engines` sets it as the floor (`>=24.22.1 <25`, also in the lockfile's root entry). On every Node security release that covers 24.x, bump all of them together in one PR, with the three lines in `docs/build-steps.md` that name the tag, `.nvmrc` and `engines`. Check first that the ECR Public mirror serves the tag (`docker manifest inspect public.ecr.aws/docker/library/node:<tag>`).
+- **Rebuilding local images (review round 1).** Compose doesn't rebuild an image that already exists, so a `dev` image built before a bump keeps the old Node, and `npm ci` then fails on `engine-strict` while `npm test` runs quietly on the old one. `./run` passes `--build`, and the README's `docker compose up` lines do too; with no change to the Dockerfile the build is a cache hit.
+- **CA store.** Node's TLS, and the global `fetch` the Anthropic SDK uses, trusts Node's bundled Mozilla CA list, not Alpine's, since we set neither `--use-system-ca` nor `NODE_EXTRA_CA_CERTS`. So the Node bump is what removes eMudhra. The runner stage still runs `apk upgrade --no-cache` before `USER node`, so `ca-certificates` and the other Alpine packages are current as of the build that last ran that layer. Docker reuses the layer while the source tree and base image are unchanged, so to pick up an Alpine fix with no code change, use Render's "Clear build cache & deploy" (locally, `docker build --no-cache`).
