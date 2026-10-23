@@ -28,7 +28,7 @@ The repo has only `docs/` right now. The approved implementation plan (`docs/imp
 | @anthropic-ai/sdk | 0.132.0 | step 6 only |
 | @testing-library/react, @testing-library/user-event, jsdom | 16.3.3, latest 14.x, 30.1.2 | step 7 only |
 
-Runtime: **Node 24 LTS**, inside Docker only (`node:24-alpine`). `.nvmrc` = `24` and `"engines": {"node": ">=24 <25"}` pin it for CI (`actions/setup-node` reads `.nvmrc`) and for the container.
+Runtime: **Node 24 LTS**, inside Docker only (`node:24.22.1-alpine`). `.nvmrc` = `24.22.1` and `"engines": {"node": ">=24.22.1 <25"}` pin it for CI (`actions/setup-node` reads `.nvmrc`) and for the container.
 
 ### Working agreement (Yami, Oct 7)
 
@@ -63,7 +63,7 @@ Commits end with the Co-Authored-By line. Anything found that's outside the step
 
 **Files**
 - First commits, before any code: `docs/build-steps.md` (this plan as approved) and `CLAUDE.md` (the rules in the working agreement)
-- `Dockerfile.dev` (`node:24-alpine`, workdir `/repo`) and a `dev` service in `docker-compose.yml`:
+- `Dockerfile.dev` (`node:24.22.1-alpine`, workdir `/repo`) and a `dev` service in `docker-compose.yml`:
   - the repo bind-mounted at `/repo`
   - **a named volume for `/repo/node_modules`**, so Linux binaries (Next SWC, Tailwind's lightningcss) never mix with macOS
   - port 3000, default command `npm run dev -- --hostname 0.0.0.0`
@@ -82,7 +82,7 @@ Commits end with the Co-Authored-By line. Anything found that's outside the step
 - `vitest.config.ts`: node environment by default, aliases matching tsconfig, includes `**/*.test.ts(x)`
 - `tests/boundary.test.ts`: lints probe code through ESLint's Node API (`lintText` with `filePath: "core/__probe__.ts"`) and expects an error for `import x from "../server/x"`, `"@app/page"` and `"@anthropic-ai/sdk"`. A probe with a clean import must produce no error. This proves the rule bites and keeps biting.
 - `core/index.ts` (empty public API with a comment), `server/.gitkeep`, `personas/.gitkeep`, `examples/.gitkeep`, `docs/research/.gitkeep`
-- `Dockerfile`: multi-stage on `node:24-alpine` (deps → `npm ci`; build → `next build`; runner → standalone output as user `node`, `EXPOSE 3000`, `CMD ["node","server.js"]`). No key in any layer.
+- `Dockerfile`: multi-stage on `node:24.22.1-alpine` (deps → `npm ci`; build → `next build`; runner → standalone output as user `node`, `EXPOSE 3000`, `CMD ["node","server.js"]`). No key in any layer.
 - `.dockerignore`: `.env*` (keeps `.env.example`), `node_modules`, `.next`, `.git`, `research`
 - `docker-compose.yml`: service `web` (the production image: `build: .`, `ports: ["3000:3000"]`, `env_file: [{ path: .env, required: false }]` so the placeholder works before the key exists) plus the `dev` service above. `web` and `dev` both use port 3000, so run one at a time.
 - `.env.example`: `MODEL_API_KEY=` with a one-line comment saying it's server-only and never committed

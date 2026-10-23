@@ -15,7 +15,7 @@ All notable changes to Step Up are listed here. The format is based on [Keep a C
 
 ### Security
 
-- The site runs on Node 24.22.1, which fixes TLS certificate hostname-check bypasses and a Brotli decompression flaw, and distrusts the compromised eMudhra intermediate certificates. The image's system CA store (Alpine `ca-certificates`) is also upgraded when the image is built (#273).
+- The site runs on Node 24.22.1, which fixes TLS certificate hostname-check bypasses and a Brotli decompression flaw, and distrusts the compromised eMudhra intermediate certificates. The production image also upgrades its Alpine packages, including the system CA store (`ca-certificates`) (#273).
 
 ## [0.1.0] - 2026-10-11
 
