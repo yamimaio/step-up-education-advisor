@@ -11,7 +11,7 @@ Step Up runs on Render as one Docker web service built from the repo's `Dockerfi
 
 - [ ] The per-IP rate limit (#122) is merged.
 - [ ] The PR with `render.yaml` and the gitleaks job is merged.
-- [ ] The `production` branch exists. After that PR merges, create it from `main` with the two commands under "Releasing". The Blueprint is read from it, so it must already hold `render.yaml`.
+- [ ] The `production` branch exists. After that PR merges, create it from `main` with `git fetch origin` and `git push origin origin/main:refs/heads/production`. The Blueprint is read from it, so it must already hold `render.yaml`.
 - [ ] The production key exists, with a spend limit on its workspace (next section).
 
 ## 1. Create the production key (Claude Console)
@@ -72,14 +72,9 @@ When all five hold, tick the boxes in #123 and close it.
 
 ## Releasing
 
-Work merges to `main` as usual; the site doesn't change. To put `main` live:
+Work merges to `main` as usual; the site doesn't change. A release puts one commit of `main` live: the merge commit of its release PR, pushed to `production`. The steps, the push included, are under "Release notes" below.
 
-```sh
-git fetch origin
-git push origin origin/main:refs/heads/production
-```
-
-Render deploys the new `production` commit once CI passes on it. A failed check means no deploy (as long as Auto Sync is off, step 2.7), and a deploy whose health check fails is dropped while the previous one keeps serving. To release only part of `main`, push an older commit of it instead: `git push origin <sha>:refs/heads/production`. The full `refs/heads/` name is needed: without it, git can't create `production` on the first release.
+Render deploys the new `production` commit once CI passes on it. A failed check means no deploy (as long as Auto Sync is off, step 2.7), and a deploy whose health check fails is dropped while the previous one keeps serving. The push names the full `refs/heads/production`, and it checks that `sha` isn't empty first: an empty source in a refspec (`:refs/heads/production`) deletes the branch.
 
 `production` only ever moves forward to commits already on `main`. Never commit to it directly. A plain `git push` refuses anything that isn't a fast-forward, and that's the guard: don't add `--force` to get around it.
 
@@ -99,15 +94,18 @@ Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production
    ```sh
    git fetch origin
    sha=$(gh pr view <release PR number> --json mergeCommit --jq .mergeCommit.oid)
-   git push origin "$sha:refs/heads/production"
+   if [ -n "$sha" ]; then git push origin "${sha}:refs/heads/production"; else echo "No merge commit (is the PR merged?): nothing pushed"; fi
    ```
 
-2. **After Render shows the deploy live**, check that the service's **Events** page names the commit `$sha`. Then tag it and create the GitHub Release from its `CHANGELOG.md` section. Run this in the repo, in the same shell (in a new one, set `sha` again as in step 1). `awk` runs in the dev container, since only `git`, `gh` and `docker` run on the host:
+   `gh` prints an empty line, with no error, for a PR that isn't merged yet, so the push only runs on a non-empty `sha`. Keep the braces in `${sha}:…`: in zsh, `$sha:r…` would read `:r` as a modifier and push to the wrong name.
+
+2. **After Render shows the deploy live**, check that the service's **Events** page names the commit `$sha`. Then tag it and create the GitHub Release from its `CHANGELOG.md` section. Run this in the repo, in the same shell (in a new one, set `sha` again as in step 1). `awk` runs in the dev container, since only `git`, `gh` and `docker` run on the host. `--progress quiet` keeps Compose's build log out of the notes when the dev image has to be built first (a fresh clone or worktree):
 
    ```sh
    v=X.Y.Z      # the version, e.g. 0.1.1
    src=$sha     # the commit whose CHANGELOG.md holds the notes
-   notes=$(git show "$src:CHANGELOG.md" | docker compose run --rm -T dev awk -v v="$v" '
+   [ -n "$sha" ] || echo "sha is empty: set it as in step 1"
+   [ -n "$sha" ] && notes=$(git show "${src}:CHANGELOG.md" | docker compose --progress quiet run --rm -T dev awk -v v="$v" '
        index($0, "## [" v "]") == 1 { p = 1; next }
        /^## \[|^\[[^]]+\]: / { p = 0 }
        p && NF { n++ }
@@ -118,7 +116,7 @@ Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production
      && printf '%s\n' "$notes" | gh release create "v$v" --verify-tag --title "v$v" --notes-file -
    ```
 
-   If `CHANGELOG.md` at `$src` has no `[X.Y.Z]` section with text under it (a typo in `v`, or a release PR that missed it), the command prints "No notes for …" and stops before tagging, so nothing is published. To read the notes first, run `printf '%s\n' "$notes"` after the `notes=…` part. If a published release has a mistake, fix `CHANGELOG.md` in a PR, then set `src=origin/main`, rerun the `notes=…` part, and run `printf '%s\n' "$notes" | gh release edit "v$v" --notes-file -`.
+   If `CHANGELOG.md` at `$src` has no `[X.Y.Z]` section with text under it (a typo in `v`, or a release PR that missed it), the command prints "No notes for …" and stops before tagging, so nothing is published. To read the notes first, run `printf '%s\n' "$notes"` after the `notes=…` part. If a published release has a mistake, fix `CHANGELOG.md` in a PR and merge it. Then run `git fetch origin` (otherwise `origin/main` still holds the old notes), set `src=origin/main`, rerun the `notes=…` part, and run `printf '%s\n' "$notes" | gh release edit "v$v" --notes-file -`.
 
 3. **If the deploy failed or was rolled back before it was tagged**, the version keeps its number, since no tag points at it. The fix PR adds its line under `## [X.Y.Z]`, not Unreleased, and sets that section's date to the new release day. Any PR merged since the release PR moves its line there too, because releasing the fix PR's merge commit ships it. Then release and tag the fix PR's merge commit as in steps 1 and 2.
 
@@ -138,7 +136,7 @@ src=origin/main
 
 1. On the service's **Events** page, pick the last good deploy and choose **Rollback**. Render reuses that deploy's build, so it takes seconds. A dashboard rollback also turns auto-deploy off, so a new release can't redeploy the bad change by accident.
 2. Fix the problem on `main` (a revert is fine) through the usual PR.
-3. In the service's **Settings**, turn auto-deploy back on (**After CI checks pass**), then release as above.
+3. In the service's **Settings**, turn auto-deploy back on (**After CI checks pass**), then release the fix as in "Release notes", step 3: its PR's merge commit, under the same version if the bad one was never tagged.
 
 ## Day to day
 
