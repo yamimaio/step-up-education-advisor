@@ -98,7 +98,12 @@ Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production
    - at that commit, a published version's section differs from its published notes (see below);
    - at that commit, `package.json` isn't at `X.Y.Z`.
 
-   **PRs open across a release.** A PR that branched before a release PR, and merges after it, puts its line under the version just released, and git merges it with no conflict. So once a release PR merges, every open PR merges `main` and checks that its line is still under `## [Unreleased]`. If one slips through, the next `push` stops and names the version whose section changed. Move the line back under `[Unreleased]` in a PR. If a released section was changed on purpose (a fix to its notes), run `scripts/release.sh edit` for that version first.
+   **PRs open across a release.** A PR that branched before a release PR, and merges after it, puts its line under the version just released, and git merges it with no conflict. So once a release PR merges, every open PR merges `main` and checks that its line is still under `## [Unreleased]`. If one slips through, the next `push` stops and names the version whose section changed. By then the stray PR's code is already in the release PR's merge commit, so it ships with this release, and its line belongs under the version being released:
+   - In a fix PR, move the line into `## [X.Y.Z]`. `git diff vW.W.W <sha> -- CHANGELOG.md`, from the script's message, shows the line.
+   - Any PR merged since the release PR moves its line there too, because the fix PR's merge commit ships it.
+   - Then run `push` and `publish` with **the fix PR's** number. The release PR's merge commit never changes, so `push` with the release PR would stop again.
+
+   This is the same recovery as for a deploy that failed before tagging (below). If a released section was changed on purpose (a fix to its notes), run `scripts/release.sh edit` for that version first.
 
 3. **After Render shows the deploy live** (the service's **Events** page names the commit that `push` printed), run `scripts/release.sh publish <release PR> X.Y.Z`. It tags the merge commit `vX.Y.Z`, pushes the tag, and creates the GitHub Release from that commit's `X.Y.Z` section. The release becomes the repo's Latest. It stops, before tagging, in any of these cases:
    - `production` isn't at that commit;

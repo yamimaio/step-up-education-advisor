@@ -249,11 +249,38 @@ describe("push", () => {
     expect(stderr).toContain(
       `[0.1.0] in CHANGELOG.md at ${SHA} differs from v0.1.0's published notes`,
     );
+    // Its code is in this commit, so the line belongs in the version being released (round 6).
+    expect(stderr).toContain("move that line into [0.1.1]");
+    expect(stderr).toContain("run push and publish with the fix PR's number");
     expect(release("publish", "290", "0.1.1").stderr).toContain(
       "differs from v0.1.0's published notes",
     );
     expect(log()).not.toContain("git push");
     expect(log()).not.toContain("git tag");
+  });
+
+  it("releases the fix PR that moves a stray line into the version being released (round 6)", () => {
+    write("releases/v0.1.0", "The first public release.\n\n### Added\n\n- The advisor.\n");
+    changelogAt(
+      SHA,
+      CHANGELOG.replace("- The advisor.\n", "- The advisor.\n- PR b feature (#300).\n"),
+    );
+    // The release PR's merge commit never changes, so pushing it again still stops.
+    expect(release("push", "290", "0.1.1").status).toBe(1);
+    write("pr", `MERGED ${OTHER}\n`);
+    changelogAt(
+      OTHER,
+      CHANGELOG.replace(
+        "- Node 24.22.1 (#273).\n",
+        "- Node 24.22.1 (#273).\n- PR b feature (#300).\n",
+      ),
+    );
+    packageAt(OTHER, "0.1.1");
+    expect(release("push", "301", "0.1.1").status).toBe(0);
+    expect(log()).toContain(`git push origin ${OTHER}:refs/heads/production`);
+    write("production", `${OTHER}\n`);
+    expect(release("publish", "301", "0.1.1").status).toBe(0);
+    expect(read("releases/v0.1.1")).toContain("- PR b feature (#300).");
   });
 
   it("matches published notes despite carriage returns, trailing spaces and edge blank lines", () => {

@@ -91,7 +91,7 @@ check_history() {
       die "can't read $tag's notes"
     current=$(notes "$w" "$1") || die "[$w] has no notes in CHANGELOG.md at $1, but $tag is published"
     [ "$current" = "$published" ] ||
-      die "[$w] in CHANGELOG.md at $1 differs from $tag's published notes. A PR that branched before that release lands its line there: move it back under [Unreleased] (git diff $tag $1 -- CHANGELOG.md). If the notes were fixed on purpose, run scripts/release.sh edit $w first."
+      die "[$w] in CHANGELOG.md at $1 differs from $tag's published notes. A PR that branched before $tag and merged after it lands its line there, and its code is in this commit, so it ships in $2: in a fix PR, move that line into [$2] (git diff $tag $1 -- CHANGELOG.md shows it), then run push and publish with the fix PR's number. If [$w]'s notes were fixed on purpose, run scripts/release.sh edit $w first."
   done
 }
 
