@@ -11,7 +11,7 @@ services:
     region: oregon
     # One instance: the per-IP rate limit (#122) lives in memory.
     numInstances: 1
-    # Releases only: `git push origin origin/main:refs/heads/production` (docs/deploy.md, "Releasing").
+    # Releases only: the release PR's merge commit is pushed here (docs/deploy.md, "Release notes").
     branch: production
     # Deploys each commit pushed to production once its CI checks pass.
     # Blueprint Auto Sync is off (dashboard; docs/deploy.md step 2.7): it wouldn't wait for checks.

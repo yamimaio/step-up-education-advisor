@@ -11,7 +11,7 @@ Step Up runs on Render as one Docker web service built from the repo's `Dockerfi
 
 - [ ] The per-IP rate limit (#122) is merged.
 - [ ] The PR with `render.yaml` and the gitleaks job is merged.
-- [ ] The `production` branch exists. After that PR merges, create it from `main` with the two commands under "Releasing". The Blueprint is read from it, so it must already hold `render.yaml`.
+- [ ] The `production` branch exists. After that PR merges, create it from `main` with `git fetch origin` and `git push origin origin/main:refs/heads/production`. The Blueprint is read from it, so it must already hold `render.yaml`.
 - [ ] The production key exists, with a spend limit on its workspace (next section).
 
 ## 1. Create the production key (Claude Console)
@@ -72,24 +72,64 @@ When all five hold, tick the boxes in #123 and close it.
 
 ## Releasing
 
-Work merges to `main` as usual; the site doesn't change. To put `main` live:
+Work merges to `main` as usual; the site doesn't change. A release puts one commit of `main` live: the merge commit of its release PR, pushed to `production`. `scripts/release.sh` does the push and the tagging; the steps are under "Release notes" below.
 
-```sh
-git fetch origin
-git push origin origin/main:refs/heads/production
-```
-
-Render deploys the new `production` commit once CI passes on it. A failed check means no deploy (as long as Auto Sync is off, step 2.7), and a deploy whose health check fails is dropped while the previous one keeps serving. To release only part of `main`, push an older commit of it instead: `git push origin <sha>:refs/heads/production`. The full `refs/heads/` name is needed: without it, git can't create `production` on the first release.
+Render deploys the new `production` commit once CI passes on it. A failed check means no deploy (as long as Auto Sync is off, step 2.7), and a deploy whose health check fails is dropped while the previous one keeps serving. The script pushes only a merged PR's merge commit, to the full `refs/heads/production`: an empty source in a refspec (`:refs/heads/production`) would delete the branch.
 
 `production` only ever moves forward to commits already on `main`. Never commit to it directly. A plain `git push` refuses anything that isn't a fast-forward, and that's the guard: don't add `--force` to get around it.
 
-To see what's live: `git log -1 origin/production`, or the service's **Events** page in Render.
+To see what's live: `git log -1 origin/production`, the latest tag (`git describe --tags origin/production`), or the service's **Events** page in Render.
+
+### Release notes
+
+Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production` commit that went live, and a GitHub Release with the same notes. Every PR adds its line under `## [Unreleased]` in `CHANGELOG.md`; changes that only touch docs, tests or tooling may be grouped. The version rules are in `docs/decisions.md` ("Versions and release notes"): a patch for fixes and security, a minor for features.
+
+1. **Before releasing**, make these changes in a release PR to `main` (or in the last PR going out):
+   - rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`, and add a new, empty `## [Unreleased]` above it. The date is the day the release goes live, so merge and release on the same day;
+   - update the links at the bottom of `CHANGELOG.md`: `[unreleased]` compares `vX.Y.Z...HEAD`, and a new `[X.Y.Z]` line compares the previous tag with it (`compare/vW.W.W...vX.Y.Z`);
+   - set `version` in `package.json` and `package-lock.json` to `X.Y.Z`: `./run npm version X.Y.Z --no-git-tag-version`.
+
+   Merge it.
+
+2. **Put it live** with `scripts/release.sh push <release PR> X.Y.Z`. It pushes **that PR's merge commit** to `production`, not the tip of `main`: a PR merged after it isn't in the version's notes, so it waits for the next release. The script stops, before pushing, in any of these cases:
+   - the PR isn't merged, or its merge commit isn't on `main`;
+   - `vX.Y.Z` is already tagged on origin or published, or it isn't above every published version;
+   - at that commit, `[X.Y.Z]` has no notes;
+   - at that commit, another version's section has no published Release yet. A version that was pushed but never published has to be published first (`publish` with its own release PR), and v0.1.0 needs the backfill;
+   - at that commit, a published version's section differs from its published notes (see below);
+   - at that commit, `package.json` isn't at `X.Y.Z`.
+
+   **PRs open across a release.** A PR that branched before a release PR, and merges after it, puts its line under the version just released, and git merges it with no conflict. So once a release PR merges, every open PR merges `main` and checks that its line is still under `## [Unreleased]`. If one slips through, the next `push` stops and names the version whose section changed. By then the stray PR's code is already in the release PR's merge commit, so it ships with this release, and its line belongs under the version being released:
+   - In a fix PR, move the line into `## [X.Y.Z]`. `git diff vW.W.W <sha> -- CHANGELOG.md`, from the script's message, shows the line.
+   - Any PR merged since the release PR moves its line there too, because the fix PR's merge commit ships it.
+   - Then run `push` and `publish` with **the fix PR's** number. The release PR's merge commit never changes, so `push` with the release PR would stop again.
+
+   This is the same recovery as for a deploy that failed before tagging (below). If a released section was changed on purpose (a fix to its notes), run `scripts/release.sh edit` for that version first.
+
+3. **After Render shows the deploy live** (the service's **Events** page names the commit that `push` printed), run `scripts/release.sh publish <release PR> X.Y.Z`. It tags the merge commit `vX.Y.Z`, pushes the tag, and creates the GitHub Release from that commit's `X.Y.Z` section. The release becomes the repo's Latest. It stops, before tagging, in any of these cases:
+   - `production` isn't at that commit;
+   - CI hasn't passed on that commit's push to `production`. Render deploys only once it has, so a failed or unfinished run means the commit isn't live, and the version keeps its number;
+   - the PR isn't merged; `X.Y.Z` isn't above every published version; a section check from `push` fails; or `package.json` isn't at `X.Y.Z`;
+   - the tag is already on origin at another commit, or the release is already published.
+
+   If it stops after pushing the tag (a `gh` error), run it again: it reuses a tag that's already on the commit. A tag that only this clone has, left by a failed tag push, is replaced.
+
+The script runs only `git`, `gh` and `docker` on the host. The section is cut out by `scripts/release-notes.awk`, and `package.json` is read, in the dev container. `tests/release.test.ts` covers each check. Two more commands:
+
+- `scripts/release.sh notes X.Y.Z [<ref>]` prints the notes (from `origin/main` by default), to read them before a release.
+- If a published release has a mistake, fix `CHANGELOG.md` in a PR and merge it, then run `scripts/release.sh edit X.Y.Z`. It fetches and republishes the notes from `origin/main`, and stops when they're empty.
+
+**If the deploy failed or was rolled back before it was tagged**, the version keeps its number, since no tag points at it. The fix PR adds its line under `## [X.Y.Z]`, not Unreleased, and sets that section's date to the new release day. Any PR merged since the release PR moves its line there too, because releasing the fix PR's merge commit ships it. Then run `push` and `publish` with the fix PR. A rollback after tagging doesn't move or delete the tag: the fix goes out as the next version.
+
+#### The v0.1.0 backfill (once)
+
+`c15c109`, the first public release, went live before `CHANGELOG.md` existed, so its notes come from `main`. Once this changelog is on `main`, run `scripts/release.sh backfill`. It tags `c15c109` as `v0.1.0` and creates its GitHub Release from `origin/main`'s `[0.1.0]` section. Run it before the first later release: until v0.1.0 is published, `push` refuses any commit whose CHANGELOG has a `[0.1.0]` section.
 
 ### Rolling back
 
 1. On the service's **Events** page, pick the last good deploy and choose **Rollback**. Render reuses that deploy's build, so it takes seconds. A dashboard rollback also turns auto-deploy off, so a new release can't redeploy the bad change by accident.
 2. Fix the problem on `main` (a revert is fine) through the usual PR.
-3. In the service's **Settings**, turn auto-deploy back on (**After CI checks pass**), then release as above.
+3. In the service's **Settings**, turn auto-deploy back on (**After CI checks pass**), then release the fix with `scripts/release.sh push` and `publish` ("Release notes"), under the same version if the bad one was never tagged.
 
 ## Day to day
 
