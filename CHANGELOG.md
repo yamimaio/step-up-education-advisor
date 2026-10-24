@@ -4,6 +4,8 @@ All notable changes to Step Up are listed here. The format is based on [Keep a C
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-24
+
 ### Added
 
 - The test sheet now holds every live test result and the commit it ran on, with the transcripts behind it in `examples/test-runs/` (#261).
@@ -29,5 +31,6 @@ The first public release: a working prototype, built during the AI Builder Chall
 - **Privacy:** no accounts and no database. The conversation stays in the browser tab and can be downloaded as a transcript. A notice before the first message says what is sent to the model provider (Anthropic). Server logs hold counts and statuses, never message text.
 - **Limits that keep cost in check:** 40 messages per conversation (taps and confirms count), 4,000 characters per message, and per visitor at most 20 messages a minute and 100 an hour, keyed on Cloudflare's client IP (#186).
 
-[unreleased]: https://github.com/yamimaio/step-up-education-advisor/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/yamimaio/step-up-education-advisor/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/yamimaio/step-up-education-advisor/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/yamimaio/step-up-education-advisor/releases/tag/v0.1.0
