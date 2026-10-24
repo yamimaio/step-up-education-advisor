@@ -56,7 +56,16 @@ case "$1" in
     [ -f "$f" ] || { echo "fatal: path '\${2#*:}' does not exist" >&2; exit 128; }
     cat "$f" ;;
   merge-base) [ ! -f "$FAKE/not-ancestor" ] ;;
-  tag) printf '%s\\n' "$4" > "$FAKE/tags/$3" ;;
+  tag)
+    case "$2" in
+      -d) rm "$FAKE/tags/$3" ;;
+      *) printf '%s\\n' "$4" > "$FAKE/tags/$3" ;;
+    esac ;;
+  ls-remote) t=\${4#refs/tags/}; [ -f "$FAKE/origin-tags/$t" ] && printf '%s\\trefs/tags/%s\\n' "$(cat "$FAKE/origin-tags/$t")" "$t" || true ;;
+  push)
+    case "$3" in
+      refs/tags/*) t=\${3#refs/tags/}; cp "$FAKE/tags/$t" "$FAKE/origin-tags/$t" ;;
+    esac ;;
 esac
 `;
 
@@ -65,7 +74,10 @@ echo "gh $*" >> "$FAKE/log"
 case "$1 $2" in
   "pr view") cat "$FAKE/pr" ;;
   "run list") cat "$FAKE/runs" ;;
-  "release view") [ -f "$FAKE/releases/$3" ] ;;
+  "release list") ls "$FAKE/releases" ;;
+  "release view")
+    [ -f "$FAKE/releases/$3" ] || exit 1
+    case "$*" in *--json*) cat "$FAKE/releases/$3" ;; esac ;;
   "release create") [ -f "$FAKE/gh-fails" ] && exit 1; cat > "$FAKE/releases/$3" ;;
   "release edit") cat > "$FAKE/releases/$3" ;;
 esac
@@ -104,7 +116,7 @@ function release(...args: string[]) {
 
 beforeEach(() => {
   fake = mkdtempSync(join(tmpdir(), "release-test-"));
-  for (const dir of ["bin", "show", "tags", "releases"]) mkdirSync(join(fake, dir));
+  for (const dir of ["bin", "show", "tags", "origin-tags", "releases"]) mkdirSync(join(fake, dir));
   for (const [name, body] of Object.entries({ git: FAKE_GIT, gh: FAKE_GH, docker: FAKE_DOCKER })) {
     write(`bin/${name}`, body);
     chmodSync(join(fake, "bin", name), 0o755);
@@ -194,13 +206,62 @@ describe("push", () => {
     expect(log()).not.toContain("git push");
   });
 
-  it("never pushes a version that's already tagged or published", () => {
-    write("tags/v0.1.1", `${OTHER}\n`);
-    expect(release("push", "300", "0.1.1").stderr).toContain("v0.1.1 is already tagged");
-    rmSync(join(fake, "tags/v0.1.1"));
+  it("never pushes a version that's already tagged on origin or published", () => {
+    write("origin-tags/v0.1.1", `${OTHER}\n`);
+    expect(release("push", "300", "0.1.1").stderr).toContain("v0.1.1 is already tagged on origin");
+    rmSync(join(fake, "origin-tags/v0.1.1"));
     write("releases/v0.1.1", "old");
     expect(release("push", "300", "0.1.1").stderr).toContain("v0.1.1 is already published");
     expect(log()).not.toContain("git push");
+  });
+
+  it("pushes past a tag left only in this clone by a failed tag push (#288)", () => {
+    write("tags/v0.1.1", `${OTHER}\n`);
+    expect(release("push", "290", "0.1.1").status).toBe(0);
+  });
+
+  it("never pushes a version below a published one, comparing numbers (#289)", () => {
+    write("releases/v0.2.0", "- Two.\n");
+    expect(release("push", "290", "0.1.1").stderr).toContain(
+      "0.1.1 isn't above the published v0.2.0",
+    );
+    expect(log()).not.toContain("git push");
+    rmSync(join(fake, "releases/v0.2.0"));
+    // 0.1.10 is above 0.1.9, though it sorts below it as text.
+    changelogAt(
+      SHA,
+      "## [Unreleased]\n\n## [0.1.10] - 2026-12-01\n\n- Ten.\n\n## [0.1.9] - 2026-11-01\n\n- Nine.\n",
+    );
+    packageAt(SHA, "0.1.10");
+    write("releases/v0.1.9", "- Nine.\n");
+    expect(release("push", "290", "0.1.10").status).toBe(0);
+  });
+
+  it("never pushes when a released version's section changed since it was published (round 5)", () => {
+    // A PR that branched before the 0.1.0 release and merged after it lands its line there.
+    write("releases/v0.1.0", "The first public release.\n\n### Added\n\n- The advisor.\n");
+    changelogAt(
+      SHA,
+      CHANGELOG.replace("- The advisor.\n", "- The advisor.\n- PR b feature (#300).\n"),
+    );
+    const { status, stderr } = release("push", "290", "0.1.1");
+    expect(status).toBe(1);
+    expect(stderr).toContain(
+      `[0.1.0] in CHANGELOG.md at ${SHA} differs from v0.1.0's published notes`,
+    );
+    expect(release("publish", "290", "0.1.1").stderr).toContain(
+      "differs from v0.1.0's published notes",
+    );
+    expect(log()).not.toContain("git push");
+    expect(log()).not.toContain("git tag");
+  });
+
+  it("matches published notes despite carriage returns, trailing spaces and edge blank lines", () => {
+    write(
+      "releases/v0.1.0",
+      "\r\nThe first public release.  \r\n\r\n### Added\r\n\r\n- The advisor.\r\n\r\n",
+    );
+    expect(release("push", "290", "0.1.1").status).toBe(0);
   });
 
   it("never pushes an older version's section: it must be the newest after Unreleased", () => {
@@ -286,10 +347,19 @@ describe("publish", () => {
     expect(read("releases/v0.1.1")).toContain("- Node 24.22.1 (#273).");
   });
 
-  it("refuses a tag on another commit, and a version already published", () => {
+  it("replaces a tag left only in this clone, which origin never had (#288)", () => {
     write("tags/v0.1.1", `${OTHER}\n`);
+    expect(release("publish", "290", "0.1.1").status).toBe(0);
+    expect(log()).toContain("git tag -d v0.1.1");
+    expect(read("origin-tags/v0.1.1").trim()).toBe(SHA);
+  });
+
+  it("refuses a tag on another commit on origin, and a version already published", () => {
+    write("tags/v0.1.1", `${OTHER}\n`);
+    write("origin-tags/v0.1.1", `${OTHER}\n`);
     expect(release("publish", "290", "0.1.1").stderr).toContain(`tag v0.1.1 is on ${OTHER}`);
     rmSync(join(fake, "tags/v0.1.1"));
+    rmSync(join(fake, "origin-tags/v0.1.1"));
     write("releases/v0.1.1", "old");
     expect(release("publish", "290", "0.1.1").stderr).toContain("already published");
     expect(log()).not.toContain("gh release create");

@@ -56,14 +56,43 @@ check_package_version() {
   [ "$pkg" = "$2" ] || die "package.json at $1 is version $pkg, not $2: the release PR runs ./run npm version $2 --no-git-tag-version"
 }
 
-# Fails when version $1 already has a tag or a GitHub Release. Run after git fetch --tags.
+# Fails when version $1 already has a GitHub Release or a tag on origin. A tag only in this clone
+# is left by a run whose tag push failed, and doesn't use the number up (#288).
 check_unreleased() {
   if gh release view "v$1" >/dev/null 2>&1; then
     die "v$1 is already published: to change its notes, use scripts/release.sh edit $1"
   fi
-  if git rev-parse -q --verify "refs/tags/v$1" >/dev/null; then
-    die "v$1 is already tagged: pick the next version"
-  fi
+  remote=$(git ls-remote --tags origin "refs/tags/v$1") || die "can't read origin's tags"
+  [ -z "$remote" ] || die "v$1 is already tagged on origin: pick the next version"
+}
+
+# True when version $1 is above version $2.
+version_gt() {
+  IFS=. read -r a1 a2 a3 <<EOF
+$1
+EOF
+  IFS=. read -r b1 b2 b3 <<EOF
+$2
+EOF
+  [ "$a1" -gt "$b1" ] || { [ "$a1" -eq "$b1" ] && { [ "$a2" -gt "$b2" ] || { [ "$a2" -eq "$b2" ] && [ "$a3" -gt "$b3" ]; }; }; }
+}
+
+# Fails unless version $2 is above every published release (#289), and every published release's
+# section in CHANGELOG.md at commit $1 still matches its published notes. A PR that branched
+# before a release PR and merged after it lands its line under the released version, with no
+# conflict (PR #276 review round 5).
+check_history() {
+  tags=$(gh release list --limit 1000 --json tagName --jq '.[].tagName') || die "can't list releases"
+  for tag in $tags; do
+    w=${tag#v}
+    case "$w" in *[!0-9.]* | "$2") continue ;; esac
+    version_gt "$2" "$w" || die "$2 isn't above the published $tag: pick a higher version"
+    published=$(gh release view "$tag" --json body --jq .body | in_dev awk -v whole=1 -f scripts/release-notes.awk) ||
+      die "can't read $tag's notes"
+    current=$(notes "$w" "$1") || die "[$w] has no notes in CHANGELOG.md at $1, but $tag is published"
+    [ "$current" = "$published" ] ||
+      die "[$w] in CHANGELOG.md at $1 differs from $tag's published notes. A PR that branched before that release lands its line there: move it back under [Unreleased] (git diff $tag $1 -- CHANGELOG.md). If the notes were fixed on purpose, run scripts/release.sh edit $w first."
+  done
 }
 
 # Fails unless CI passed on the production push of commit $1: Render deploys only then
@@ -100,11 +129,14 @@ publish() {
     die "v$v is already published: to change its notes, use scripts/release.sh edit $v"
   fi
   tagged=$(git rev-parse -q --verify "refs/tags/v${v}^{commit}" || true)
-  if [ -z "$tagged" ]; then
-    git tag -a "v$v" "$sha" -m "v$v"
-  elif [ "$tagged" != "$sha" ]; then
-    die "tag v$v is on $tagged, not $sha"
+  if [ -n "$tagged" ] && [ "$tagged" != "$sha" ]; then
+    remote=$(git ls-remote --tags origin "refs/tags/v$v") || die "can't read origin's tags"
+    [ -z "$remote" ] || die "tag v$v is on $tagged, not $sha"
+    # Left in this clone by a run whose tag push failed; origin never had it (#288).
+    git tag -d "v$v" >/dev/null
+    tagged=
   fi
+  [ -n "$tagged" ] || git tag -a "v$v" "$sha" -m "v$v"
   git push origin "refs/tags/v$v"
   printf '%s\n' "$body" | gh release create "v$v" --verify-tag --title "v$v" "$4" --notes-file -
 }
@@ -122,6 +154,7 @@ case "$cmd" in
     sha=$(merge_commit "$1")
     git merge-base --is-ancestor "$sha" origin/main || die "$sha isn't on origin/main"
     check_unreleased "$2"
+    check_history "$sha" "$2"
     notes "$2" "$sha" newest >/dev/null || exit 1
     check_package_version "$sha" "$2"
     git push origin "${sha}:refs/heads/production"
@@ -135,6 +168,7 @@ case "$cmd" in
     live=$(git rev-parse origin/production)
     [ "$live" = "$sha" ] || die "production is at $live, not PR #$1's merge commit $sha: run push first"
     check_ci "$sha"
+    check_history "$sha" "$2"
     check_package_version "$sha" "$2"
     publish "$sha" "$2" "$sha" --latest newest
     ;;
