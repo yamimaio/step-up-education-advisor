@@ -18,6 +18,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 const SHA = "1111111111111111111111111111111111111111";
 const OTHER = "2222222222222222222222222222222222222222";
 const BACKFILL = "c15c1097bd3d0dda8c48931ffdaf4a19a7d57f4f";
+// v0.1.0's notes as the backfill publishes them, normalized.
+const V010_NOTES = "The first public release.\n\n### Added\n\n- The advisor.\n";
 
 const CHANGELOG = `# Changelog
 
@@ -127,6 +129,8 @@ beforeEach(() => {
   changelogAt(SHA);
   packageAt(SHA, "0.1.1");
   changelogAt("origin/main");
+  // The v0.1.0 backfill comes before any later release (round 7).
+  write("releases/v0.1.0", V010_NOTES);
 });
 
 afterEach(() => rmSync(fake, { recursive: true, force: true }));
@@ -220,6 +224,31 @@ describe("push", () => {
     expect(release("push", "290", "0.1.1").status).toBe(0);
   });
 
+  it("never pushes past an older version that was pushed but never published (round 7)", () => {
+    // 0.1.1 went live with push, but publish never ran; the 0.2.0 release PR sits on top of it.
+    changelogAt(
+      SHA,
+      CHANGELOG.replace("## [0.1.1]", "## [0.1.2] - 2026-10-30\n\n- Next.\n\n## [0.1.1]"),
+    );
+    packageAt(SHA, "0.1.2");
+    const { status, stderr } = release("push", "295", "0.1.2");
+    expect(status).toBe(1);
+    expect(stderr).toContain(
+      `[0.1.1] is in CHANGELOG.md at ${SHA}, but v0.1.1 isn't published: run scripts/release.sh publish <its release PR> 0.1.1 first`,
+    );
+    expect(release("publish", "295", "0.1.2").stderr).toContain("v0.1.1 isn't published");
+    expect(log()).not.toContain("git push");
+    expect(log()).not.toContain("git tag");
+  });
+
+  it("needs the v0.1.0 backfill before the first release after it", () => {
+    rmSync(join(fake, "releases/v0.1.0"));
+    expect(release("push", "290", "0.1.1").stderr).toContain(
+      "v0.1.0 isn't published yet: run scripts/release.sh backfill first",
+    );
+    expect(log()).not.toContain("git push");
+  });
+
   it("never pushes a version below a published one, comparing numbers (#289)", () => {
     write("releases/v0.2.0", "- Two.\n");
     expect(release("push", "290", "0.1.1").stderr).toContain(
@@ -227,6 +256,7 @@ describe("push", () => {
     );
     expect(log()).not.toContain("git push");
     rmSync(join(fake, "releases/v0.2.0"));
+    rmSync(join(fake, "releases/v0.1.0"));
     // 0.1.10 is above 0.1.9, though it sorts below it as text.
     changelogAt(
       SHA,
@@ -291,12 +321,15 @@ describe("push", () => {
     expect(release("push", "290", "0.1.1").status).toBe(0);
   });
 
-  it("never pushes an older version's section: it must be the newest after Unreleased", () => {
+  it("never pushes an older version's section from a later commit (round 4)", () => {
+    // Before the backfill, 0.1.1's commit still has a [0.1.0] section; [0.1.1] above it isn't
+    // published, so 0.1.0 can't go out from here.
+    rmSync(join(fake, "releases/v0.1.0"));
+    packageAt(SHA, "0.1.0");
     const { status, stderr } = release("push", "290", "0.1.0");
     expect(status).toBe(1);
-    expect(stderr).toContain(
-      '[0.1.0] isn\'t the newest version in CHANGELOG.md: "## [0.1.1] - 2026-10-24"',
-    );
+    expect(stderr).toContain("[0.1.1] is in CHANGELOG.md");
+    expect(stderr).toContain("v0.1.1 isn't published");
     expect(log()).not.toContain("git push");
   });
 
@@ -342,8 +375,10 @@ describe("publish", () => {
 
   it("stops before tagging an older version or a package.json on another version", () => {
     // Before the backfill, 0.1.1's commit still has a [0.1.0] section (round 4).
+    rmSync(join(fake, "releases/v0.1.0"));
     packageAt(SHA, "0.1.0");
-    expect(release("publish", "290", "0.1.0").stderr).toContain("isn't the newest version");
+    expect(release("publish", "290", "0.1.0").stderr).toContain("v0.1.1 isn't published");
+    write("releases/v0.1.0", V010_NOTES);
     expect(release("publish", "290", "0.1.1").stderr).toContain("is version 0.1.0, not 0.1.1");
     expect(log()).not.toContain("git tag");
   });
@@ -414,6 +449,8 @@ describe("edit", () => {
 });
 
 describe("backfill", () => {
+  beforeEach(() => rmSync(join(fake, "releases/v0.1.0")));
+
   it("tags c15c109 as v0.1.0 with origin/main's notes", () => {
     expect(release("backfill").status).toBe(0);
     expect(log()).toContain(`git tag -a v0.1.0 ${BACKFILL} -m v0.1.0`);

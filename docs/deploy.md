@@ -94,7 +94,8 @@ Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production
 2. **Put it live** with `scripts/release.sh push <release PR> X.Y.Z`. It pushes **that PR's merge commit** to `production`, not the tip of `main`: a PR merged after it isn't in the version's notes, so it waits for the next release. The script stops, before pushing, in any of these cases:
    - the PR isn't merged, or its merge commit isn't on `main`;
    - `vX.Y.Z` is already tagged on origin or published, or it isn't above every published version;
-   - at that commit, `[X.Y.Z]` isn't the newest section after Unreleased, or has no notes;
+   - at that commit, `[X.Y.Z]` has no notes;
+   - at that commit, another version's section has no published Release yet. A version that was pushed but never published has to be published first (`publish` with its own release PR), and v0.1.0 needs the backfill;
    - at that commit, a published version's section differs from its published notes (see below);
    - at that commit, `package.json` isn't at `X.Y.Z`.
 
@@ -122,7 +123,7 @@ The script runs only `git`, `gh` and `docker` on the host. The section is cut ou
 
 #### The v0.1.0 backfill (once)
 
-`c15c109`, the first public release, went live before `CHANGELOG.md` existed, so its notes come from `main`. Once this changelog is on `main`, run `scripts/release.sh backfill`. It tags `c15c109` as `v0.1.0` and creates its GitHub Release from `origin/main`'s `[0.1.0]` section.
+`c15c109`, the first public release, went live before `CHANGELOG.md` existed, so its notes come from `main`. Once this changelog is on `main`, run `scripts/release.sh backfill`. It tags `c15c109` as `v0.1.0` and creates its GitHub Release from `origin/main`'s `[0.1.0]` section. Run it before the first later release: until v0.1.0 is published, `push` refuses any commit whose CHANGELOG has a `[0.1.0]` section.
 
 ### Rolling back
 

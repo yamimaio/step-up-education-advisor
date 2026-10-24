@@ -39,12 +39,11 @@ in_dev() {
   docker compose --progress quiet run --rm -T dev "$@"
 }
 
-# Prints version $1's notes from CHANGELOG.md at ref $2, or fails. With $3 = newest, also fails
-# when another version's section comes before it.
+# Prints version $1's notes from CHANGELOG.md at ref $2, or fails.
 notes() {
   git show "${2}:CHANGELOG.md" >/dev/null 2>&1 || die "no CHANGELOG.md at $2"
   git show "${2}:CHANGELOG.md" |
-    in_dev awk -v v="$1" -v newest="$([ "${3:-}" = newest ] && echo 1 || echo 0)" -f scripts/release-notes.awk
+    in_dev awk -v v="$1" -f scripts/release-notes.awk
 }
 
 # Fails unless package.json's version at commit $1 is $2 (docs/decisions.md: it matches the
@@ -93,6 +92,19 @@ check_history() {
     [ "$current" = "$published" ] ||
       die "[$w] in CHANGELOG.md at $1 differs from $tag's published notes. A PR that branched before $tag and merged after it lands its line there, and its code is in this commit, so it ships in $2: in a fix PR, move that line into [$2] (git diff $tag $1 -- CHANGELOG.md shows it), then run push and publish with the fix PR's number. If [$w]'s notes were fixed on purpose, run scripts/release.sh edit $w first."
   done
+  # Every older version in the CHANGELOG must be published already. A version that was pushed but
+  # never published would otherwise be skipped for good once a later one goes out (round 7).
+  sections=$(git show "${1}:CHANGELOG.md" | in_dev awk -v versions=1 -f scripts/release-notes.awk) ||
+    die "can't read CHANGELOG.md at $1"
+  published=" $(printf '%s ' $tags)"
+  for w in $sections; do
+    case "$w" in *[!0-9.]* | "$2") continue ;; esac
+    case "$published" in *" v$w "*) continue ;; esac
+    if [ "$w" = "$BACKFILL_VERSION" ]; then
+      die "v$w isn't published yet: run scripts/release.sh backfill first"
+    fi
+    die "[$w] is in CHANGELOG.md at $1, but v$w isn't published: run scripts/release.sh publish <its release PR> $w first"
+  done
 }
 
 # Fails unless CI passed on the production push of commit $1: Render deploys only then
@@ -124,7 +136,7 @@ merge_commit() {
 publish() {
   sha=$1
   v=$2
-  body=$(notes "$v" "$3" "${5:-}") || exit 1
+  body=$(notes "$v" "$3") || exit 1
   if gh release view "v$v" >/dev/null 2>&1; then
     die "v$v is already published: to change its notes, use scripts/release.sh edit $v"
   fi
@@ -155,7 +167,7 @@ case "$cmd" in
     git merge-base --is-ancestor "$sha" origin/main || die "$sha isn't on origin/main"
     check_unreleased "$2"
     check_history "$sha" "$2"
-    notes "$2" "$sha" newest >/dev/null || exit 1
+    notes "$2" "$sha" >/dev/null || exit 1
     check_package_version "$sha" "$2"
     git push origin "${sha}:refs/heads/production"
     printf 'release: pushed %s to production. Once Render shows it live: scripts/release.sh publish %s %s\n' "$sha" "$1" "$2"
@@ -170,7 +182,7 @@ case "$cmd" in
     check_ci "$sha"
     check_history "$sha" "$2"
     check_package_version "$sha" "$2"
-    publish "$sha" "$2" "$sha" --latest newest
+    publish "$sha" "$2" "$sha" --latest
     ;;
   edit)
     [ $# -eq 1 ] || usage
