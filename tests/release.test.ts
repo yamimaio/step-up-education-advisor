@@ -52,8 +52,8 @@ case "$1" in
       -q) t=\${4#refs/tags/}; t=\${t%'^{commit}'}; [ -f "$FAKE/tags/$t" ] && cat "$FAKE/tags/$t" || exit 1 ;;
     esac ;;
   show)
-    f="$FAKE/show/$(printf '%s' "\${2%:CHANGELOG.md}" | tr / _)"
-    [ -f "$f" ] || { echo "fatal: path 'CHANGELOG.md' does not exist" >&2; exit 128; }
+    f="$FAKE/show/$(printf '%s' "\${2%%:*}" | tr / _)__\${2#*:}"
+    [ -f "$f" ] || { echo "fatal: path '\${2#*:}' does not exist" >&2; exit 128; }
     cat "$f" ;;
   merge-base) [ ! -f "$FAKE/not-ancestor" ] ;;
   tag) printf '%s\\n' "$4" > "$FAKE/tags/$3" ;;
@@ -64,6 +64,7 @@ const FAKE_GH = `#!/bin/sh
 echo "gh $*" >> "$FAKE/log"
 case "$1 $2" in
   "pr view") cat "$FAKE/pr" ;;
+  "run list") cat "$FAKE/runs" ;;
   "release view") [ -f "$FAKE/releases/$3" ] ;;
   "release create") [ -f "$FAKE/gh-fails" ] && exit 1; cat > "$FAKE/releases/$3" ;;
   "release edit") cat > "$FAKE/releases/$3" ;;
@@ -83,8 +84,13 @@ let fake: string;
 const write = (path: string, text: string) => writeFileSync(join(fake, path), text);
 const read = (path: string) => readFileSync(join(fake, path), "utf8");
 const log = () => (existsSync(join(fake, "log")) ? read("log") : "");
-const changelogAt = (ref: string, text = CHANGELOG) =>
-  write(`show/${ref.replaceAll("/", "_")}`, text);
+const atRef = (ref: string, path: string, text: string) =>
+  write(`show/${ref.replaceAll("/", "_")}__${path}`, text);
+const changelogAt = (ref: string, text = CHANGELOG) => atRef(ref, "CHANGELOG.md", text);
+const packageAt = (ref: string, version: string) =>
+  atRef(ref, "package.json", JSON.stringify({ name: "step-up", version }, null, 2));
+// Each logged call in order, so a test can check that one ran before another.
+const calls = () => log().split("\n");
 
 function release(...args: string[]) {
   const bin = join(fake, "bin");
@@ -105,7 +111,9 @@ beforeEach(() => {
   }
   write("pr", `MERGED ${SHA}\n`);
   write("production", `${SHA}\n`);
+  write("runs", "completed success\n");
   changelogAt(SHA);
+  packageAt(SHA, "0.1.1");
   changelogAt("origin/main");
 });
 
@@ -120,6 +128,8 @@ describe("notes", () => {
     expect(stdout).not.toContain("## [0.1.0]");
     expect(stdout).not.toContain("[unreleased]:");
     expect(stdout).not.toContain("Node 24.22.1");
+    // Without --progress quiet, a first-time image build prints into the notes (#286).
+    expect(log()).toContain("docker compose --progress quiet run --rm -T dev awk");
   });
 
   it("matches the whole version: 0.1.1 is not 0.1.10", () => {
@@ -183,6 +193,34 @@ describe("push", () => {
     expect(release("push", "290", "0.1.1").status).toBe(1);
     expect(log()).not.toContain("git push");
   });
+
+  it("never pushes a version that's already tagged or published", () => {
+    write("tags/v0.1.1", `${OTHER}\n`);
+    expect(release("push", "300", "0.1.1").stderr).toContain("v0.1.1 is already tagged");
+    rmSync(join(fake, "tags/v0.1.1"));
+    write("releases/v0.1.1", "old");
+    expect(release("push", "300", "0.1.1").stderr).toContain("v0.1.1 is already published");
+    expect(log()).not.toContain("git push");
+  });
+
+  it("never pushes an older version's section: it must be the newest after Unreleased", () => {
+    const { status, stderr } = release("push", "290", "0.1.0");
+    expect(status).toBe(1);
+    expect(stderr).toContain(
+      '[0.1.0] isn\'t the newest version in CHANGELOG.md: "## [0.1.1] - 2026-10-24"',
+    );
+    expect(log()).not.toContain("git push");
+  });
+
+  it("never pushes when package.json isn't at the version (#287)", () => {
+    packageAt(SHA, "0.1.0");
+    const { status, stderr } = release("push", "290", "0.1.1");
+    expect(status).toBe(1);
+    expect(stderr).toContain(
+      "package.json at 1111111111111111111111111111111111111111 is version 0.1.0",
+    );
+    expect(log()).not.toContain("git push");
+  });
 });
 
 describe("publish", () => {
@@ -191,9 +229,35 @@ describe("publish", () => {
     expect(status).toBe(0);
     expect(log()).toContain(`git tag -a v0.1.1 ${SHA} -m v0.1.1`);
     expect(log()).toContain("git push origin refs/tags/v0.1.1");
-    expect(log()).toContain("gh release create v0.1.1 --verify-tag --title v0.1.1 --notes-file -");
+    expect(log()).toContain(
+      "gh release create v0.1.1 --verify-tag --title v0.1.1 --latest --notes-file -",
+    );
     expect(read("releases/v0.1.1")).toContain("- Node 24.22.1 (#273).");
     expect(read("releases/v0.1.1")).not.toContain("The first public release.");
+  });
+
+  it("stops before tagging unless CI passed on production, which Render waits for (#284)", () => {
+    for (const runs of [
+      "",
+      "completed failure\n",
+      "in_progress \n",
+      "completed success\ncompleted cancelled\n",
+    ]) {
+      write("runs", runs);
+      const { status, stderr } = release("publish", "290", "0.1.1");
+      expect(status).toBe(1);
+      expect(stderr).toMatch(runs ? /CI on production for .* is '/ : /no CI run on production/);
+    }
+    expect(log()).toContain(`gh run list --commit ${SHA} --branch production --event push`);
+    expect(log()).not.toContain("git tag");
+  });
+
+  it("stops before tagging an older version or a package.json on another version", () => {
+    // Before the backfill, 0.1.1's commit still has a [0.1.0] section (round 4).
+    packageAt(SHA, "0.1.0");
+    expect(release("publish", "290", "0.1.0").stderr).toContain("isn't the newest version");
+    expect(release("publish", "290", "0.1.1").stderr).toContain("is version 0.1.0, not 0.1.1");
+    expect(log()).not.toContain("git tag");
   });
 
   it("stops before tagging when production isn't at the merge commit", () => {
@@ -237,6 +301,11 @@ describe("edit", () => {
     write("releases/v0.1.0", "old");
     expect(release("edit", "0.1.0").status).toBe(0);
     expect(read("releases/v0.1.0")).toContain("- The advisor.");
+    // Without the fetch, origin/main could still hold the notes being fixed (#286).
+    const fetched = calls().findIndex((c) => c.startsWith("git fetch"));
+    const shown = calls().findIndex((c) => c === "git show origin/main:CHANGELOG.md");
+    expect(fetched).toBeGreaterThanOrEqual(0);
+    expect(fetched).toBeLessThan(shown);
   });
 
   it("never blanks a published release when origin/main has no notes for it", () => {
@@ -252,5 +321,10 @@ describe("backfill", () => {
     expect(release("backfill").status).toBe(0);
     expect(log()).toContain(`git tag -a v0.1.0 ${BACKFILL} -m v0.1.0`);
     expect(read("releases/v0.1.0")).toContain("The first public release.");
+  });
+
+  it("never marks v0.1.0 as the Latest release (#285)", () => {
+    release("backfill");
+    expect(log()).toContain("gh release create v0.1.0 --verify-tag --title v0.1.0 --latest=false");
   });
 });

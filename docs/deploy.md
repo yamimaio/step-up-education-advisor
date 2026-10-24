@@ -91,11 +91,21 @@ Every release has a section in `CHANGELOG.md`, a `vX.Y.Z` tag on the `production
 
    Merge it.
 
-2. **Put it live** with `scripts/release.sh push <release PR> X.Y.Z`. It pushes **that PR's merge commit** to `production`, not the tip of `main`: a PR merged after it isn't in the version's notes, so it waits for the next release. The script stops, before pushing, when the PR isn't merged, when its merge commit isn't on `main`, or when that commit's `CHANGELOG.md` has no notes for `X.Y.Z`.
+2. **Put it live** with `scripts/release.sh push <release PR> X.Y.Z`. It pushes **that PR's merge commit** to `production`, not the tip of `main`: a PR merged after it isn't in the version's notes, so it waits for the next release. The script stops, before pushing, in any of these cases:
+   - the PR isn't merged, or its merge commit isn't on `main`;
+   - `vX.Y.Z` is already tagged or published;
+   - at that commit, `[X.Y.Z]` isn't the newest section after Unreleased, or has no notes;
+   - at that commit, `package.json` isn't at `X.Y.Z`.
 
-3. **After Render shows the deploy live** (the service's **Events** page names the commit that `push` printed), run `scripts/release.sh publish <release PR> X.Y.Z`. It tags the merge commit `vX.Y.Z`, pushes the tag, and creates the GitHub Release from that commit's `X.Y.Z` section. It stops, before tagging, when `production` isn't at that commit, when the section has no text besides its subheadings, when the tag already exists on another commit, or when the release is already published. If it stops after pushing the tag (a `gh` error), run it again: it reuses a tag that's already on the commit.
+3. **After Render shows the deploy live** (the service's **Events** page names the commit that `push` printed), run `scripts/release.sh publish <release PR> X.Y.Z`. It tags the merge commit `vX.Y.Z`, pushes the tag, and creates the GitHub Release from that commit's `X.Y.Z` section. The release becomes the repo's Latest. It stops, before tagging, in any of these cases:
+   - `production` isn't at that commit;
+   - CI hasn't passed on that commit's push to `production`. Render deploys only once it has, so a failed or unfinished run means the commit isn't live, and the version keeps its number;
+   - the PR isn't merged, `[X.Y.Z]` isn't the newest section or has no notes, or `package.json` isn't at `X.Y.Z`;
+   - the tag already exists on another commit, or the release is already published.
 
-The script runs only `git`, `gh` and `docker` on the host. The section is cut out by `scripts/release-notes.awk` in the dev container. `tests/release.test.ts` covers each check. Two more commands:
+   If it stops after pushing the tag (a `gh` error), run it again: it reuses a tag that's already on the commit.
+
+The script runs only `git`, `gh` and `docker` on the host. The section is cut out by `scripts/release-notes.awk`, and `package.json` is read, in the dev container. `tests/release.test.ts` covers each check. Two more commands:
 
 - `scripts/release.sh notes X.Y.Z [<ref>]` prints the notes (from `origin/main` by default), to read them before a release.
 - If a published release has a mistake, fix `CHANGELOG.md` in a PR and merge it, then run `scripts/release.sh edit X.Y.Z`. It fetches and republishes the notes from `origin/main`, and stops when they're empty.
