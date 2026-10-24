@@ -81,6 +81,7 @@ EOF
 # before a release PR and merged after it lands its line under the released version, with no
 # conflict (PR #276 review round 5).
 check_history() {
+  git show "${1}:CHANGELOG.md" >/dev/null 2>&1 || die "no CHANGELOG.md at $1"
   tags=$(gh release list --limit 1000 --json tagName --jq '.[].tagName') || die "can't list releases"
   for tag in $tags; do
     w=${tag#v}
